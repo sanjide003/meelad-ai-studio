@@ -17,8 +17,30 @@
     </div>
   </div>
 
-  <main class="flex-1 flex items-center justify-center p-4">
-    <div class="max-w-5xl w-full space-y-8 py-8">
+  <header id="super-admin-header" class="hidden bg-white border-b border-slate-100 px-4 py-3 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <div>
+        <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-600">MeeladPulse SaaS Owner</p>
+        <h2 class="text-lg font-extrabold text-slate-900 font-display">Super Admin Control Center</h2>
+      </div>
+      <div class="relative">
+        <button id="super-menu-btn" type="button" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-extrabold text-slate-700 shadow-sm hover:bg-slate-50" aria-expanded="false">
+          ☰ Menu
+        </button>
+        <div id="super-menu" class="hidden absolute right-0 mt-2 w-56 rounded-2xl border border-slate-100 bg-white p-2 shadow-2xl">
+          <button data-super-filter="all" class="super-filter block w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50">All Institutions</button>
+          <button data-super-filter="purchased" class="super-filter block w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50">Purchased</button>
+          <button data-super-filter="trial" class="super-filter block w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50">Trial</button>
+          <button data-super-filter="deactivated" class="super-filter block w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50">Deactivated / Expired</button>
+          <div class="my-2 border-t border-slate-100"></div>
+          <button class="logout-action-btn block w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-rose-600 hover:bg-rose-50">Logout</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 flex items-start justify-center p-4">
+    <div class="max-w-7xl w-full space-y-8 py-8">
       
       <!-- Upper Banner Info -->
       <div class="text-center space-y-3">
@@ -72,24 +94,46 @@
             <select id="institution-plan" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
               <option value="trial">Trial</option>
               <option value="purchased">Purchased</option>
-              <option value="premium">Premium</option>
             </select>
           </label>
           <label class="space-y-1 text-xs font-bold text-slate-600">Subscription Status
             <select id="institution-subscription" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
               <option value="trial">Trial</option>
-              <option value="active">Active / Purchased</option>
+              <option value="active">Active / Paid</option>
               <option value="payment_due">Payment Due</option>
               <option value="expired">Expired</option>
               <option value="suspended">Suspended</option>
             </select>
           </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600">Trial Ends On
+            <input id="institution-trial-ends" type="date" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
+          </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600">Purchase Duration
+            <select id="institution-billing-cycle" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="custom">Custom Date</option>
+              <option value="unlimited">Unlimited</option>
+            </select>
+          </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600">Subscription Ends On
+            <input id="institution-subscription-ends" type="date" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
+          </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600">Amount Paid
+            <input id="institution-payment-amount" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="0.00">
+          </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600">Payment Reference
+            <input id="institution-payment-reference" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="receipt / UPI / bank ref">
+          </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600">Purchase Date
+            <input id="institution-purchase-date" type="date" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
+          </label>
           <label class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600">
             <input id="institution-active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-emerald-600" checked>
             Institution active
           </label>
-          <label class="space-y-1 text-xs font-bold text-slate-600 md:col-span-2">Purchase Notes
-            <textarea id="institution-purchase-notes" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800" rows="2" placeholder="Payment reference, validity, remarks"></textarea>
+          <label class="space-y-1 text-xs font-bold text-slate-600 md:col-span-2">Purchase / Status Notes
+            <textarea id="institution-purchase-notes" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800" rows="2" placeholder="Payment details, validity, reminders, remarks"></textarea>
           </label>
         </div>
         <div class="flex justify-end gap-3 border-t border-slate-100 pt-4">
@@ -112,6 +156,7 @@
     import { collection, query, where, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const festivalsGrid = document.getElementById('festivals-grid');
+    let superAdminFilter = 'all';
 
     async function initializeFestivalSelection() {
       try {
@@ -200,63 +245,129 @@
     }
 
 
+    function toDateOnly(value) {
+      if (!value) return '';
+      if (typeof value === 'string') return value.slice(0, 10);
+      if (value.toDate) return value.toDate().toISOString().slice(0, 10);
+      return '';
+    }
+
+    function daysUntil(dateString) {
+      if (!dateString) return null;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const target = new Date(`${dateString}T00:00:00`);
+      return Math.ceil((target - today) / 86400000);
+    }
+
+    function getEffectiveSubscription(festival) {
+      const plan = festival.plan || 'trial';
+      const trialEndsAt = toDateOnly(festival.trialEndsAt);
+      const subscriptionEndsAt = toDateOnly(festival.subscriptionEndsAt);
+      const endDate = plan === 'trial' ? trialEndsAt : subscriptionEndsAt;
+      const remainingDays = daysUntil(endDate);
+      const expiredByDate = remainingDays !== null && remainingDays < 0 && festival.billingCycle !== 'unlimited';
+      const blockedStatus = ['expired', 'payment_due', 'suspended'].includes(festival.subscriptionStatus);
+      const effectiveActive = festival.active !== false && !expiredByDate && !blockedStatus;
+      return { plan, endDate, remainingDays, effectiveActive, expiredByDate };
+    }
+
     async function renderSuperAdminPortal() {
+      document.getElementById('super-admin-header').classList.remove('hidden');
       document.querySelector('h1').textContent = 'Super Admin Institution Portal';
-      document.getElementById('portal-subtitle').textContent = 'Application-owner control for institutions, premium subscriptions, activation status, and festival workspaces.';
+      document.getElementById('portal-subtitle').textContent = 'Application-owner control for institution customers, paid/trial subscriptions, activation, login credentials, and links.';
       const snap = await getDocs(collection(db, 'institutions'));
-      const festivals = snap.docs.map(item => ({ id: item.id, institutionId: item.id, ...item.data() })).sort((a, b) => (a.title || a.name || '').localeCompare(b.title || b.name || ''));
+      let festivals = snap.docs.map(item => ({ id: item.id, institutionId: item.id, ...item.data() })).sort((a, b) => (a.title || a.name || '').localeCompare(b.title || b.name || ''));
+      festivals = festivals.filter(festival => {
+        const info = getEffectiveSubscription(festival);
+        if (superAdminFilter === 'trial') return info.plan === 'trial';
+        if (superAdminFilter === 'purchased') return info.plan === 'purchased';
+        if (superAdminFilter === 'deactivated') return !info.effectiveActive;
+        return true;
+      });
       festivalsGrid.innerHTML = `
-        <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-4 overflow-hidden">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
-              <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Premium SaaS Control</p>
+              <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">SaaS Control</p>
               <h2 class="text-lg font-extrabold text-slate-900 font-display">Institutions / Festival Workspaces</h2>
+              <p class="text-xs text-slate-500 mt-1">Current filter: <span class="font-bold text-slate-700">${superAdminFilter}</span></p>
             </div>
             <button id="super-create-festival" class="btn btn-primary text-xs font-bold text-white px-4 py-2">Create Institution + Admin Login</button>
           </div>
-          <div id="super-admin-list" class="space-y-3"></div>
+          <div class="overflow-x-auto rounded-2xl border border-slate-100">
+            <table class="min-w-full divide-y divide-slate-100 text-left text-xs">
+              <thead class="bg-slate-50 text-[10px] uppercase tracking-widest text-slate-500">
+                <tr>
+                  <th class="px-4 py-3">Institution</th>
+                  <th class="px-4 py-3">Admin Login</th>
+                  <th class="px-4 py-3">Plan / Status</th>
+                  <th class="px-4 py-3">Validity / Payment</th>
+                  <th class="px-4 py-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="super-admin-list" class="divide-y divide-slate-100 bg-white"></tbody>
+            </table>
+          </div>
         </div>
       `;
       document.getElementById('super-create-festival').onclick = () => openInstitutionModal();
       const list = document.getElementById('super-admin-list');
-      list.innerHTML = festivals.length ? '' : '<p class="text-xs text-slate-400 text-center py-8">No institution workspaces created yet.</p>';
+      list.innerHTML = festivals.length ? '' : '<tr><td colspan="5" class="px-4 py-8 text-center text-xs text-slate-400">No institution workspaces found for this filter.</td></tr>';
       festivals.forEach(festival => {
-        const row = document.createElement('div');
-        row.className = 'border border-slate-100 rounded-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3';
+        const info = getEffectiveSubscription(festival);
+        const warning = info.remainingDays !== null && info.remainingDays >= 0 && info.remainingDays <= 7
+          ? `<div class="mt-1 rounded-lg bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700">Expires in ${info.remainingDays} day(s)</div>` : '';
+        const row = document.createElement('tr');
+        row.className = info.effectiveActive ? 'align-top hover:bg-slate-50' : 'align-top bg-rose-50/40 hover:bg-rose-50';
         row.innerHTML = `
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="text-[10px] font-mono font-bold text-slate-400">${festival.id}</span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${festival.active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${festival.active !== false ? 'ACTIVE' : 'INACTIVE'}</span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">${festival.plan || 'trial'}</span>
+          <td class="px-4 py-4">
+            <div class="font-extrabold text-slate-900">${festival.title || festival.name || festival.code || 'Untitled Institution'}</div>
+            <div class="mt-1 font-mono text-[10px] font-bold text-slate-400">${festival.id}</div>
+            <div class="mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${info.effectiveActive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${info.effectiveActive ? 'ACTIVE' : 'DEACTIVATED'}</div>
+          </td>
+          <td class="px-4 py-4">
+            <div class="font-bold text-slate-700">${festival.ownerName || 'Not assigned'}</div>
+            <div class="mt-1 text-slate-500">${festival.ownerUsername || festival.ownerEmail || 'No username'}</div>
+            <div class="mt-1 font-mono text-[11px] font-bold text-slate-800">Password: ${festival.ownerPassword || 'not set'}</div>
+          </td>
+          <td class="px-4 py-4">
+            <div class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${info.plan === 'purchased' ? 'bg-sky-50 text-sky-700' : 'bg-amber-50 text-amber-700'}">${info.plan.toUpperCase()}</div>
+            <div class="mt-2 text-slate-500">${festival.subscriptionStatus || 'trial'}</div>
+          </td>
+          <td class="px-4 py-4">
+            <div class="text-slate-600">Ends: <span class="font-bold">${info.endDate || (festival.billingCycle === 'unlimited' ? 'Unlimited' : 'Not set')}</span></div>
+            <div class="mt-1 text-slate-500">Amount: ${festival.paymentAmount || '0'} ${festival.paymentCurrency || 'INR'}</div>
+            <div class="mt-1 text-slate-400">${festival.billingCycle || 'monthly'} • ${festival.paymentReference || 'no ref'}</div>
+            ${warning}
+          </td>
+          <td class="px-4 py-4">
+            <div class="flex flex-wrap justify-end gap-2">
+              <button class="edit-workspace btn btn-secondary text-[10px] font-bold px-3 py-1.5">Edit</button>
+              <button class="share-login btn border border-slate-200 text-[10px] font-bold px-3 py-1.5">Copy Link</button>
+              <button class="toggle-workspace btn border border-slate-200 text-[10px] font-bold px-3 py-1.5">${info.effectiveActive ? 'Deactivate' : 'Activate'}</button>
+              <button class="delete-workspace btn bg-rose-600 text-white text-[10px] font-bold px-3 py-1.5">Delete</button>
             </div>
-            <h3 class="text-sm font-extrabold text-slate-900">${festival.title || festival.name || festival.code || 'Untitled Institution'}</h3>
-            <p class="text-[11px] text-slate-500">${festival.venue || 'No venue'} • Owner: ${festival.ownerEmail || 'not assigned'} • Subscription: ${festival.subscriptionStatus || 'trial'}</p>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <button class="credentials-workspace btn btn-secondary text-[10px] font-bold px-3 py-1.5">Admin Login</button>
-            <button class="share-login btn border border-slate-200 text-[10px] font-bold px-3 py-1.5">Copy Login Link</button>
-            <button class="toggle-workspace btn border border-slate-200 text-[10px] font-bold px-3 py-1.5">${festival.active !== false ? 'Deactivate' : 'Activate'}</button>
-            <button class="delete-workspace btn bg-rose-600 text-white text-[10px] font-bold px-3 py-1.5">Delete</button>
-          </div>
+          </td>
         `;
-        row.querySelector('.credentials-workspace').onclick = () => openInstitutionModal(festival);
+        row.querySelector('.edit-workspace').onclick = () => openInstitutionModal(festival);
         row.querySelector('.share-login').onclick = async () => {
           const loginUrl = new URL('login.html', window.location.href);
           loginUrl.searchParams.set('institution', festival.id);
           loginUrl.searchParams.set('festival', festival.defaultFestivalId || festival.id);
-          await navigator.clipboard?.writeText(loginUrl.href);
+          if (navigator.clipboard) await navigator.clipboard.writeText(loginUrl.href);
           alert(`Institution login link copied:
 ${loginUrl.href}`);
         };
         row.querySelector('.toggle-workspace').onclick = async () => {
-          const nextActive = festival.active === false;
-          await updateDoc(doc(db, 'institutions', festival.id), { active: nextActive, updatedAt: serverTimestamp() });
-          await setDoc(doc(db, `institutions/${festival.id}/festivals`, festival.defaultFestivalId || festival.id), { active: nextActive, updatedAt: serverTimestamp() }, { merge: true });
+          const nextActive = !info.effectiveActive;
+          const nextStatus = nextActive ? (festival.plan === 'purchased' ? 'active' : 'trial') : 'suspended';
+          await updateDoc(doc(db, 'institutions', festival.id), { active: nextActive, subscriptionStatus: nextStatus, updatedAt: serverTimestamp() });
+          await setDoc(doc(db, `institutions/${festival.id}/festivals`, festival.defaultFestivalId || festival.id), { active: nextActive, subscriptionStatus: nextStatus, updatedAt: serverTimestamp() }, { merge: true });
           if (festival.ownerUsername || festival.ownerEmail) {
             const loginKey = (festival.ownerUsername || festival.ownerEmail).toLowerCase();
-            await setDoc(doc(db, 'institutionLogins', loginKey), { active: nextActive, updatedAt: serverTimestamp() }, { merge: true });
-            await setDoc(doc(db, `institutions/${festival.id}/festivals/${festival.defaultFestivalId || festival.id}/manualUsers`, loginKey), { active: nextActive, updatedAt: serverTimestamp() }, { merge: true });
+            await setDoc(doc(db, 'institutionLogins', loginKey), { active: nextActive, subscriptionStatus: nextStatus, updatedAt: serverTimestamp() }, { merge: true });
+            await setDoc(doc(db, `institutions/${festival.id}/festivals/${festival.defaultFestivalId || festival.id}/manualUsers`, loginKey), { active: nextActive, subscriptionStatus: nextStatus, updatedAt: serverTimestamp() }, { merge: true });
           }
           await renderSuperAdminPortal();
         };
@@ -295,10 +406,16 @@ ${loginUrl.href}`);
       document.getElementById('institution-slug').disabled = isEdit;
       document.getElementById('institution-admin-name').value = festival?.ownerName || `${festival?.name || festival?.title || ''} Admin`.trim();
       document.getElementById('institution-admin-login').value = festival?.ownerUsername || festival?.ownerEmail || '';
-      document.getElementById('institution-admin-password').value = '';
-      document.getElementById('institution-admin-password').placeholder = isEdit ? 'enter new/updated password' : 'temporary password';
+      document.getElementById('institution-admin-password').value = festival?.ownerPassword || '';
+      document.getElementById('institution-admin-password').placeholder = 'admin login password';
       document.getElementById('institution-plan').value = festival?.plan || 'trial';
       document.getElementById('institution-subscription').value = festival?.subscriptionStatus || 'trial';
+      document.getElementById('institution-trial-ends').value = toDateOnly(festival?.trialEndsAt);
+      document.getElementById('institution-billing-cycle').value = festival?.billingCycle || 'monthly';
+      document.getElementById('institution-subscription-ends').value = toDateOnly(festival?.subscriptionEndsAt);
+      document.getElementById('institution-payment-amount').value = festival?.paymentAmount || '';
+      document.getElementById('institution-payment-reference').value = festival?.paymentReference || '';
+      document.getElementById('institution-purchase-date').value = toDateOnly(festival?.purchaseDate);
       document.getElementById('institution-active').checked = festival?.active !== false;
       document.getElementById('institution-purchase-notes').value = festival?.purchaseNotes || '';
       setModalOpen(true);
@@ -320,6 +437,12 @@ ${loginUrl.href}`);
       const ownerPassword = document.getElementById('institution-admin-password').value.trim();
       const plan = document.getElementById('institution-plan').value;
       const subscriptionStatus = document.getElementById('institution-subscription').value;
+      const trialEndsAt = document.getElementById('institution-trial-ends').value;
+      const billingCycle = document.getElementById('institution-billing-cycle').value;
+      const subscriptionEndsAt = document.getElementById('institution-subscription-ends').value;
+      const paymentAmount = document.getElementById('institution-payment-amount').value;
+      const paymentReference = document.getElementById('institution-payment-reference').value.trim();
+      const purchaseDate = document.getElementById('institution-purchase-date').value;
       const active = document.getElementById('institution-active').checked;
       const purchaseNotes = document.getElementById('institution-purchase-notes').value.trim();
 
@@ -336,6 +459,12 @@ ${loginUrl.href}`);
         ownerPassword,
         plan,
         subscriptionStatus,
+        trialEndsAt,
+        billingCycle,
+        subscriptionEndsAt,
+        paymentAmount,
+        paymentReference,
+        purchaseDate,
         active,
         purchaseNotes,
         oldLogin: oldLoginInput.value
@@ -344,7 +473,7 @@ ${loginUrl.href}`);
       await renderSuperAdminPortal();
     });
 
-    async function saveInstitutionWorkspace({ id, title, ownerName, ownerLogin, ownerPassword, plan, subscriptionStatus, active, purchaseNotes, oldLogin }) {
+    async function saveInstitutionWorkspace({ id, title, ownerName, ownerLogin, ownerPassword, plan, subscriptionStatus, trialEndsAt, billingCycle, subscriptionEndsAt, paymentAmount, paymentReference, purchaseDate, active, purchaseNotes, oldLogin }) {
       await setDoc(doc(db, 'institutions', id), {
         id,
         title,
@@ -353,10 +482,18 @@ ${loginUrl.href}`);
         active,
         plan,
         subscriptionStatus,
+        trialEndsAt,
+        billingCycle,
+        subscriptionEndsAt,
+        paymentAmount,
+        paymentCurrency: 'INR',
+        paymentReference,
+        purchaseDate,
         purchaseNotes,
         ownerName,
         ownerEmail: ownerLogin.includes('@') ? ownerLogin : '',
         ownerUsername: ownerLogin,
+        ownerPassword,
         defaultFestivalId: id,
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp()
@@ -369,6 +506,13 @@ ${loginUrl.href}`);
         active,
         plan,
         subscriptionStatus,
+        trialEndsAt,
+        billingCycle,
+        subscriptionEndsAt,
+        paymentAmount,
+        paymentCurrency: 'INR',
+        paymentReference,
+        purchaseDate,
         purchaseNotes,
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp()
@@ -378,10 +522,10 @@ ${loginUrl.href}`);
         await deleteDoc(doc(db, 'institutionLogins', oldLogin));
         await deleteDoc(doc(db, `institutions/${id}/festivals/${id}/manualUsers`, oldLogin));
       }
-      await saveInstitutionAdminLogin({ id, defaultFestivalId: id, name: title, title }, ownerName, ownerLogin, ownerPassword, active, plan, subscriptionStatus);
+      await saveInstitutionAdminLogin({ id, defaultFestivalId: id, name: title, title }, ownerName, ownerLogin, ownerPassword, active, plan, subscriptionStatus, trialEndsAt, billingCycle, subscriptionEndsAt);
     }
 
-    async function saveInstitutionAdminLogin(festival, ownerName, ownerLogin, ownerPassword, active, plan = 'trial', subscriptionStatus = 'trial') {
+    async function saveInstitutionAdminLogin(festival, ownerName, ownerLogin, ownerPassword, active, plan = 'trial', subscriptionStatus = 'trial', trialEndsAt = '', billingCycle = 'monthly', subscriptionEndsAt = '') {
       const institutionId = festival.id;
       const festivalId = festival.defaultFestivalId || festival.id;
       const loginKey = ownerLogin.toLowerCase();
@@ -398,12 +542,30 @@ ${loginUrl.href}`);
         password: ownerPassword,
         plan,
         subscriptionStatus,
+        trialEndsAt,
+        billingCycle,
+        subscriptionEndsAt,
         active,
         updatedAt: serverTimestamp()
       };
       await setDoc(doc(db, 'institutionLogins', loginKey), loginPayload, { merge: true });
       await setDoc(doc(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`, loginKey), loginPayload, { merge: true });
     }
+
+    const superMenuBtn = document.getElementById('super-menu-btn');
+    const superMenu = document.getElementById('super-menu');
+    superMenuBtn.addEventListener('click', () => {
+      const nextOpen = superMenu.classList.contains('hidden');
+      superMenu.classList.toggle('hidden', !nextOpen);
+      superMenuBtn.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+    });
+    document.querySelectorAll('.super-filter').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        superAdminFilter = btn.dataset.superFilter || 'all';
+        superMenu.classList.add('hidden');
+        await renderSuperAdminPortal();
+      });
+    });
 
     function enterFestivalScope(festId, festival, redirectUrl) {
       localStorage.setItem('meeladpulse_selected_fest_id', festId);

@@ -23,7 +23,10 @@ async function isSelectedFestivalAvailable(festId, role) {
     if (!snap.exists()) return false;
     const data = snap.data();
     const blockedStatuses = ['inactive', 'expired', 'payment_due', 'suspended'];
-    return data.active !== false && !blockedStatuses.includes(data.subscriptionStatus);
+    const expiryDate = data.plan === 'trial' ? data.trialEndsAt : data.subscriptionEndsAt;
+    const isUnlimited = data.billingCycle === 'unlimited';
+    const expiredByDate = expiryDate && !isUnlimited && new Date(`${expiryDate}T23:59:59`) < new Date();
+    return data.active !== false && !blockedStatuses.includes(data.subscriptionStatus) && !expiredByDate;
   } catch (err) {
     console.warn('Could not verify selected festival subscription:', err);
     return false;
