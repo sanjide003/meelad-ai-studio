@@ -342,6 +342,38 @@ export async function getTeams() {
   }
 }
 
+
+export async function saveTeam(teamData) {
+  assertAdminRole();
+  const festId = getActiveFestivalId();
+  const id = (teamData.id || teamData.code || doc(collection(db, 'dummy')).id).toString().trim().toLowerCase();
+  const path = `festivals/${festId}/teams/${id}`;
+  try {
+    await setDoc(doc(db, `festivals/${festId}/teams`, id), {
+      id,
+      name: teamData.name,
+      code: teamData.code || id.toUpperCase(),
+      colour: teamData.colour || '#10b981',
+      active: teamData.active !== false,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export async function deleteTeam(id) {
+  assertAdminRole();
+  const festId = getActiveFestivalId();
+  const path = `festivals/${festId}/teams/${id}`;
+  try {
+    await deleteDoc(doc(db, `festivals/${festId}/teams`, id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
 export async function getCategories() {
   const festId = getActiveFestivalId();
   const path = `festivals/${festId}/categories`;
@@ -350,6 +382,39 @@ export async function getCategories() {
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (error) {
     handleFirestoreError(error, OperationType.LIST, path);
+  }
+}
+
+
+export async function saveCategory(categoryData) {
+  assertAdminRole();
+  const festId = getActiveFestivalId();
+  const id = (categoryData.id || categoryData.code || doc(collection(db, 'dummy')).id).toString().trim().toLowerCase();
+  const path = `festivals/${festId}/categories/${id}`;
+  try {
+    await setDoc(doc(db, `festivals/${festId}/categories`, id), {
+      id,
+      name: categoryData.name,
+      code: categoryData.code || id.toUpperCase(),
+      colour: categoryData.colour || '#10b981',
+      order: Number(categoryData.order) || 0,
+      active: categoryData.active !== false,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export async function deleteCategory(id) {
+  assertAdminRole();
+  const festId = getActiveFestivalId();
+  const path = `festivals/${festId}/categories/${id}`;
+  try {
+    await deleteDoc(doc(db, `festivals/${festId}/categories`, id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 }
 

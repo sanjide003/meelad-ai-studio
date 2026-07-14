@@ -66,9 +66,6 @@
               <label for="student-cat" class="text-xs font-bold text-slate-700">Age Category</label>
               <select id="student-cat" required class="form-input cursor-pointer">
                 <option value="">-- Select Category --</option>
-                <option value="cat_subjunior">Sub-Junior</option>
-                <option value="cat_junior">Junior</option>
-                <option value="cat_senior">Senior</option>
               </select>
             </div>
 
@@ -93,7 +90,7 @@
     import { loadPortalLayout } from "../assets/js/component-loader.js";
     import { initializeNavigation } from "../assets/js/navigation.js";
     import { getFestivalSettings, createFestivalStudent } from "../assets/js/student-service.js";
-    import { getTeams } from "../assets/js/firestore-service.js";
+    import { getTeams, getCategories } from "../assets/js/firestore-service.js";
 
     let activeFestId = null;
 
@@ -120,6 +117,7 @@
         }
 
         await populateTeamsDropdown();
+        await populateCategoriesDropdown();
         setupFormHandler();
 
         document.getElementById('global-page-loader').classList.add('hidden');
@@ -141,6 +139,19 @@
       } catch (err) {
         console.error("Failed to load teams:", err);
       }
+    }
+
+
+    async function populateCategoriesDropdown() {
+      const dropdown = document.getElementById('student-cat');
+      const categories = (await getCategories() || []).filter(cat => cat.active !== false);
+      dropdown.innerHTML = '<option value="">-- Select Category --</option>';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.name || cat.code || cat.id;
+        dropdown.appendChild(opt);
+      });
     }
 
     function setupFormHandler() {

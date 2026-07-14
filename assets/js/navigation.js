@@ -65,8 +65,13 @@ export function initializeNavigation() {
 
   allNavLinks.forEach(link => {
     const href = link.getAttribute('href');
-    if (href && (currentPath.endsWith(href) || currentPath.includes(href.replace('.html', '')))) {
-      link.classList.add('bg-slate-100', 'text-slate-900', 'font-bold');
+    if (!href) return;
+
+    const hrefPath = new URL(href, window.location.href).pathname;
+    if (currentPath === hrefPath || currentPath.endsWith(hrefPath.split('/').pop())) {
+      link.classList.remove('text-slate-400', 'text-slate-500', 'text-slate-600');
+      link.classList.add('bg-emerald-100', 'text-emerald-800', 'font-extrabold', 'shadow-sm');
+      link.setAttribute('aria-current', 'page');
       
       // Auto expand parent group if it exists
       const parentGroup = link.closest('.nav-group-content');
@@ -75,6 +80,7 @@ export function initializeNavigation() {
         const trigger = document.querySelector(`[aria-controls="${parentGroup.id}"]`);
         if (trigger) {
           trigger.setAttribute('aria-expanded', 'true');
+          trigger.classList.add('bg-emerald-50', 'text-emerald-800', 'font-bold');
         }
       }
     }
@@ -83,15 +89,22 @@ export function initializeNavigation() {
   // 3. Dropdown Expanders (Sidebar groups)
   const groupTriggers = document.querySelectorAll('.nav-group-trigger');
   groupTriggers.forEach(trigger => {
+    const targetId = trigger.getAttribute('aria-controls');
+    const target = document.getElementById(targetId);
+    if (!targetId || !target) return;
+
+    if (localStorage.getItem(`meeladpulse_nav_${targetId}`) === 'open') {
+      target.classList.remove('hidden');
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+
     trigger.addEventListener('click', (e) => {
       e.preventDefault();
-      const targetId = trigger.getAttribute('aria-controls');
-      const target = document.getElementById(targetId);
-      if (target) {
-        const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
-        trigger.setAttribute('aria-expanded', !isExpanded ? 'true' : 'false');
-        target.classList.toggle('hidden');
-      }
+      const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+      const nextOpen = !isExpanded;
+      trigger.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+      target.classList.toggle('hidden', !nextOpen);
+      localStorage.setItem(`meeladpulse_nav_${targetId}`, nextOpen ? 'open' : 'closed');
     });
   });
 
