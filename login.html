@@ -217,7 +217,14 @@
       submitBtn.querySelector('span').textContent = t[activeLang].btnSigningIn;
 
       try {
-        const redirectPath = email.includes('@') ? await loginWithEmailAndPassword(email, password, rememberMe) : await loginWithUsernamePassword(email, password);
+        let redirectPath;
+        try {
+          redirectPath = email.includes('@') ? await loginWithEmailAndPassword(email, password, rememberMe) : await loginWithUsernamePassword(email, password);
+        } catch (primaryErr) {
+          // Institution admins may use an email-like username created by Super Admin.
+          if (!email.includes('@')) throw primaryErr;
+          redirectPath = await loginWithUsernamePassword(email, password);
+        }
         window.location.replace(redirectPath);
       } catch (err) {
         console.error("Auth transaction failed:", err);

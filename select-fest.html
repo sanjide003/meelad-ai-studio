@@ -151,7 +151,7 @@
               <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Premium SaaS Control</p>
               <h2 class="text-lg font-extrabold text-slate-900 font-display">Institutions / Festival Workspaces</h2>
             </div>
-            <button id="super-create-festival" class="btn btn-primary text-xs font-bold text-white px-4 py-2">Create Institution Workspace</button>
+            <button id="super-create-festival" class="btn btn-primary text-xs font-bold text-white px-4 py-2">Create Institution + Admin Login</button>
           </div>
           <div id="super-admin-list" class="space-y-3"></div>
         </div>
@@ -173,19 +173,35 @@
             <p class="text-[11px] text-slate-500">${festival.venue || 'No venue'} • Owner: ${festival.ownerEmail || 'not assigned'} • Subscription: ${festival.subscriptionStatus || 'trial'}</p>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button class="open-workspace btn btn-secondary text-[10px] font-bold px-3 py-1.5">Open</button>
+            <button class="credentials-workspace btn btn-secondary text-[10px] font-bold px-3 py-1.5">Admin Login</button>
+            <button class="share-login btn border border-slate-200 text-[10px] font-bold px-3 py-1.5">Copy Login Link</button>
             <button class="toggle-workspace btn border border-slate-200 text-[10px] font-bold px-3 py-1.5">${festival.active !== false ? 'Deactivate' : 'Activate'}</button>
             <button class="delete-workspace btn bg-rose-600 text-white text-[10px] font-bold px-3 py-1.5">Delete</button>
           </div>
         `;
-        row.querySelector('.open-workspace').onclick = () => enterFestivalScope(festival.id, festival, 'admin/app.html');
+        row.querySelector('.credentials-workspace').onclick = () => upsertInstitutionAdminLogin(festival);
+        row.querySelector('.share-login').onclick = async () => {
+          const loginUrl = new URL('login.html', window.location.href);
+          loginUrl.searchParams.set('institution', festival.id);
+          loginUrl.searchParams.set('festival', festival.defaultFestivalId || festival.id);
+          await navigator.clipboard?.writeText(loginUrl.href);
+          alert(`Institution login link copied:
+${loginUrl.href}`);
+        };
         row.querySelector('.toggle-workspace').onclick = async () => {
-          await updateDoc(doc(db, 'institutions', festival.id), { active: festival.active === false, updatedAt: serverTimestamp() });
-          await setDoc(doc(db, `institutions/${festival.id}/festivals`, festival.defaultFestivalId || festival.id), { active: festival.active === false, updatedAt: serverTimestamp() }, { merge: true });
+          const nextActive = festival.active === false;
+          await updateDoc(doc(db, 'institutions', festival.id), { active: nextActive, updatedAt: serverTimestamp() });
+          await setDoc(doc(db, `institutions/${festival.id}/festivals`, festival.defaultFestivalId || festival.id), { active: nextActive, updatedAt: serverTimestamp() }, { merge: true });
+          if (festival.ownerUsername || festival.ownerEmail) {
+            const loginKey = (festival.ownerUsername || festival.ownerEmail).toLowerCase();
+            await setDoc(doc(db, 'institutionLogins', loginKey), { active: nextActive, updatedAt: serverTimestamp() }, { merge: true });
+            await setDoc(doc(db, `institutions/${festival.id}/festivals/${festival.defaultFestivalId || festival.id}/manualUsers`, loginKey), { active: nextActive, updatedAt: serverTimestamp() }, { merge: true });
+          }
           await renderSuperAdminPortal();
         };
         row.querySelector('.delete-workspace').onclick = async () => {
           if (!confirm(`Delete ${festival.title || festival.id}? This removes the workspace document only.`)) return;
+          if (festival.ownerUsername || festival.ownerEmail) await deleteDoc(doc(db, 'institutionLogins', (festival.ownerUsername || festival.ownerEmail).toLowerCase()));
           await deleteDoc(doc(db, 'institutions', festival.id));
           await renderSuperAdminPortal();
         };
@@ -194,9 +210,14 @@
     }
 
     async function createSuperAdminFestival() {
-      const title = prompt('Institution / festival workspace name');
+      const title = prompt('Institution name');
       if (!title) return;
       const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `workspace-${Date.now()}`;
+      const ownerName = prompt('Institution admin name', title + ' Admin') || `${title} Admin`;
+      const ownerLogin = (prompt('Institution admin email or username') || '').trim().toLowerCase();
+      if (!ownerLogin) return alert('Admin email/username is required.');
+      const ownerPassword = prompt('Temporary password for institution admin');
+      if (!ownerPassword) return alert('Temporary password is required.');
       await setDoc(doc(db, 'institutions', slug), {
         id: slug,
         name: title,
@@ -204,6 +225,9 @@
         active: true,
         plan: 'trial',
         subscriptionStatus: 'trial',
+        ownerName,
+        ownerEmail: ownerLogin.includes('@') ? ownerLogin : '',
+        ownerUsername: ownerLogin,
         defaultFestivalId: slug,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -218,7 +242,48 @@
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       }, { merge: true });
+      await saveInstitutionAdminLogin({ id: slug, defaultFestivalId: slug, name: title }, ownerName, ownerLogin, ownerPassword, true);
       await renderSuperAdminPortal();
+    }
+
+    async function upsertInstitutionAdminLogin(festival) {
+      const displayName = festival.title || festival.name || festival.id;
+      const ownerName = prompt('Institution admin name', festival.ownerName || `${displayName} Admin`);
+      if (!ownerName) return;
+      const ownerLogin = (prompt('Institution admin email or username', festival.ownerUsername || festival.ownerEmail || '') || '').trim().toLowerCase();
+      if (!ownerLogin) return alert('Admin email/username is required.');
+      const ownerPassword = prompt('Temporary password for institution admin');
+      if (!ownerPassword) return alert('Temporary password is required.');
+      await saveInstitutionAdminLogin(festival, ownerName, ownerLogin, ownerPassword, festival.active !== false);
+      await updateDoc(doc(db, 'institutions', festival.id), {
+        ownerName,
+        ownerEmail: ownerLogin.includes('@') ? ownerLogin : '',
+        ownerUsername: ownerLogin,
+        updatedAt: serverTimestamp()
+      });
+      await renderSuperAdminPortal();
+    }
+
+    async function saveInstitutionAdminLogin(festival, ownerName, ownerLogin, ownerPassword, active) {
+      const institutionId = festival.id;
+      const festivalId = festival.defaultFestivalId || festival.id;
+      const loginKey = ownerLogin.toLowerCase();
+      const loginPayload = {
+        uid: `manual_institution_${institutionId}_${loginKey.replace(/[^a-z0-9]+/g, '_')}`,
+        role: 'institutionAdmin',
+        institutionId,
+        festivalId,
+        institutionName: festival.title || festival.name || institutionId,
+        name: ownerName,
+        username: ownerLogin,
+        usernameLower: loginKey,
+        email: ownerLogin.includes('@') ? ownerLogin : '',
+        password: ownerPassword,
+        active,
+        updatedAt: serverTimestamp()
+      };
+      await setDoc(doc(db, 'institutionLogins', loginKey), loginPayload, { merge: true });
+      await setDoc(doc(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`, loginKey), loginPayload, { merge: true });
     }
 
     function enterFestivalScope(festId, festival, redirectUrl) {

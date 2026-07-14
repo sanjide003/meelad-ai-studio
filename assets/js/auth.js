@@ -77,29 +77,45 @@ export async function loginWithEmailAndPassword(email, password, rememberMe) {
 
 export async function loginWithUsernamePassword(username, password) {
   const usernameLower = username.trim().toLowerCase();
-  const institutionId = localStorage.getItem('meeladpulse_selected_institution_id');
-  const festivalId = localStorage.getItem('meeladpulse_selected_fest_id');
-  if (!institutionId || !festivalId) {
-    const err = new Error('Select an institution/festival scope before manual login.');
-    err.code = 'auth/manual-scope-required';
-    throw err;
+  let institutionId = localStorage.getItem('meeladpulse_selected_institution_id');
+  let festivalId = localStorage.getItem('meeladpulse_selected_fest_id');
+  let profile = null;
+
+  // Institution admins log in before any scope is selected. Super Admin creates this index.
+  const indexSnap = await getDoc(doc(db, 'institutionLogins', usernameLower));
+  if (indexSnap.exists()) {
+    const indexedProfile = indexSnap.data();
+    if (indexedProfile.password === password) {
+      institutionId = indexedProfile.institutionId;
+      festivalId = indexedProfile.festivalId || indexedProfile.institutionId;
+      profile = { id: indexSnap.id, ...indexedProfile, institutionId, festivalId, manualAuth: true };
+    }
   }
 
-  const scopedQuery = query(collection(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`), where('usernameLower', '==', usernameLower), where('password', '==', password));
-  const snap = await getDocs(scopedQuery);
+  // Scoped Team/Judge users log in from links that already include institution/festival scope.
+  if (!profile && institutionId && festivalId) {
+    const scopedQuery = query(collection(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`), where('usernameLower', '==', usernameLower), where('password', '==', password));
+    const snap = await getDocs(scopedQuery);
+    if (!snap.empty) profile = { id: snap.docs[0].id, institutionId, festivalId, ...snap.docs[0].data(), manualAuth: true };
+  }
 
-  if (snap.empty) {
+  if (!profile) {
     const err = new Error('Invalid username or password.');
     err.code = 'auth/manual-invalid';
     throw err;
   }
-  const profile = { id: snap.docs[0].id, institutionId, festivalId, ...snap.docs[0].data(), manualAuth: true };
   if (profile.active !== true) {
     const err = new Error('Account Inactive: Your account access has been suspended by the administrator.');
     err.code = 'auth/user-disabled';
     throw err;
   }
+
+  localStorage.setItem('meeladpulse_selected_institution_id', institutionId);
+  localStorage.setItem('meeladpulse_selected_fest_id', festivalId);
+  if (profile.institutionName || profile.festivalTitle) localStorage.setItem('meeladpulse_selected_fest_title', profile.institutionName || profile.festivalTitle);
   sessionStorage.setItem('meeladpulse_manual_user', JSON.stringify(profile));
+
+  if (profile.role === 'institutionAdmin' || profile.role === 'admin') return appPath('admin/app.html');
   if (profile.role === 'judge') return appPath('judge/dashboard.html');
   if (profile.role === 'teamLeader') return appPath('team/dashboard.html');
   return appPath('unauthorized.html?reason=invalid_manual_role');

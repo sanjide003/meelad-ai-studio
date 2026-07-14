@@ -73,6 +73,12 @@ service cloud.firestore {
     }
 
 
+    // --- Public manual login index for institution admins (replace with Cloud Function + hashed passwords before launch). ---
+    match /institutionLogins/{loginId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
     // --- Premium SaaS Institutions Collection ---
     match /institutions/{institutionId} {
       allow read: if isSuperAdmin() || isInstitutionMember(institutionId);
@@ -88,7 +94,8 @@ service cloud.firestore {
         allow write: if isSuperAdmin() || isInstitutionMember(institutionId);
 
         match /manualUsers/{manualUserId} {
-          allow read, write: if isSuperAdmin() || isInstitutionMember(institutionId);
+          allow read: if true;
+          allow write: if isSuperAdmin() || isInstitutionMember(institutionId);
         }
 
         match /publicData/{pubId} {
