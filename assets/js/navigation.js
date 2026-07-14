@@ -4,7 +4,7 @@ import { signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-aut
 import { getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 function appUrl(path) {
-  return new URL(path.replace(/^\//, ""), new URL("../../", import.meta.url)).href;
+  return new URL(path.replace(/^\//, ""), new URL(/* @vite-ignore */ "../../", import.meta.url)).href;
 }
 
 export function initializeNavigation() {

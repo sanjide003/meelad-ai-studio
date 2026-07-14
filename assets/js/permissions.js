@@ -1,6 +1,6 @@
 // MeeladPulse Permission Enforcement System
 function appUrl(path) {
-  return new URL(path.replace(/^\//, ""), new URL("../../", import.meta.url)).href;
+  return new URL(path.replace(/^\//, ""), new URL(/* @vite-ignore */ "../../", import.meta.url)).href;
 }
 
 export function hasPermission(userProfile, requiredPermission) {

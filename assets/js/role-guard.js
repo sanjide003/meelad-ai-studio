@@ -4,7 +4,7 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 function appUrl(path) {
-  return new URL(path.replace(/^\//, ""), new URL("../../", import.meta.url)).href;
+  return new URL(path.replace(/^\//, ""), new URL(/* @vite-ignore */ "../../", import.meta.url)).href;
 }
 
 // Initially hide elements or display a clean loading overlay
@@ -54,8 +54,11 @@ export async function verifyUserRole(allowedRoles) {
         if (!currentPath.includes('select-fest.html') && !currentPath.includes('unauthorized.html')) {
           const selectedFestId = localStorage.getItem('meeladpulse_selected_fest_id');
           if (!selectedFestId) {
-            window.location.replace(appUrl('select-fest.html'));
-            return reject('No festival selected');
+            const isAdminDashboard = userData.role === 'admin' && currentPath.includes('admin/dashboard.html');
+            if (!isAdminDashboard) {
+              window.location.replace(appUrl('select-fest.html'));
+              return reject('No festival selected');
+            }
           }
         }
 

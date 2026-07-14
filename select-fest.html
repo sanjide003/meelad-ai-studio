@@ -48,7 +48,7 @@
   <script type="module">
     import { verifyUserRole } from "./assets/js/role-guard.js";
     import { db } from "./assets/js/firebase-init.js";
-    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const festivalsGrid = document.getElementById('festivals-grid');
 
@@ -66,12 +66,25 @@
         festivalsGrid.innerHTML = '';
 
         if (querySnapshot.empty) {
-          festivalsGrid.innerHTML = `
-            <div class="bg-white border border-slate-100 rounded-2xl p-8 text-center space-y-3">
-              <p class="text-sm font-bold text-slate-700">No Active Festivals Available</p>
-              <p class="text-xs text-slate-500">There are currently no active competition festivals configured in the system. Please ask an administrator to set up a festival.</p>
-            </div>
-          `;
+          if (userProfile.role === 'admin') {
+            festivalsGrid.innerHTML = `
+              <div class="bg-white border border-slate-100 rounded-2xl p-8 text-center space-y-4">
+                <p class="text-sm font-bold text-slate-700">No Active Festivals Available</p>
+                <p class="text-xs text-slate-500">Create an initial festival scope now to unlock the administrator control center.</p>
+                <button id="create-default-festival-btn" class="btn btn-primary px-5 py-2.5 text-xs font-bold text-white rounded-xl cursor-pointer">Create Initial Festival</button>
+                <button id="admin-dashboard-without-fest-btn" class="block mx-auto text-[10px] font-bold text-slate-400 hover:text-slate-700 cursor-pointer">Open Admin Dashboard without a festival</button>
+              </div>
+            `;
+            document.getElementById('create-default-festival-btn').onclick = createInitialFestivalAndEnter;
+            document.getElementById('admin-dashboard-without-fest-btn').onclick = () => window.location.replace('admin/dashboard.html');
+          } else {
+            festivalsGrid.innerHTML = `
+              <div class="bg-white border border-slate-100 rounded-2xl p-8 text-center space-y-3">
+                <p class="text-sm font-bold text-slate-700">No Active Festivals Available</p>
+                <p class="text-xs text-slate-500">There are currently no active competition festivals configured in the system. Please ask an administrator to set up a festival.</p>
+              </div>
+            `;
+          }
           return;
         }
 
@@ -123,6 +136,26 @@
           </div>
         `;
       }
+    }
+
+
+    async function createInitialFestivalAndEnter() {
+      const festId = 'main-festival';
+      const festivalTitle = 'Meelad Fest';
+      await setDoc(doc(db, 'festivals', festId), {
+        title: festivalTitle,
+        name: festivalTitle,
+        code: 'MEELAD',
+        venue: 'Main Campus',
+        active: true,
+        studentRegistrationMode: 'adminOnly',
+        studentRegistrationOpen: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      localStorage.setItem('meeladpulse_selected_fest_id', festId);
+      localStorage.setItem('meeladpulse_selected_fest_title', festivalTitle);
+      window.location.replace('admin/dashboard.html');
     }
 
     // Initialize layout navigation controls (e.g. signout)

@@ -10,7 +10,7 @@ import {
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 function appPath(path) {
-  return new URL(path.replace(/^\//, ""), new URL("../../", import.meta.url)).pathname;
+  return new URL(path.replace(/^\//, ""), new URL(/* @vite-ignore */ "../../", import.meta.url)).pathname;
 }
 
 /**

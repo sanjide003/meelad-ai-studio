@@ -46,6 +46,14 @@
           </div>
         </div>
 
+        <!-- First Run Festival Setup Panel -->
+        <div id="festival-setup-panel" class="hidden bg-amber-50 border border-amber-100 rounded-2xl p-6 space-y-3">
+          <p class="text-xs font-extrabold text-amber-700 uppercase tracking-widest">First Run Setup Required</p>
+          <h2 class="text-lg font-bold text-slate-900 font-display">No festival scope is selected</h2>
+          <p class="text-xs text-slate-600 leading-relaxed">Create an initial active festival to unlock teams, competitions, students, judge assignments, and result management.</p>
+          <button id="create-default-festival-btn" class="btn btn-primary px-5 py-2.5 text-xs font-bold text-white rounded-xl cursor-pointer">Create Initial Festival</button>
+        </div>
+
         <!-- Quick Stats Bento Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="card-panel flex items-center space-x-4">
@@ -116,7 +124,7 @@
     import { loadPortalLayout } from "../assets/js/component-loader.js";
     import { initializeNavigation } from "../assets/js/navigation.js";
     import { db } from "../assets/js/firebase-init.js";
-    import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { collection, getDocs, query, where, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     async function initDashboard() {
       try {
@@ -150,12 +158,15 @@
 
         // Fetch Teams count inside selected festival
         if (festId) {
+          document.getElementById('festival-setup-panel')?.classList.add('hidden');
           const teamsSnap = await getDocs(collection(db, `festivals/${festId}/teams`));
           document.getElementById('stat-teams-count').textContent = teamsSnap.size;
 
           const compsSnap = await getDocs(collection(db, `festivals/${festId}/competitions`));
           document.getElementById('stat-competitions-count').textContent = compsSnap.size;
         } else {
+          document.getElementById('festival-setup-panel')?.classList.remove('hidden');
+          document.getElementById('create-default-festival-btn').onclick = createInitialFestival;
           document.getElementById('stat-teams-count').textContent = 'N/A';
           document.getElementById('stat-competitions-count').textContent = 'N/A';
         }
@@ -163,6 +174,26 @@
       } catch (err) {
         console.warn("Could not retrieve statistics:", err);
       }
+    }
+
+
+    async function createInitialFestival() {
+      const festId = 'main-festival';
+      const festivalTitle = 'Meelad Fest';
+      await setDoc(doc(db, 'festivals', festId), {
+        title: festivalTitle,
+        name: festivalTitle,
+        code: 'MEELAD',
+        venue: 'Main Campus',
+        active: true,
+        studentRegistrationMode: 'adminOnly',
+        studentRegistrationOpen: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      localStorage.setItem('meeladpulse_selected_fest_id', festId);
+      localStorage.setItem('meeladpulse_selected_fest_title', festivalTitle);
+      window.location.reload();
     }
 
     // Run core boots sequence
