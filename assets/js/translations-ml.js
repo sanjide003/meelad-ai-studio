@@ -1,0 +1,126 @@
+export const ml = {
+  // Common terms
+  competition: "മത്സരം",
+  category: "വിഭാഗം",
+  division: "ഡിവിഷൻ",
+  subdivision: "സബ്ഡിവിഷൻ",
+  genderMode: "ലിംഗഭേദം",
+  stage: "സ്റ്റേജ്",
+  dateTime: "തീയതിയും സമയവും",
+  rules: "നിയമങ്ങൾ",
+  criteria: "മാനദണ്ഡങ്ങൾ",
+  maxMark: "പരമാവധി മാർക്ക്",
+  blindJudgingMode: "ബ്ലൈൻഡ് മൂല്യനിർണ്ണയം",
+  submissionStatus: "സമർപ്പിക്കൽ നില",
+  actions: "നടപടികൾ",
+  back: "തിരികെ",
+  save: "സൂക്ഷിക്കുക",
+  submit: "സമർപ്പിക്കുക",
+  cancel: "റദ്ദാക്കുക",
+  confirm: "ഉറപ്പാക്കുക",
+  status: "നില",
+  date: "തീയതി",
+  time: "സമയം",
+  notes: "കുറിപ്പുകൾ",
+
+  // Terminology Standardisation (Teams instead of Clubs)
+  team: "ടീം",
+  teams: "ടീമുകൾ",
+  activeTeams: "സജീവ ടീമുകൾ",
+  teamStandings: "ടീം റാങ്കിംഗ്",
+  rank: "റാങ്ക്",
+  score: "സ്കോർ",
+  points: "പോയിന്റുകൾ",
+
+  // Navigation Items
+  publicHome: "ഹോം പേജ്",
+  liveScoreboard: "ലൈവ് സ്കോർബോർഡ്",
+  reports: "റിപ്പോർട്ടുകൾ",
+  adminDashboard: "അഡ്മിൻ ഡാഷ്‌ബോർഡ്",
+  teamPortal: "ടീം പോർട്ടൽ",
+  certificates: "സർട്ടിഫിക്കറ്റുകൾ",
+  rankings: "റാങ്കിംഗുകൾ",
+
+  // Judge Dashboard
+  judgeStationPortal: "ജഡ്ജ് സ്റ്റേഷൻ പോർട്ടൽ",
+  assignedComps: "അനുവദിച്ച മത്സരങ്ങൾ",
+  todayComps: "ഇന്നത്തെ മത്സരങ്ങൾ",
+  upcomingComps: "വരാനിരിക്കുന്ന മത്സരങ്ങൾ",
+  openSheets: "തുറന്ന മാർക്ക് ഷീറ്റുകൾ",
+  draftSheets: "ഡ്രാഫ്റ്റ് ഷീറ്റുകൾ",
+  finalSubmittedSheets: "സമർപ്പിച്ച മാർക്ക് ഷീറ്റുകൾ",
+  reopenedSheets: "വീണ്ടും തുറന്ന ഷീറ്റുകൾ",
+  returnedForCorrection: "തിരുത്തലിനായി മടക്കിയ ഷീറ്റുകൾ",
+  competitionTime: "മത്സര സമയം",
+  participantCount: "മത്സരാർത്ഥികളുടെ എണ്ണം",
+  adminAnnouncements: "അഡ്മിൻ അറിയിപ്പുകൾ",
+  noAnnouncements: "അഡ്മിനിസ്ട്രേറ്റർമാരിൽ നിന്നുള്ള അറിയിപ്പുകൾ ഒന്നും തന്നെയില്ല.",
+  noAssignedComps: "നിങ്ങൾക്ക് സജീവമായ മത്സര അസൈൻമെന്റുകൾ ഒന്നും തന്നെയില്ല.",
+
+  // Judge Competitions
+  myAssignments: "എന്റെ അസൈൻമെന്റുകൾ",
+  onlyActiveAssignments: "സജീവവും സ്ഥിരീകരിച്ചതുമായ അസൈൻമെന്റുകൾ മാത്രമേ ലഭ്യമാകൂ.",
+  startEvaluation: "മൂല്യനിർണ്ണയം ആരംഭിക്കുക",
+
+  // Competition Details
+  compDetailsTitle: "മത്സര വിവരങ്ങളും നിയമങ്ങളും",
+  eligibilityRules: "യോഗ്യതാ നിയമങ്ങളും മാനദണ്ഡങ്ങളും",
+  viewParticipants: "മത്സരാർത്ഥികളുടെ പട്ടിക",
+
+  // Mark Entry
+  evaluateParticipant: "മത്സരാർത്ഥിയെ വിലയിരുത്തുക",
+  next: "അടുത്തത്",
+  prev: "മുമ്പത്തേത്",
+  progress: "പുരോഗതി",
+  penaltyRecommendation: "പെനാൽറ്റി ശുപാർശ",
+  participantStatus: "പങ്കാളിത്ത നില",
+  saveDraft: "ഡ്രാഫ്റ്റ് സൂക്ഷിക്കുക",
+  finalSubmit: "സമർപ്പിക്കുക",
+  lastSaved: "അവസാനമായി സൂക്ഷിച്ചത്",
+  unsavedWarning: "നിങ്ങൾ വരുത്തിയ മാറ്റങ്ങൾ സൂക്ഷിച്ചിട്ടില്ല. പുറത്തുകടക്കണമെന്ന് ഉറപ്പാണോ?",
+  readOnlyMode: "റീഡ്-ഓൺലി മോഡ് (അവസാന സമർപ്പിക്കൽ പൂർത്തിയായി)",
+  absentConfirm: "ഈ മത്സരാർത്ഥി പങ്കെടുത്തില്ല എന്ന് ഉറപ്പാണോ? എല്ലാ സ്കോർ ഫീൽഡുകളും പൂട്ടുകയും പൂജ്യമായി ക്രമീകരിക്കുകയും ചെയ്യും.",
+  withdrawnConfirm: "ഈ മത്സരാർത്ഥി പിന്മാറിയെന്ന് ഉറപ്പാണോ? എല്ലാ സ്കോർ ഫീൽഡുകളും പൂട്ടുകയും പൂജ്യമായി ക്രമീകരിക്കുകയും ചെയ്യും.",
+  disqualifiedConfirm: "ഈ മത്സരാർത്ഥിയെ അയോഗ്യനാക്കാൻ ശുപാർശ ചെയ്യുന്നുവെന്ന് ഉറപ്പാണോ? എല്ലാ സ്കോർ ഫീൽഡുകളും പൂട്ടുകയും പൂജ്യമായി ക്രമീകരിക്കുകയും ചെയ്യും.",
+  confirmSubmitTitle: "മാർക്ക് സമർപ്പിക്കൽ ഉറപ്പാക്കുക",
+  confirmSubmitText: "തീർച്ചയായും ഇത് സമർപ്പിക്കാൻ ആഗ്രഹിക്കുന്നുവോ? ഒരിക്കൽ സമർപ്പിച്ചു കഴിഞ്ഞാൽ അഡ്മിനിസ്ട്രേറ്ററുടെ സഹായമില്ലാതെ ഇത് തിരുത്താൻ സാധിക്കുകയില്ല.",
+  incompleteSummary: "താഴെ പറയുന്ന മത്സരാർത്ഥികളെ വിലയിരുത്തിയിട്ടില്ല:",
+
+  // Audit and Log
+  auditLog: "ഓഡിറ്റ് ലോഗ്",
+  logAction: "നടപടി",
+  logTime: "സമയം",
+  logUser: "ഉപയോക്താവ്",
+
+  // Admin Mark Review
+  submittedMarks: "സമർപ്പിച്ച മാർക്കുകൾ",
+  markReview: "മാർക്ക് അവലോകനം",
+  reopenSheet: "ഷീറ്റ് വീണ്ടും തുറക്കുക",
+  returnForCorrection: "തിരുത്തലിനായി മടക്കുക",
+  verifySheet: "ഷീറ്റ് സ്ഥിരീകരിക്കുക",
+  largeScoringDiff: "വലിയ സ്കോറിങ് വ്യത്യാസം കണ്ടെത്തി",
+  missingCriteria: "മാനദണ്ഡ മൂല്യങ്ങൾ നൽകിയിട്ടില്ല",
+  missingJudgeSubmissions: "ജഡ്ജ് സമർപ്പിക്കലുകൾ പൂർണ്ണമല്ല",
+  invalidTotals: "തെറ്റായ ആകെത്തുക കണക്കുകൂട്ടൽ",
+  unresolvedTies: "പരിഹരിക്കപ്പെടാത്ത ടൈകൾ",
+
+  // Result Review and Approval
+  resultReview: "ഫല അവലോകനവും അംഗീകാരവും",
+  approveResult: "ഫലം അംഗീകരിക്കുക",
+  holdResult: "ഫലം തടഞ്ഞുവെക്കുക",
+  recalculate: "വീണ്ടും കണക്കാക്കുക",
+  manualOverride: "മാനുവൽ ഓവർറൈഡ് പോയിന്റുകൾ",
+  resultStatusApproved: "ഫല നില: അംഗീകരിച്ചു",
+  resultStatusHeld: "ഫല നില: തടഞ്ഞുവെച്ചു",
+
+  // Result Publication
+  resultPublish: "ഫല പ്രസിദ്ധീകരണ കൺസോൾ",
+  publishedResults: "പ്രസിദ്ധീകരിച്ച ഫലങ്ങൾ",
+  publishOne: "ഫലം പ്രസിദ്ധീകരിക്കുക",
+  publishSelected: "തിരഞ്ഞെടുത്തവ പ്രസിദ്ധീകരിക്കുക",
+  publicVisibility: "മാർക്കുകൾ പരസ്യമായി കാണാം",
+  teamPointsVisibility: "ടീം പോയിന്റുകൾ പരസ്യമായി കാണാം",
+  unpublish: "പ്രസിദ്ധീകരണം പിൻവലിക്കുക",
+  correct: "തിരുത്തി വീണ്ടും പ്രസിദ്ധീകരിക്കുക",
+  viewHistory: "പ്രസിദ്ധീകരണ ചരിത്രം"
+};

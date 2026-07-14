@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Details - Admin Terminal</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Fetching Student Profile Details...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8 max-w-4xl">
+        
+        <!-- Header Banner -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+          <div class="space-y-1">
+            <h1 class="text-xl font-extrabold text-slate-900 tracking-tight font-display">Student Registration Audit</h1>
+            <p class="text-xs text-slate-400 font-medium">Trace registration origins, verify cryptographic logs, and audit credentials.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <a href="/admin/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-1.5 px-3 text-xs font-bold">
+              Back to Roster
+            </a>
+            <a id="edit-link" href="#" class="btn btn-primary py-1.5 px-3 text-xs font-bold">
+              Edit/Override
+            </a>
+          </div>
+        </div>
+
+        <!-- Student General Information & Audit Timeline Card Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Column 1: General Info Card -->
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-5 md:col-span-1">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Profile Card</h2>
+            
+            <div class="space-y-3">
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block uppercase">Student Participant</span>
+                <span id="stud-name" class="text-base font-extrabold text-slate-900 font-display">Loading...</span>
+              </div>
+
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block uppercase">Chest Number</span>
+                <span id="stud-chest" class="text-xs font-mono font-bold bg-slate-100 text-slate-850 px-2 py-0.5 rounded">Loading...</span>
+              </div>
+
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block uppercase">Age Category</span>
+                <span id="stud-cat" class="text-xs font-bold text-slate-700">Loading...</span>
+              </div>
+
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block uppercase">Competing Team</span>
+                <span id="stud-team" class="text-xs font-mono font-bold text-emerald-600">Loading...</span>
+              </div>
+
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block uppercase">Approval Status</span>
+                <span id="stud-status" class="inline-flex mt-1">Loading...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Audit Trail details -->
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-5 md:col-span-2">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Roster Origin & Verification Log</h2>
+
+            <div class="space-y-4">
+              
+              <!-- Origins -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-150">
+                <div>
+                  <span class="text-[10px] font-bold text-slate-400 uppercase block">Registration Source</span>
+                  <span id="audit-source" class="text-xs font-bold text-slate-800">Loading...</span>
+                </div>
+                <div>
+                  <span class="text-[10px] font-bold text-slate-400 uppercase block">Registrant Role</span>
+                  <span id="audit-registrant-role" class="text-xs font-bold text-slate-800">Loading...</span>
+                </div>
+                <div>
+                  <span class="text-[10px] font-bold text-slate-400 uppercase block">Created By (UID)</span>
+                  <span id="audit-created-by" class="text-xs font-mono text-slate-600">Loading...</span>
+                </div>
+                <div>
+                  <span class="text-[10px] font-bold text-slate-400 uppercase block">Creation Timestamp</span>
+                  <span id="audit-created-at" class="text-xs font-mono text-slate-600">Loading...</span>
+                </div>
+              </div>
+
+              <!-- Approvals Log -->
+              <div id="approval-log-section" class="bg-slate-50 p-4 rounded-xl border border-slate-150 space-y-2">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Verification Details</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span class="text-[10px] text-slate-400 block font-bold">Processed By (UID)</span>
+                    <span id="audit-processed-by" class="font-mono text-slate-700">None</span>
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-slate-400 block font-bold">Processed Timestamp</span>
+                    <span id="audit-processed-at" class="font-mono text-slate-700">None</span>
+                  </div>
+                </div>
+                <div id="rejection-reason-box" class="hidden pt-2 border-t border-slate-200 mt-2">
+                  <span class="text-[10px] text-red-600 font-extrabold block uppercase">Rejection Justification (തിരസ്കരണ കാരണം)</span>
+                  <p id="audit-rejection-reason" class="text-xs text-red-700 font-medium italic mt-1 bg-red-50 p-2 rounded border border-red-100"></p>
+                </div>
+              </div>
+
+              <!-- Emergency Overrides Log -->
+              <div id="override-log-section" class="hidden bg-amber-50 p-4 rounded-xl border border-amber-100 space-y-2">
+                <p class="text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center space-x-1">
+                  <svg class="h-3.5 w-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                  <span>Emergency Override Applied</span>
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span class="text-[10px] text-amber-700 block font-bold">Override By Admin (UID)</span>
+                    <span id="override-by" class="font-mono text-slate-700">None</span>
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-amber-700 block font-bold">Override Timestamp</span>
+                    <span id="override-at" class="font-mono text-slate-700">None</span>
+                  </div>
+                </div>
+                <div class="pt-2 border-t border-amber-200 mt-2">
+                  <span class="text-[10px] text-amber-800 font-extrabold block uppercase">Written Justification (തിരുത്തലിന്റെ കാരണം)</span>
+                  <p id="override-reason" class="text-xs text-amber-900 font-medium italic mt-1 bg-amber-100/50 p-2.5 rounded border border-amber-200"></p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    let activeFestId = null;
+    let studentId = null;
+
+    async function initPage() {
+      try {
+        await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+
+        activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
+        if (!activeFestId) {
+          alert("Please select a festival scope first.");
+          window.location.replace('/select-fest.html');
+          return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        studentId = params.get('id');
+        if (!studentId) {
+          alert("No student ID specified.");
+          window.location.replace('/admin/students.html');
+          return;
+        }
+
+        document.getElementById('edit-link').href = `/admin/student-edit.html?id=${studentId}`;
+        await loadStudentDetails();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Audit page failed to load:", err);
+      }
+    }
+
+    async function loadStudentDetails() {
+      const docRef = doc(db, `festivals/${activeFestId}/festStudents`, studentId);
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) {
+        alert("Student profile not found.");
+        window.location.replace('/admin/students.html');
+        return;
+      }
+
+      const s = snap.data();
+
+      // General Details
+      document.getElementById('stud-name').textContent = s.name;
+      document.getElementById('stud-chest').textContent = s.chestNumber;
+      
+      const catNames = {
+        cat_subjunior: 'Sub-Junior',
+        cat_junior: 'Junior',
+        cat_senior: 'Senior'
+      };
+      document.getElementById('stud-cat').textContent = catNames[s.categoryId] || s.categoryId;
+      document.getElementById('stud-team').textContent = s.teamId ? s.teamId.toUpperCase() : 'N/A';
+
+      // Status Badge
+      const statusBadge = document.getElementById('stud-status');
+      let badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-150";
+      let statusLabel = s.status || 'active';
+
+      if (s.status === 'pending_approval') {
+        badgeClass = "bg-amber-50 text-amber-700 border-amber-150 animate-pulse";
+        statusLabel = "Pending Approval";
+      } else if (s.status === 'rejected') {
+        badgeClass = "bg-red-50 text-red-700 border-red-150";
+        statusLabel = "Rejected";
+      }
+
+      statusBadge.className = `px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeClass} uppercase tracking-wider`;
+      statusBadge.textContent = statusLabel;
+
+      // Audit Tracing
+      document.getElementById('audit-source').textContent = s.registrationSource ? s.registrationSource.toUpperCase() : 'ADMIN';
+      document.getElementById('audit-registrant-role').textContent = s.createdByRole ? s.createdByRole.toUpperCase() : 'ADMIN';
+      document.getElementById('audit-created-by').textContent = s.createdBy || 'N/A';
+      document.getElementById('audit-created-at').textContent = s.createdAt ? new Date(s.createdAt.seconds * 1000).toLocaleString() : 'N/A';
+
+      // Verification Details
+      if (s.status === 'active' && s.approvedBy) {
+        document.getElementById('audit-processed-by').textContent = s.approvedBy;
+        document.getElementById('audit-processed-at').textContent = s.approvedAt ? new Date(s.approvedAt.seconds * 1000).toLocaleString() : 'N/A';
+      } else if (s.status === 'rejected' && s.rejectedBy) {
+        document.getElementById('audit-processed-by').textContent = s.rejectedBy;
+        document.getElementById('audit-processed-at').textContent = s.rejectedAt ? new Date(s.rejectedAt.seconds * 1000).toLocaleString() : 'N/A';
+        
+        const rejectionBox = document.getElementById('rejection-reason-box');
+        rejectionBox.classList.remove('hidden');
+        document.getElementById('audit-rejection-reason').textContent = s.rejectionReason || 'No reason specified.';
+      }
+
+      // Emergency Override Log
+      if (s.emergencyOverride) {
+        document.getElementById('override-log-section').classList.remove('hidden');
+        document.getElementById('override-by').textContent = s.emergencyOverrideBy || 'N/A';
+        document.getElementById('override-at').textContent = s.emergencyOverrideAt ? new Date(s.emergencyOverrideAt.seconds * 1000).toLocaleString() : 'N/A';
+        document.getElementById('override-reason').textContent = s.emergencyOverrideReason || 'No written justification recorded.';
+      }
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

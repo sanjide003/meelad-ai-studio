@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports Championships - Public Portal</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+  <header id="public-header" class="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-100"></header>
+
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
+    
+    <!-- Title Card -->
+    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <h1 class="text-2xl font-extrabold text-slate-950 tracking-tight font-display" id="page-title">Sports Championships</h1>
+        <p class="text-xs text-slate-400 font-medium font-display" id="page-subtitle">Official results and podium standings for all Sports events. Malayalam: കായിക മത്സരങ്ങൾ</p>
+      </div>
+      <div class="flex items-center space-x-2 shrink-0">
+        <input type="text" id="sports-search" class="w-64 p-2.5 text-xs border border-slate-150 rounded-xl bg-slate-50/50 outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400 font-medium" placeholder="Search by event or code...">
+      </div>
+    </div>
+
+    <!-- Results Grid -->
+    <div id="sports-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="col-span-full text-center text-slate-400 py-12 font-medium">Scanning Sports registries...</div>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="details-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+      <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-2xl w-full overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] font-mono font-extrabold text-indigo-600 uppercase tracking-wider">Official Verified Gazette</p>
+            <h3 id="modal-comp-name" class="text-base font-bold text-slate-900 font-display">Competition Name</h3>
+            <span id="modal-comp-code" class="text-[10px] font-mono text-slate-400 block mt-0.5 uppercase tracking-widest">CODE: TBA</span>
+          </div>
+          <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 font-bold cursor-pointer text-sm">✕</button>
+        </div>
+        <div class="flex-grow overflow-y-auto p-6">
+          <div class="table-container border border-slate-100 rounded-xl overflow-hidden">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-4 py-3 font-mono">Chest</th>
+                  <th class="px-4 py-3">Competitor</th>
+                  <th class="px-4 py-3">Team</th>
+                  <th class="px-4 py-3">Grade</th>
+                  <th class="px-4 py-3">Position</th>
+                </tr>
+              </thead>
+              <tbody id="modal-winners-tbody" class="divide-y divide-slate-100 text-xs font-semibold text-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer id="public-footer" class="bg-white border-t border-slate-100 py-8"></footer>
+
+  <script type="module">
+    import { getActiveFestivalId } from "/assets/js/public-config-service.js";
+    import { getPublicResultsOneTime } from "/assets/js/public-result-service.js";
+    import { initializePublicNavigation } from "/assets/js/navigation.js";
+    import { isSportsResult } from "/assets/js/public-data-normalizer.js";
+
+    const festId = getActiveFestivalId();
+    let publishedResults = [];
+
+    async function init() {
+      await initializePublicNavigation();
+
+      const lang = localStorage.getItem('meeladpulse_lang') || 'en';
+      translatePage(lang);
+
+      document.getElementById('sports-search').oninput = (e) => {
+        renderGrid(e.target.value);
+      };
+
+      try {
+        const results = await getPublicResultsOneTime(festId);
+        // Use normalized helper
+        publishedResults = results.filter(isSportsResult);
+        renderGrid();
+      } catch (err) {
+        console.error("Error loading sports results:", err);
+      }
+
+      // Modal binder
+      document.getElementById('modal-close-btn').onclick = () => {
+        document.getElementById('details-modal').classList.add('hidden');
+      };
+    }
+
+    function translatePage(lang) {
+      if (lang === 'ml') {
+        document.getElementById('page-title').textContent = "കായിക മത്സരങ്ങൾ (Sports Championships)";
+        document.getElementById('page-subtitle').textContent = "കായിക വിഭാഗങ്ങളിലെ എല്ലാ മത്സരങ്ങളുടെയും ഫലങ്ങളും റാങ്കുകളും ഇവിടെ കാണാം.";
+        document.getElementById('sports-search').placeholder = "മത്സരം അല്ലെങ്കിൽ കോഡ് തിരയുക...";
+      }
+    }
+
+    function renderGrid(searchQuery = '') {
+      const grid = document.getElementById('sports-grid');
+      grid.innerHTML = '';
+
+      let filtered = publishedResults;
+      if (searchQuery.trim() !== '') {
+        const q = searchQuery.toLowerCase().trim();
+        filtered = publishedResults.filter(r => 
+          (r.competitionName || '').toLowerCase().includes(q) || 
+          (r.competitionCode || '').toLowerCase().includes(q)
+        );
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center text-slate-400 py-12">No Sports results match your filters.</div>`;
+        return;
+      }
+
+      filtered.forEach(r => {
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition duration-200 overflow-hidden flex flex-col justify-between p-6 cursor-pointer";
+        
+        // Find top winners
+        const winners = r.winners || [];
+        
+        let podiumHTML = '<div class="space-y-2 mt-4">';
+        if (winners.length > 0) {
+          winners.slice(0, 3).forEach(w => {
+            podiumHTML += `
+              <div class="flex items-center justify-between text-xs border-b border-slate-50 pb-1.5 last:border-b-0">
+                <div class="flex items-center space-x-1.5">
+                  <span class="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-indigo-50 text-indigo-700 font-display">${w.position}</span>
+                  <span class="font-bold text-slate-800">${w.displayName}</span>
+                </div>
+                <span class="text-[10px] text-slate-400 font-bold">${w.teamName}</span>
+              </div>
+            `;
+          });
+        } else {
+          podiumHTML += `<div class="text-xs text-slate-400 italic">No winners graded yet</div>`;
+        }
+        podiumHTML += '</div>';
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="font-mono font-extrabold text-xs text-indigo-600 uppercase tracking-wider">${r.competitionCode || 'CODE'}</span>
+              <span class="px-2 py-0.5 bg-slate-50 text-[9px] text-slate-400 font-extrabold uppercase rounded-lg tracking-widest">${r.categoryName || 'General'}</span>
+            </div>
+            <h3 class="text-sm font-extrabold text-slate-900 mt-2 tracking-tight leading-snug font-display">${r.competitionName}</h3>
+            ${podiumHTML}
+          </div>
+          <div class="pt-4 mt-4 border-t border-slate-50 flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 font-display">
+            <span>View Full Gazette ↗</span>
+            <span class="text-slate-300 font-mono text-[9px]">V${r.publicationVersion || 1}</span>
+          </div>
+        `;
+
+        card.onclick = () => {
+          showModal(r);
+        };
+
+        grid.appendChild(card);
+      });
+    }
+
+    function showModal(result) {
+      document.getElementById('modal-comp-name').textContent = result.competitionName;
+      document.getElementById('modal-comp-code').textContent = `CODE: ${result.competitionCode || result.competitionId}`;
+      
+      const tbody = document.getElementById('modal-winners-tbody');
+      tbody.innerHTML = '';
+
+      if (!result.winners || result.winners.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400 italic">No podium finishes structured.</td></tr>`;
+      } else {
+        result.winners.forEach(w => {
+          const tr = document.createElement('tr');
+          tr.className = "border-b border-slate-50 hover:bg-slate-50/50 transition";
+          tr.innerHTML = `
+            <td class="px-4 py-3 font-mono text-slate-400 font-bold">${w.chestNumber || w.publicParticipantCode || '--'}</td>
+            <td class="px-4 py-3 text-slate-900 font-extrabold">${w.displayName}</td>
+            <td class="px-4 py-3 text-slate-500">${w.teamName}</td>
+            <td class="px-4 py-3">${w.grade && w.grade !== 'None' ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-50 text-emerald-700">${w.grade}</span>` : '<span class="text-slate-300">--</span>'}</td>
+            <td class="px-4 py-3"><span class="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-indigo-50 text-indigo-700 font-display">${w.position || 'Podium'}</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      document.getElementById('details-modal').classList.remove('hidden');
+    }
+
+    init();
+  </script>
+</body>
+</html>

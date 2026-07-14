@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Scoreboard - Public Portal</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+  <!-- Floating Sticky Header -->
+  <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="/index.html" class="flex items-center space-x-2">
+        <div class="h-9 w-9 rounded-xl bg-slate-950 text-white font-extrabold flex items-center justify-center font-display shadow-sm">
+          M
+        </div>
+        <div class="flex flex-col">
+          <span class="font-extrabold text-sm text-slate-900 tracking-tight font-display" id="nav-festival-title">MeeladPulse</span>
+          <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider font-mono">Real-Time Board</span>
+        </div>
+      </a>
+
+      <!-- Desktop Links -->
+      <nav class="hidden md:flex items-center space-x-1">
+        <a href="/index.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Home</a>
+        <a href="/public/live-scoreboard.html" class="px-3 py-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-lg">Scoreboard</a>
+        <a href="/public/latest-results.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Latest Results</a>
+        <a href="/public/announcements.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Announcements</a>
+      </nav>
+
+      <div class="flex items-center space-x-2">
+        <div id="auth-actions">
+          <a href="/login.html" class="px-3.5 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition font-display">
+            Admin / Staff Login
+          </a>
+        </div>
+        <button id="mobile-menu-btn" class="p-2 text-slate-500 hover:text-slate-900 md:hidden rounded-lg hover:bg-slate-50 transition cursor-pointer">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation Menu -->
+    <div id="mobile-menu" class="hidden border-b border-slate-100 bg-white px-4 py-3 md:hidden space-y-1">
+      <a href="/index.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl">Home</a>
+      <a href="/public/live-scoreboard.html" class="block px-3 py-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-xl">Scoreboard</a>
+      <a href="/public/latest-results.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Latest Results</a>
+      <a href="/public/announcements.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Announcements</a>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
+    
+    <!-- Title Section -->
+    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <h1 class="text-2xl font-extrabold text-slate-950 tracking-tight font-display">Championship Standings</h1>
+        <p class="text-xs text-slate-400 font-medium font-display">Real-time club and house rankings based on officialised publications. Malayalam: ലൈവ് സ്‌കോർബോർഡ്</p>
+      </div>
+      <div class="flex items-center shrink-0">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-100 space-x-1.5 font-mono">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+          <span>SECURE REAL-TIME PIPELINE</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Podium Standings Section -->
+    <div id="podium-section" class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+      <!-- Generated dynamically -->
+    </div>
+
+    <!-- Overall Championship Log Table -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+      <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+        <h2 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest font-display">Overall Championship Log</h2>
+      </div>
+      <div class="table-container">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+              <th class="px-6 py-4 w-16">Rank</th>
+              <th class="px-6 py-4">Club/House Team Name</th>
+              <th class="px-6 py-4 font-mono text-center">Arts Points</th>
+              <th class="px-6 py-4 font-mono text-center">Sports Points</th>
+              <th class="px-6 py-4 font-mono text-center">Bonus / Penalties</th>
+              <th class="px-6 py-4 text-center">Medals (1st/2nd/3rd)</th>
+              <th class="px-6 py-4 font-mono text-right">Overall Total</th>
+            </tr>
+          </thead>
+          <tbody id="scoreboard-table-body" class="divide-y divide-slate-100 text-xs font-semibold">
+            <tr>
+              <td colspan="7" class="px-6 py-12 text-center text-slate-400 font-medium font-display">Awaiting stands data streaming...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 text-center space-y-1 text-xs font-medium text-slate-400">
+      <p>© MeeladPulse standing node. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { auth, db } from "/assets/js/firebase-init.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    import { getActiveFestivalId, getPublicFestivalConfig } from "/assets/js/public-config-service.js";
+    import { subscribePublicRankings } from "/assets/js/public-result-service.js";
+
+    const festId = getActiveFestivalId();
+
+    async function start() {
+      // Load title
+      const config = await getPublicFestivalConfig(festId);
+      if (config) {
+        document.getElementById('nav-festival-title').textContent = config.title || config.name || "MeeladPulse";
+      }
+
+      // Handle mobile hamburger
+      const mobBtn = document.getElementById('mobile-menu-btn');
+      const mobMenu = document.getElementById('mobile-menu');
+      if (mobBtn && mobMenu) {
+        mobBtn.onclick = (e) => {
+          e.stopPropagation();
+          mobMenu.classList.toggle('hidden');
+        };
+        document.addEventListener('click', () => mobMenu.classList.add('hidden'));
+      }
+
+      // Auth state
+      onAuthStateChanged(auth, async (user) => {
+        const authActions = document.getElementById('auth-actions');
+        if (user) {
+          try {
+            const userSnap = await getDoc(doc(db, 'users', user.uid));
+            if (userSnap.exists()) {
+              const uData = userSnap.data();
+              let dashboardHref = '/login.html';
+              if (uData.role === 'admin') dashboardHref = '/admin/dashboard.html';
+              else if (uData.role === 'judge') dashboardHref = '/judge/dashboard.html';
+              else if (uData.role === 'teamLeader') dashboardHref = '/team/dashboard.html';
+
+              authActions.innerHTML = `
+                <a href="${dashboardHref}" class="px-3.5 py-2 bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100 text-xs font-bold rounded-xl transition font-display">
+                  Dashboard
+                </a>
+              `;
+              return;
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+        authActions.innerHTML = `
+          <a href="/login.html" class="px-3.5 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition font-display">
+            Admin / Staff Login
+          </a>
+        `;
+      });
+
+      // Stream standings
+      subscribePublicRankings(festId, (rankings) => {
+        renderScoreboard(rankings);
+      });
+    }
+
+    function renderScoreboard(rankings) {
+      const podium = document.getElementById('podium-section');
+      const tableBody = document.getElementById('scoreboard-table-body');
+
+      if (!rankings || rankings.length === 0) {
+        podium.innerHTML = '';
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="px-6 py-12 text-center text-slate-400 font-medium">Championship stands not calculated yet.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      // 1. Render Podium Card Structures
+      const gold = rankings.find(r => r.rank === 1);
+      const silver = rankings.find(r => r.rank === 2);
+      const bronze = rankings.find(r => r.rank === 3);
+
+      let podiumHTML = '';
+
+      if (silver) {
+        podiumHTML += `
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col justify-between items-center text-center space-y-4 shadow-xs">
+            <div class="space-y-1">
+              <span class="inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">2nd Place</span>
+              <h3 class="text-lg font-extrabold text-slate-900 font-display">${silver.teamName}</h3>
+              <span class="text-[10px] font-mono text-slate-400 tracking-wider">CODE: ${silver.teamCode}</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-4xl font-black font-mono text-slate-800">${silver.overallTotal}</span>
+              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Total Points</span>
+            </div>
+            <div class="flex items-center space-x-3 text-[10px] text-slate-500 font-medium">
+              <span>Arts: <strong class="text-slate-700">${silver.artsTotal || 0}</strong></span>
+              <span>•</span>
+              <span>Sports: <strong class="text-slate-700">${silver.sportsTotal || 0}</strong></span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (gold) {
+        podiumHTML += `
+          <div class="bg-white rounded-3xl border border-amber-200 p-6 flex flex-col justify-between items-center text-center space-y-4 shadow-md ring-4 ring-amber-400/5 relative overflow-hidden">
+            <div class="absolute top-0 right-0 h-16 w-16 bg-amber-500/10 rounded-full blur-xl"></div>
+            <div class="space-y-1">
+              <span class="inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">🏆 Overall Champion</span>
+              <h3 class="text-xl font-extrabold text-amber-900 font-display">${gold.teamName}</h3>
+              <span class="text-[10px] font-mono text-slate-400 tracking-wider">CODE: ${gold.teamCode}</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-5xl font-black font-mono text-amber-600 tracking-tight">${gold.overallTotal}</span>
+              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Total Points</span>
+            </div>
+            <div class="flex items-center space-x-3 text-[10px] text-slate-500 font-medium">
+              <span>Arts: <strong class="text-slate-700">${gold.artsTotal || 0}</strong></span>
+              <span>•</span>
+              <span>Sports: <strong class="text-slate-700">${gold.sportsTotal || 0}</strong></span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (bronze) {
+        podiumHTML += `
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col justify-between items-center text-center space-y-4 shadow-xs">
+            <div class="space-y-1">
+              <span class="inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-orange-50 text-orange-700 border border-orange-100">3rd Place</span>
+              <h3 class="text-lg font-extrabold text-slate-900 font-display">${bronze.teamName}</h3>
+              <span class="text-[10px] font-mono text-slate-400 tracking-wider">CODE: ${bronze.teamCode}</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-4xl font-black font-mono text-slate-800">${bronze.overallTotal}</span>
+              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Total Points</span>
+            </div>
+            <div class="flex items-center space-x-3 text-[10px] text-slate-500 font-medium">
+              <span>Arts: <strong class="text-slate-700">${bronze.artsTotal || 0}</strong></span>
+              <span>•</span>
+              <span>Sports: <strong class="text-slate-700">${bronze.sportsTotal || 0}</strong></span>
+            </div>
+          </div>
+        `;
+      }
+
+      podium.innerHTML = podiumHTML;
+
+      // 2. Render Log Table
+      tableBody.innerHTML = rankings.map(t => {
+        let rankStyle = "text-slate-500 font-mono font-bold";
+        if (t.rank === 1) rankStyle = "text-amber-500 font-black text-sm";
+        else if (t.rank === 2) rankStyle = "text-slate-700 font-black text-xs";
+        else if (t.rank === 3) rankStyle = "text-orange-500 font-black text-xs";
+
+        return `
+          <tr class="hover:bg-slate-50/50 transition border-b border-slate-100">
+            <td class="px-6 py-4 ${rankStyle}">#${t.rank}</td>
+            <td class="px-6 py-4">
+              <div class="flex items-center space-x-2">
+                <span class="h-2.5 w-2.5 rounded-full" style="background-color: ${t.teamColour}"></span>
+                <span class="font-extrabold text-slate-900">${t.teamName}</span>
+              </div>
+              <div class="text-[9px] font-mono text-slate-400 mt-0.5 uppercase">CODE: ${t.teamCode}</div>
+            </td>
+            <td class="px-6 py-4 text-center text-slate-600 font-mono font-bold">${t.artsTotal || 0}</td>
+            <td class="px-6 py-4 text-center text-slate-600 font-mono font-bold">${t.sportsTotal || 0}</td>
+            <td class="px-6 py-4 text-center text-slate-500 font-mono">
+              <span class="text-emerald-600 font-bold">+${t.bonusTotal || 0}</span>
+              <span class="text-slate-350 mx-1">/</span>
+              <span class="text-rose-600 font-bold">-${t.penaltyTotal || 0}</span>
+            </td>
+            <td class="px-6 py-4 text-center">
+              <div class="flex justify-center items-center space-x-1 font-mono text-[10px] text-slate-600">
+                <span class="bg-amber-50 text-amber-700 font-extrabold px-1.5 py-0.5 rounded border border-amber-100">${t.firstCount || 0}</span>
+                <span class="bg-slate-100 text-slate-700 font-extrabold px-1.5 py-0.5 rounded border border-slate-200">${t.secondCount || 0}</span>
+                <span class="bg-orange-50 text-orange-700 font-extrabold px-1.5 py-0.5 rounded border border-orange-100">${t.thirdCount || 0}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4 font-mono font-extrabold text-right text-slate-950 text-sm">${t.overallTotal}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    start();
+  </script>
+</body>
+</html>

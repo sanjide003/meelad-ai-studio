@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select Festival - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col justify-between">
+  
+  <!-- Global loading overlay -->
+  <div id="global-page-loader" class="fixed inset-0 bg-slate-900/65 z-50 flex items-center justify-center">
+    <div class="bg-white p-5 rounded-2xl flex flex-col items-center space-y-3 shadow-2xl">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Authorizing Portal Session...</p>
+    </div>
+  </div>
+
+  <main class="flex-1 flex items-center justify-center p-4">
+    <div class="max-w-xl w-full space-y-8 py-8">
+      
+      <!-- Upper Banner Info -->
+      <div class="text-center space-y-3">
+        <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-emerald-200">Session Authorized</span>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight font-display">Select Festival Scope</h1>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">Choose an active competition festival to load its registered items, scoring matrices, and team rosters.</p>
+      </div>
+
+      <!-- Grid Cards -->
+      <div id="festivals-grid" class="grid grid-cols-1 gap-4">
+        <!-- Spinner inside grid -->
+        <div class="py-12 flex flex-col items-center justify-center text-slate-400 space-y-2">
+          <div class="h-8 w-8 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+          <span class="text-xs font-medium">Scanning competition nodes...</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="w-full text-center py-6 border-t border-slate-100 bg-white">
+    <button class="logout-action-btn text-xs font-bold text-rose-600 hover:text-rose-500 transition cursor-pointer">
+      Sign Out of Session
+    </button>
+  </footer>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const festivalsGrid = document.getElementById('festivals-grid');
+
+    async function initializeFestivalSelection() {
+      try {
+        // 1. Verify user profile and authenticate first
+        const userProfile = await verifyUserRole(['admin', 'judge', 'teamLeader']);
+        
+        // 2. Query Firestore festivals
+        const festivalsCol = collection(db, 'festivals');
+        // Let's get both active festivals and drafts (or all where active is true)
+        const q = query(festivalsCol, where('active', '==', true));
+        const querySnapshot = await getDocs(q);
+
+        festivalsGrid.innerHTML = '';
+
+        if (querySnapshot.empty) {
+          festivalsGrid.innerHTML = `
+            <div class="bg-white border border-slate-100 rounded-2xl p-8 text-center space-y-3">
+              <p class="text-sm font-bold text-slate-700">No Active Festivals Available</p>
+              <p class="text-xs text-slate-500">There are currently no active competition festivals configured in the system. Please ask an administrator to set up a festival.</p>
+            </div>
+          `;
+          return;
+        }
+
+        querySnapshot.forEach((docSnap) => {
+          const festival = docSnap.data();
+          const festId = docSnap.id;
+
+          const card = document.createElement('button');
+          card.className = "w-full text-left bg-white border border-slate-100 hover:border-emerald-500 hover:shadow-lg rounded-2xl p-6 transition-all duration-200 flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 cursor-pointer group";
+          
+          card.innerHTML = `
+            <div class="space-y-1">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-mono font-bold text-emerald-600 uppercase tracking-wider">${festival.code || 'CODE'}</span>
+                <span class="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+              </div>
+              <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition font-display">${festival.title}</h3>
+              <p class="text-xs text-slate-400">${festival.venue || 'No Venue Listed'} • ${festival.startDate || 'TBA'} to ${festival.endDate || 'TBA'}</p>
+            </div>
+            <div class="bg-slate-50 group-hover:bg-emerald-50 text-slate-500 group-hover:text-emerald-600 rounded-xl px-4 py-2 text-xs font-bold transition flex items-center space-x-1">
+              <span>Select scope</span>
+              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </div>
+          `;
+
+          card.addEventListener('click', () => {
+            // Store selected festival in local storage
+            localStorage.setItem('meeladpulse_selected_fest_id', festId);
+            localStorage.setItem('meeladpulse_selected_fest_title', festival.title);
+
+            // Redirect user to their custom dashboard
+            let redirectUrl = "/login.html";
+            if (userProfile.role === 'admin') redirectUrl = "/admin/dashboard.html";
+            else if (userProfile.role === 'judge') redirectUrl = "/judge/dashboard.html";
+            else if (userProfile.role === 'teamLeader') redirectUrl = "/team/dashboard.html";
+
+            window.location.replace(redirectUrl);
+          });
+
+          festivalsGrid.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error("Failed to load active festivals:", err);
+        festivalsGrid.innerHTML = `
+          <div class="bg-rose-50 border border-rose-100 rounded-2xl p-6 text-center space-y-2">
+            <p class="text-xs font-bold text-rose-800">Operational Failure</p>
+            <p class="text-xs text-rose-600">${err.message || 'Could not verify user privileges or retrieve festival collections.'}</p>
+          </div>
+        `;
+      }
+    }
+
+    // Initialize layout navigation controls (e.g. signout)
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    // We will call initializeNavigation once auth verification completes inside initializeFestivalSelection
+    initializeFestivalSelection().then(() => {
+      initializeNavigation();
+    }).catch(() => {});
+  </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+export const en = {
+  // Common terms
+  competition: "Competition",
+  category: "Category",
+  division: "Division",
+  subdivision: "Subdivision",
+  genderMode: "Gender Mode",
+  stage: "Stage",
+  dateTime: "Date & Time",
+  rules: "Rules",
+  criteria: "Criteria",
+  maxMark: "Maximum Mark",
+  blindJudgingMode: "Blind Judging Mode",
+  submissionStatus: "Submission Status",
+  actions: "Actions",
+  back: "Back",
+  save: "Save",
+  submit: "Submit",
+  cancel: "Cancel",
+  confirm: "Confirm",
+  status: "Status",
+  date: "Date",
+  time: "Time",
+  notes: "Notes",
+
+  // Terminology Standardisation (Teams instead of Clubs)
+  team: "Team",
+  teams: "Teams",
+  activeTeams: "Active Teams",
+  teamStandings: "Team Standings",
+  rank: "Rank",
+  score: "Score",
+  points: "Points",
+
+  // Navigation Items
+  publicHome: "Public Home",
+  liveScoreboard: "Live Scoreboard",
+  reports: "Reports",
+  adminDashboard: "Admin Dashboard",
+  teamPortal: "Team Portal",
+  certificates: "Certificates",
+  rankings: "Rankings",
+
+  // Judge Dashboard
+  judgeStationPortal: "Judge Station Portal",
+  assignedComps: "Assigned Competitions",
+  todayComps: "Today's Competitions",
+  upcomingComps: "Upcoming Competitions",
+  openSheets: "Open Mark Sheets",
+  draftSheets: "Draft Sheets",
+  finalSubmittedSheets: "Final Submitted Sheets",
+  reopenedSheets: "Reopened Sheets",
+  returnedForCorrection: "Returned for Correction Sheets",
+  competitionTime: "Competition Time",
+  participantCount: "Participant Count",
+  adminAnnouncements: "Admin Announcements",
+  noAnnouncements: "No announcements from administrators.",
+  noAssignedComps: "You have no active competition assignments.",
+
+  // Judge Competitions
+  myAssignments: "My Assignments",
+  onlyActiveAssignments: "Only active, verified assignments are accessible.",
+  startEvaluation: "Start Evaluation",
+
+  // Competition Details
+  compDetailsTitle: "Competition details and regulations",
+  eligibilityRules: "Eligibility Rules & Criteria",
+  viewParticipants: "View Participant Roster",
+
+  // Mark Entry
+  evaluateParticipant: "Evaluate Participant",
+  next: "Next",
+  prev: "Previous",
+  progress: "Progress",
+  penaltyRecommendation: "Penalty Recommendation",
+  participantStatus: "Participant Status",
+  saveDraft: "Save Draft",
+  finalSubmit: "Final Submit",
+  lastSaved: "Last saved",
+  unsavedWarning: "You have unsaved changes. Are you sure you want to leave?",
+  readOnlyMode: "Read-only mode (Final Submission Completed)",
+  absentConfirm: "Are you sure this participant is Absent? All score fields will be locked and set to zero.",
+  withdrawnConfirm: "Are you sure this participant has Withdrawn? All score fields will be locked and set to zero.",
+  disqualifiedConfirm: "Are you sure you recommend Disqualifying this participant? All score fields will be locked and set to zero.",
+  confirmSubmitTitle: "Confirm Final Submission",
+  confirmSubmitText: "Are you sure you want to final submit? Once submitted, your scores are locked and cannot be edited without administrator reopening.",
+  incompleteSummary: "The following participants are not evaluated:",
+
+  // Audit and Log
+  auditLog: "Audit Log",
+  logAction: "Action",
+  logTime: "Time",
+  logUser: "User",
+
+  // Admin Mark Review
+  submittedMarks: "Submitted Marks",
+  markReview: "Mark Review",
+  reopenSheet: "Reopen Sheet",
+  returnForCorrection: "Return for Correction",
+  verifySheet: "Verify Sheet",
+  largeScoringDiff: "Large Scoring Difference Detected",
+  missingCriteria: "Missing Criteria Values",
+  missingJudgeSubmissions: "Missing Judge Submissions",
+  invalidTotals: "Invalid Totals Calculation",
+  unresolvedTies: "Unresolved Ties",
+
+  // Result Review and Approval
+  resultReview: "Result Review & Approval",
+  approveResult: "Approve Result",
+  holdResult: "Hold Result",
+  recalculate: "Recalculate",
+  manualOverride: "Manual Override Points",
+  resultStatusApproved: "Result Status: Approved",
+  resultStatusHeld: "Result Status: Held",
+
+  // Result Publication
+  resultPublish: "Result Publication Console",
+  publishedResults: "Published Results",
+  publishOne: "Publish Competition",
+  publishSelected: "Publish Selected",
+  publicVisibility: "Marks Publicly Visible",
+  teamPointsVisibility: "Team Points Publicly Visible",
+  unpublish: "Unpublish",
+  correct: "Correct & Republish",
+  viewHistory: "View Publication History"
+};

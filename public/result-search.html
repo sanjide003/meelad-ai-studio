@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Result Search - Public Portal</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+  <header id="public-header" class="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-100"></header>
+
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
+    
+    <!-- Title Card -->
+    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <h1 class="text-2xl font-extrabold text-slate-950 tracking-tight font-display" id="page-title">Search Official Results</h1>
+        <p class="text-xs text-slate-400 font-medium font-display" id="page-subtitle">Verify standings by competitor name, chest number, or competition code. Malayalam: തിരച്ചിൽ</p>
+      </div>
+      <div class="flex items-center shrink-0">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-100 space-x-1.5 font-mono">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+          <span>SECURE INDEX PIPELINE</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Search input widget -->
+    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row items-stretch gap-4">
+      <div class="flex-1 relative">
+        <input type="text" id="search-input" class="w-full pl-4 pr-10 py-3.5 text-xs border border-slate-200 rounded-xl bg-slate-50/50 outline-none focus:ring-2 focus:ring-indigo-500 font-medium placeholder-slate-400" placeholder="Type competitor name, chest number, or competition code (e.g. A04)...">
+        <div class="absolute right-3 top-3 text-slate-400 font-bold">🔍</div>
+      </div>
+      <button id="search-btn" class="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition cursor-pointer font-display shrink-0">
+        Search Records
+      </button>
+    </div>
+
+    <!-- Search Limitation Notice -->
+    <div class="px-6 py-3.5 bg-indigo-50/50 border border-indigo-100 rounded-2xl flex items-start space-x-3">
+      <span class="text-xs shrink-0 mt-0.5">💡</span>
+      <div class="space-y-0.5">
+        <p id="search-limitation-notice" class="text-xs text-indigo-900 font-semibold leading-relaxed">
+          Search supports exact values and beginning-of-name matches.
+        </p>
+        <p id="search-limitation-notice-desc" class="text-[10px] text-indigo-500 font-medium">
+          Chest numbers and competition codes must match exactly. Student names will match from the beginning.
+        </p>
+      </div>
+    </div>
+
+    <!-- Results Display -->
+    <div id="search-results-section" class="space-y-6">
+      <div id="placeholder-message" class="text-center text-slate-400 py-12 font-medium">Enter your query above to search official public records.</div>
+      <div id="results-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></div>
+      
+      <!-- Load More Container -->
+      <div id="load-more-container" class="flex justify-center hidden pt-4">
+        <button id="load-more-btn" class="px-6 py-3 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-xs hover:bg-slate-50 transition cursor-pointer font-display">
+          Load More Results
+        </button>
+      </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="details-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+      <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-2xl w-full overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] font-mono font-extrabold text-indigo-600 uppercase tracking-wider">Official Verified Gazette</p>
+            <h3 id="modal-comp-name" class="text-base font-bold text-slate-900 font-display">Competition Name</h3>
+            <span id="modal-comp-code" class="text-[10px] font-mono text-slate-400 block mt-0.5 uppercase tracking-widest">CODE: TBA</span>
+          </div>
+          <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 font-bold cursor-pointer text-sm">✕</button>
+        </div>
+        <div class="flex-grow overflow-y-auto p-6">
+          <div class="table-container border border-slate-100 rounded-xl overflow-hidden">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-4 py-3 font-mono">Chest</th>
+                  <th class="px-4 py-3">Competitor</th>
+                  <th class="px-4 py-3">Team</th>
+                  <th class="px-4 py-3">Grade</th>
+                  <th class="px-4 py-3">Position</th>
+                </tr>
+              </thead>
+              <tbody id="modal-winners-tbody" class="divide-y divide-slate-100 text-xs font-semibold text-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer id="public-footer" class="bg-white border-t border-slate-100 py-8"></footer>
+
+  <script type="module">
+    import { getActiveFestivalId } from "/assets/js/public-config-service.js";
+    import { queryPublicResultsWithFilters } from "/assets/js/public-search-service.js";
+    import { initializePublicNavigation } from "/assets/js/navigation.js";
+
+    const festId = getActiveFestivalId();
+    let lastVisibleDoc = null;
+    let hasMore = false;
+    let currentTerm = "";
+    let accumulatedResults = [];
+
+    async function init() {
+      await initializePublicNavigation();
+
+      const lang = localStorage.getItem('meeladpulse_lang') || 'en';
+      translatePage(lang);
+
+      const searchBtn = document.getElementById('search-btn');
+      const searchInput = document.getElementById('search-input');
+      const loadMoreBtn = document.getElementById('load-more-btn');
+
+      const triggerSearch = async (isNew = true) => {
+        if (isNew) {
+          currentTerm = searchInput.value.trim();
+          if (currentTerm === '') {
+            alert(lang === 'ml' ? "ദയവായി തിരയാൻ ഒരു വാക്ക് നൽകുക." : "Please type a valid search term first.");
+            return;
+          }
+          lastVisibleDoc = null;
+          accumulatedResults = [];
+          
+          document.getElementById('placeholder-message').textContent = lang === 'ml' ? "വിവരങ്ങൾ തിരയുന്നു..." : "Searching records index...";
+          document.getElementById('placeholder-message').classList.remove('hidden');
+          document.getElementById('results-grid').classList.add('hidden');
+          document.getElementById('load-more-container').classList.add('hidden');
+        } else {
+          loadMoreBtn.disabled = true;
+          loadMoreBtn.textContent = lang === 'ml' ? "കൂടുതൽ വിവരങ്ങൾ ലോഡ് ചെയ്യുന്നു..." : "Loading more...";
+        }
+
+        try {
+          const pageSize = 12; // Controlled query limit per page
+          const data = await queryPublicResultsWithFilters(festId, {
+            term: currentTerm,
+            pageSize,
+            lastDoc: lastVisibleDoc
+          });
+
+          lastVisibleDoc = data.lastVisibleDoc;
+          hasMore = data.hasMore;
+          
+          accumulatedResults = accumulatedResults.concat(data.results);
+          renderResults(accumulatedResults);
+
+          if (hasMore) {
+            document.getElementById('load-more-container').classList.remove('hidden');
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.textContent = lang === 'ml' ? "കൂടുതൽ ഫലങ്ങൾ കാണിക്കുക" : "Load More Results";
+          } else {
+            document.getElementById('load-more-container').classList.add('hidden');
+          }
+        } catch (e) {
+          console.error("Search failed:", e);
+          document.getElementById('placeholder-message').textContent = "Search error occurred: " + e.message;
+        }
+      };
+
+      searchBtn.onclick = () => triggerSearch(true);
+      searchInput.onkeydown = (e) => {
+        if (e.key === 'Enter') triggerSearch(true);
+      };
+      loadMoreBtn.onclick = () => triggerSearch(false);
+
+      document.getElementById('modal-close-btn').onclick = () => {
+        document.getElementById('details-modal').classList.add('hidden');
+      };
+    }
+
+    function translatePage(lang) {
+      if (lang === 'ml') {
+        document.getElementById('page-title').textContent = "ഫലങ്ങൾ തിരയുക (Result Search)";
+        document.getElementById('page-subtitle').textContent = "മത്സരാർത്ഥിയുടെ പേര്, ചെസ്റ്റ് നമ്പർ, അല്ലെങ്കിൽ മത്സര കോഡ് ഉപയോഗിച്ച് ഫലങ്ങൾ കണ്ടെത്താം.";
+        document.getElementById('search-input').placeholder = "പേര്, ചെസ്റ്റ് നമ്പർ, അല്ലെങ്കിൽ മത്സര കോഡ് ടൈപ്പ് ചെയ്യുക...";
+        document.getElementById('search-btn').textContent = "തിരയുക";
+        document.getElementById('placeholder-message').textContent = "തിരച്ചിൽ ആരംഭിക്കാൻ മുകളിൽ വിവരങ്ങൾ നൽകുക.";
+        document.getElementById('search-limitation-notice').textContent = "കൃത്യമായ വിവരമോ പേരിന്റെ ആദ്യഭാഗമോ ഉപയോഗിച്ച് തിരയാം.";
+        document.getElementById('search-limitation-notice-desc').textContent = "ചെസ്റ്റ് നമ്പറുകളും മത്സര കോഡുകളും കൃത്യമായി നൽകണം. പേരിന്റെ ആദ്യഭാഗം നൽകി തിരയാവുന്നതാണ്.";
+        document.getElementById('load-more-btn').textContent = "കൂടുതൽ ഫലങ്ങൾ കാണിക്കുക";
+      }
+    }
+
+    function renderResults(results) {
+      const placeholder = document.getElementById('placeholder-message');
+      const grid = document.getElementById('results-grid');
+      grid.innerHTML = '';
+
+      if (!results || results.length === 0) {
+        placeholder.textContent = "No results found matching your query in the verified gazette.";
+        placeholder.classList.remove('hidden');
+        grid.classList.add('hidden');
+        return;
+      }
+
+      placeholder.classList.add('hidden');
+      grid.classList.remove('hidden');
+
+      results.forEach(r => {
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition duration-200 overflow-hidden flex flex-col justify-between p-6 cursor-pointer";
+        
+        const winners = r.winners || [];
+        let podiumHTML = '<div class="space-y-2 mt-4">';
+        if (winners.length > 0) {
+          winners.slice(0, 3).forEach(w => {
+            podiumHTML += `
+              <div class="flex items-center justify-between text-xs border-b border-slate-50 pb-1.5 last:border-b-0">
+                <div class="flex items-center space-x-1.5">
+                  <span class="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-indigo-50 text-indigo-700 font-display">${w.position}</span>
+                  <span class="font-bold text-slate-800">${w.displayName}</span>
+                </div>
+                <span class="text-[10px] text-slate-400 font-bold">${w.teamName}</span>
+              </div>
+            `;
+          });
+        } else {
+          podiumHTML += `<div class="text-xs text-slate-400 italic">No winners graded yet</div>`;
+        }
+        podiumHTML += '</div>';
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="font-mono font-extrabold text-xs text-indigo-600 uppercase tracking-wider">${r.competitionCode || 'CODE'}</span>
+              <span class="px-2 py-0.5 bg-slate-50 text-[9px] text-slate-400 font-extrabold uppercase rounded-lg tracking-widest">${r.categoryName || 'General'}</span>
+            </div>
+            <h3 class="text-sm font-extrabold text-slate-900 mt-2 tracking-tight leading-snug font-display">${r.competitionName}</h3>
+            ${podiumHTML}
+          </div>
+          <div class="pt-4 mt-4 border-t border-slate-50 flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 font-display">
+            <span>View Full Gazette ↗</span>
+            <span class="text-slate-300 font-mono text-[9px]">V${r.publicationVersion || 1}</span>
+          </div>
+        `;
+
+        card.onclick = () => {
+          showModal(r);
+        };
+
+        grid.appendChild(card);
+      });
+    }
+
+    function showModal(result) {
+      document.getElementById('modal-comp-name').textContent = result.competitionName;
+      document.getElementById('modal-comp-code').textContent = `CODE: ${result.competitionCode || result.competitionId}`;
+      
+      const tbody = document.getElementById('modal-winners-tbody');
+      tbody.innerHTML = '';
+
+      if (!result.winners || result.winners.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400 italic">No podium finishes structured.</td></tr>`;
+      } else {
+        result.winners.forEach(w => {
+          const tr = document.createElement('tr');
+          tr.className = "border-b border-slate-50 hover:bg-slate-50/50 transition";
+          tr.innerHTML = `
+            <td class="px-4 py-3 font-mono text-slate-400 font-bold">${w.chestNumber || w.publicParticipantCode || '--'}</td>
+            <td class="px-4 py-3 text-slate-900 font-extrabold">${w.displayName}</td>
+            <td class="px-4 py-3 text-slate-500">${w.teamName}</td>
+            <td class="px-4 py-3">${w.grade && w.grade !== 'None' ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-50 text-emerald-700">${w.grade}</span>` : '<span class="text-slate-300">--</span>'}</td>
+            <td class="px-4 py-3"><span class="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-indigo-50 text-indigo-700 font-display">${w.position || 'Podium'}</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      document.getElementById('details-modal').classList.remove('hidden');
+    }
+
+    init();
+  </script>
+</body>
+</html>

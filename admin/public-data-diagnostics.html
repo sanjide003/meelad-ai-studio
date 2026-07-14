@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Public Data Diagnostics - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Loading Diagnostics Workspace...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Banner -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Public Data Diagnostics</h1>
+            <p class="text-xs text-slate-400 font-medium">Verify normalization consistency, check for missing search indexes, and repair published results metadata.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button id="scan-btn" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-sm">
+              Scan Public Data
+            </button>
+            <button id="export-report-btn" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer border border-slate-200 hidden">
+              Export Diagnostic Report
+            </button>
+          </div>
+        </div>
+
+        <!-- Issue Counter Banner -->
+        <div id="stats-banner" class="grid grid-cols-1 md:grid-cols-4 gap-4 hidden">
+          <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex items-center space-x-4">
+            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl font-bold">📄</div>
+            <div>
+              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Scanned</p>
+              <h3 id="scanned-count" class="text-lg font-black text-slate-900 font-mono">0</h3>
+            </div>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex items-center space-x-4">
+            <div class="p-3 bg-amber-50 text-amber-600 rounded-xl font-bold">⚠️</div>
+            <div>
+              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Anomalous Records</p>
+              <h3 id="anomaly-count" class="text-lg font-black text-amber-600 font-mono">0</h3>
+            </div>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex items-center space-x-4">
+            <div class="p-3 bg-rose-50 text-rose-600 rounded-xl font-bold">🚨</div>
+            <div>
+              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Issues Identified</p>
+              <h3 id="total-issues-count" class="text-lg font-black text-rose-600 font-mono">0</h3>
+            </div>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex items-center space-x-4">
+            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl font-bold">✅</div>
+            <div>
+              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Fully Compliant</p>
+              <h3 id="compliant-count" class="text-lg font-black text-emerald-600 font-mono">0</h3>
+            </div>
+          </div>
+        </div>
+
+        <!-- Correction Action Bar -->
+        <div id="batch-actions-bar" class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hidden">
+          <div>
+            <h4 class="text-xs font-extrabold text-indigo-950 font-display">Batch Normalization and Repositioning Available</h4>
+            <p class="text-[10px] text-indigo-600 font-medium">Automatic matching, stage classification mapping, case normalization, and index generation can be performed safely.</p>
+          </div>
+          <button id="repair-all-btn" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-sm">
+            Auto-Correct All Safe Records
+          </button>
+        </div>
+
+        <!-- Issue Table / Grid -->
+        <div id="diagnostics-card" class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden hidden">
+          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Anomalous Documents & Issues Breakdown</h2>
+            <span id="issues-table-badge" class="text-xs font-bold bg-amber-500/10 text-amber-700 py-1 px-2.5 rounded-full">0 Anomalies</span>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4">Competition Code</th>
+                  <th class="px-6 py-4">Competition Name</th>
+                  <th class="px-6 py-4">Issues Identified</th>
+                  <th class="px-6 py-4">Normalization Preview</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="diagnostics-table-body" class="divide-y divide-slate-100 text-xs text-slate-700">
+                <tr>
+                  <td colspan="5" class="px-6 py-12 text-center text-slate-400">Click "Scan Public Data" above to initiate scanning.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "/assets/js/firebase-init.js";
+    import { collection, doc, getDocs, updateDoc, setDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { createAuditLog } from "/assets/js/audit-service.js";
+    import { normalizeMachineValue, generatePrefixes } from "/assets/js/public-data-normalizer.js";
+
+    const festId = localStorage.getItem('meeladpulse_selected_fest_id') || 'fest_default';
+    let rawRecords = [];
+    let detectedAnomalies = [];
+
+    async function initPage() {
+      try {
+        await verifyUserRole(['admin']);
+        await loadPortalLayout();
+        await initializeNavigation();
+        document.getElementById('global-page-loader').classList.add('hidden');
+
+        document.getElementById('scan-btn').onclick = scanData;
+        document.getElementById('repair-all-btn').onclick = () => repairAll();
+        document.getElementById('export-report-btn').onclick = exportDiagnosticReport;
+      } catch (err) {
+        console.error("Initialization failed:", err);
+        document.getElementById('loader-text').textContent = "Access Denied / Error: " + err.message;
+      }
+    }
+
+    async function scanData() {
+      const scanBtn = document.getElementById('scan-btn');
+      scanBtn.disabled = true;
+      scanBtn.textContent = "Scanning...";
+
+      const path = `festivals/${festId}/publicData/results`;
+      try {
+        const snap = await getDocs(collection(db, path));
+        rawRecords = snap.docs.map(docSnap => ({ id: docSnap.id, ref: docSnap.ref, ...docSnap.data() }));
+
+        const searchIndexSnap = await getDocs(collection(db, `festivals/${festId}/publicData/searchIndex`));
+        const searchIndexMap = {};
+        searchIndexSnap.docs.forEach(d => {
+          const data = d.data();
+          if (data.resultId) {
+            if (!searchIndexMap[data.resultId]) {
+              searchIndexMap[data.resultId] = [];
+            }
+            searchIndexMap[data.resultId].push(data);
+          }
+        });
+
+        processAnomalies(searchIndexMap);
+        renderTable();
+
+        scanBtn.disabled = false;
+        scanBtn.textContent = "Scan Public Data";
+      } catch (e) {
+        alert("Scan failed: " + e.message);
+        scanBtn.disabled = false;
+        scanBtn.textContent = "Scan Public Data";
+      }
+    }
+
+    function processAnomalies(searchIndexMap = {}) {
+      detectedAnomalies = [];
+
+      rawRecords.forEach(rec => {
+        const issues = [];
+        const fixes = {};
+
+        // 1. Division ID
+        if (!rec.divisionId) {
+          issues.push("Missing divisionId");
+          fixes.divisionId = rec.divisionCode?.toLowerCase() || (rec.divisionName?.toLowerCase().includes('art') ? 'arts' : 'sports');
+        }
+
+        // 2. Division Code
+        if (!rec.divisionCode) {
+          issues.push("Missing divisionCode");
+          fixes.divisionCode = rec.divisionId?.toLowerCase() || (rec.divisionName?.toLowerCase().includes('art') ? 'arts' : 'sports');
+        }
+
+        // 3. Subdivision ID
+        if (!rec.subdivisionId) {
+          issues.push("Missing subdivisionId");
+          fixes.subdivisionId = rec.subdivisionCode || (rec.performanceType || 'general').toLowerCase();
+        }
+
+        // 4. Invalid Stage Machine Value
+        const currentType = rec.performanceType || '';
+        const normType = normalizeMachineValue(currentType);
+        if (normType !== 'stage' && normType !== 'nonstage') {
+          issues.push(`Invalid stage machine value: "${currentType}"`);
+          // Map correctly
+          if (normType.includes('on') || normType.includes('stage')) {
+            fixes.performanceType = 'stage';
+          } else {
+            fixes.performanceType = 'nonstage';
+          }
+        }
+
+        // 5. Mixed status casing
+        if (rec.status && rec.status !== 'published') {
+          issues.push(`Mixed status casing: "${rec.status}"`);
+          fixes.status = 'published';
+        }
+
+        // 6. Missing normalized search fields in record or winners
+        if (!rec.competitionCodeNormalized && rec.competitionCode) {
+          issues.push("Missing normalized competition code search field");
+          fixes.competitionCodeNormalized = normalizeMachineValue(rec.competitionCode);
+        }
+
+        let winnersIssue = false;
+        const normalizedWinners = [];
+        if (rec.winners && Array.isArray(rec.winners)) {
+          rec.winners.forEach(w => {
+            let winFixed = false;
+            const wCopy = { ...w };
+            
+            if (!wCopy.chestNumberNormalized && wCopy.chestNumber) {
+              wCopy.chestNumberNormalized = normalizeMachineValue(wCopy.chestNumber);
+              winFixed = true;
+            }
+            if (!wCopy.displayNameNormalized && wCopy.displayName) {
+              wCopy.displayNameNormalized = normalizeMachineValue(wCopy.displayName);
+              winFixed = true;
+            }
+            if (!wCopy.teamId && wCopy.teamName) {
+              wCopy.teamId = normalizeMachineValue(wCopy.teamName);
+              winFixed = true;
+            }
+            normalizedWinners.push(wCopy);
+            if (winFixed) winnersIssue = true;
+          });
+        }
+
+        if (winnersIssue) {
+          issues.push("Missing normalized winners search/team fields");
+          fixes.winners = normalizedWinners;
+        }
+
+        // 7. Missing publication timestamp
+        if (!rec.publishedAt) {
+          issues.push("Missing publication timestamp");
+          fixes.publishedAt = true; // Set to server timestamp on fix
+        }
+
+        // 8. Missing Category ID
+        if (!rec.categoryId) {
+          issues.push("Missing Category ID");
+          fixes.categoryId = rec.categoryName ? normalizeMachineValue(rec.categoryName) : 'general';
+        }
+
+        // 9. Missing search index entries
+        const existingIndices = searchIndexMap[rec.id] || [];
+        const winnersCount = (rec.winners || []).length;
+        if (winnersCount > 0 && existingIndices.length < winnersCount) {
+          issues.push("Missing public search index documents");
+          fixes.needsSearchIndexRegen = true;
+        }
+
+        if (issues.length > 0) {
+          detectedAnomalies.push({
+            rec,
+            issues,
+            fixes
+          });
+        }
+      });
+
+      // Show stats
+      document.getElementById('stats-banner').classList.remove('hidden');
+      document.getElementById('scanned-count').textContent = rawRecords.length;
+      document.getElementById('anomaly-count').textContent = detectedAnomalies.length;
+      document.getElementById('total-issues-count').textContent = detectedAnomalies.reduce((acc, current) => acc + current.issues.length, 0);
+      document.getElementById('compliant-count').textContent = rawRecords.length - detectedAnomalies.length;
+
+      if (detectedAnomalies.length > 0) {
+        document.getElementById('batch-actions-bar').classList.remove('hidden');
+      } else {
+        document.getElementById('batch-actions-bar').classList.add('hidden');
+      }
+
+      document.getElementById('export-report-btn').classList.remove('hidden');
+    }
+
+    function renderTable() {
+      const body = document.getElementById('diagnostics-table-body');
+      body.innerHTML = '';
+
+      const container = document.getElementById('diagnostics-card');
+      container.classList.remove('hidden');
+
+      document.getElementById('issues-table-badge').textContent = `${detectedAnomalies.length} Anomalies`;
+
+      if (detectedAnomalies.length === 0) {
+        body.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-emerald-600 font-bold">✨ Perfect compliance! No metadata anomalies or normalization flaws found in Public Data.</td></tr>`;
+        return;
+      }
+
+      detectedAnomalies.forEach((anomaly, index) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+        // Map issues list
+        const issuesList = anomaly.issues.map(iss => `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 mr-1 mb-1 font-mono">${iss}</span>`).join('');
+        
+        // Map fixes preview
+        let fixPreview = '';
+        Object.entries(anomaly.fixes).forEach(([k, v]) => {
+          if (k === 'winners') {
+            fixPreview += `<div class="text-[10px] font-medium text-slate-500 font-mono">${k}: [Normalized Array]</div>`;
+          } else if (k === 'publishedAt') {
+            fixPreview += `<div class="text-[10px] font-medium text-slate-500 font-mono">${k}: [serverTimestamp]</div>`;
+          } else {
+            fixPreview += `<div class="text-[10px] font-medium text-slate-500 font-mono">${k} ➔ <strong class="text-indigo-600 font-bold">"${v}"</strong></div>`;
+          }
+        });
+
+        tr.innerHTML = `
+          <td class="px-6 py-4 font-mono font-bold text-slate-900">${anomaly.rec.competitionCode || '—'}</td>
+          <td class="px-6 py-4 font-bold text-slate-800">${anomaly.rec.competitionName || '—'}</td>
+          <td class="px-6 py-4 max-w-xs">${issuesList}</td>
+          <td class="px-6 py-4 space-y-0.5">${fixPreview}</td>
+          <td class="px-6 py-4 text-right">
+            <button class="repair-btn px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold rounded-xl transition cursor-pointer" data-index="${index}">
+              Auto-Correct
+            </button>
+          </td>
+        `;
+
+        body.appendChild(tr);
+      });
+
+      // Bind buttons
+      document.querySelectorAll('.repair-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-index'), 10);
+          repairSingle(idx);
+        });
+      });
+    }
+
+    async function repairSingle(index) {
+      const anomaly = detectedAnomalies[index];
+      const recId = anomaly.rec.id;
+
+      try {
+        const updatePayload = { ...anomaly.fixes };
+        const needsSearchIndexRegen = updatePayload.needsSearchIndexRegen;
+        delete updatePayload.needsSearchIndexRegen;
+
+        if (updatePayload.publishedAt) {
+          updatePayload.publishedAt = serverTimestamp();
+        }
+
+        if (Object.keys(updatePayload).length > 0) {
+          await updateDoc(anomaly.rec.ref, updatePayload);
+        }
+
+        if (needsSearchIndexRegen) {
+          const batch = writeBatch(db);
+          const winners = anomaly.rec.winners || [];
+          winners.forEach(w => {
+            const chestNorm = w.chestNumberNormalized || normalizeMachineValue(w.chestNumber) || '';
+            const nameNorm = w.displayNameNormalized || normalizeMachineValue(w.displayName) || '';
+            const sId = `${recId}_${chestNorm || nameNorm}`;
+            const searchIndexRef = doc(db, `festivals/${festId}/publicData/searchIndex`, sId);
+            batch.set(searchIndexRef, {
+              resultId: recId,
+              competitionId: recId,
+              competitionCodeNormalized: anomaly.rec.competitionCodeNormalized || normalizeMachineValue(anomaly.rec.competitionCode),
+              competitionName: anomaly.rec.competitionName || 'Competition Event',
+              displayName: w.displayName,
+              displayNameNormalized: nameNorm,
+              namePrefixes: generatePrefixes(w.displayName),
+              chestNumberNormalized: chestNorm,
+              teamId: w.teamId || normalizeMachineValue(w.teamName),
+              categoryId: anomaly.rec.categoryId || '',
+              publishedAt: anomaly.rec.publishedAt || serverTimestamp(),
+              active: true
+            });
+          });
+          await batch.commit();
+        }
+
+        // Audit Log entry
+        const user = auth.currentUser;
+        await createAuditLog(
+          festId, 
+          'DIAGNOSTICS_CORRECT_DOCUMENT', 
+          recId, 
+          { 
+            message: `Repaired normalization properties of public results document ${recId}`, 
+            correctedFields: Object.keys(anomaly.fixes),
+            competitionCode: anomaly.rec.competitionCode 
+          }, 
+          user?.uid || 'diagnostics_agent', 
+          user?.email || 'admin@meeladpulse.com'
+        );
+
+        alert(`Successfully repaired document ${anomaly.rec.competitionCode || recId}`);
+        await scanData();
+      } catch (err) {
+        alert("Failed to repair document: " + err.message);
+      }
+    }
+
+    async function repairAll() {
+      if (!confirm(`Are you sure you want to perform batch normalization corrections on all ${detectedAnomalies.length} anomalous public records? This action creates an audit trail.`)) {
+        return;
+      }
+
+      const repairBtn = document.getElementById('repair-all-btn');
+      repairBtn.disabled = true;
+      repairBtn.textContent = "Repairing...";
+
+      let successCount = 0;
+      for (const anomaly of detectedAnomalies) {
+        try {
+          const recId = anomaly.rec.id;
+          const updatePayload = { ...anomaly.fixes };
+          const needsSearchIndexRegen = updatePayload.needsSearchIndexRegen;
+          delete updatePayload.needsSearchIndexRegen;
+
+          if (updatePayload.publishedAt) {
+            updatePayload.publishedAt = serverTimestamp();
+          }
+
+          if (Object.keys(updatePayload).length > 0) {
+            await updateDoc(anomaly.rec.ref, updatePayload);
+          }
+
+          if (needsSearchIndexRegen) {
+            const batch = writeBatch(db);
+            const winners = anomaly.rec.winners || [];
+            winners.forEach(w => {
+              const chestNorm = w.chestNumberNormalized || normalizeMachineValue(w.chestNumber) || '';
+              const nameNorm = w.displayNameNormalized || normalizeMachineValue(w.displayName) || '';
+              const sId = `${recId}_${chestNorm || nameNorm}`;
+              const searchIndexRef = doc(db, `festivals/${festId}/publicData/searchIndex`, sId);
+              batch.set(searchIndexRef, {
+                resultId: recId,
+                competitionId: recId,
+                competitionCodeNormalized: anomaly.rec.competitionCodeNormalized || normalizeMachineValue(anomaly.rec.competitionCode),
+                competitionName: anomaly.rec.competitionName || 'Competition Event',
+                displayName: w.displayName,
+                displayNameNormalized: nameNorm,
+                namePrefixes: generatePrefixes(w.displayName),
+                chestNumberNormalized: chestNorm,
+                teamId: w.teamId || normalizeMachineValue(w.teamName),
+                categoryId: anomaly.rec.categoryId || '',
+                publishedAt: anomaly.rec.publishedAt || serverTimestamp(),
+                active: true
+              });
+            });
+            await batch.commit();
+          }
+
+          const user = auth.currentUser;
+          await createAuditLog(
+            festId, 
+            'DIAGNOSTICS_CORRECT_DOCUMENT_BATCH', 
+            anomaly.rec.id, 
+            { 
+              message: `Batch corrected normalization fields on ${anomaly.rec.id}`,
+              correctedFields: Object.keys(anomaly.fixes)
+            }, 
+            user?.uid || 'diagnostics_agent', 
+            user?.email || 'admin@meeladpulse.com'
+          );
+          successCount++;
+        } catch (err) {
+          console.error(`Batch repair failed for document ${anomaly.rec.id}:`, err);
+        }
+      }
+
+      alert(`Batch repair process completed. Successfully corrected ${successCount} records.`);
+      await scanData();
+    }
+
+    function exportDiagnosticReport() {
+      const report = {
+        scanTimestamp: new Date().toISOString(),
+        festivalId: festId,
+        scannedCount: rawRecords.length,
+        anomaliesCount: detectedAnomalies.length,
+        items: detectedAnomalies.map(a => ({
+          documentId: a.rec.id,
+          competitionCode: a.rec.competitionCode,
+          competitionName: a.rec.competitionName,
+          issues: a.issues,
+          fixesAppliedPreview: a.fixes
+        }))
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(report, null, 2));
+      const dlAnchorElem = document.createElement('a');
+      dlAnchorElem.setAttribute("href", dataStr);
+      dlAnchorElem.setAttribute("download", `meeladpulse-public-data-diagnostic-report-${festId}.json`);
+      dlAnchorElem.click();
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

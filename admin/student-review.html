@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Registration Review - Admin Terminal</title>
+  <link class="main-css" rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Loading Pending Registrations...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Panel -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Student Registration Review</h1>
+            <p class="text-xs text-slate-400 font-medium">Review pending registrations submitted by Team Leaders and take necessary approvals or rejections.</p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <a href="/admin/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm">
+              <span>Back to Roster</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Success/Error Alert Toast -->
+        <div id="toast-msg" class="hidden bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl p-4 text-xs flex items-center space-x-2">
+          <svg class="h-4 w-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="toast-text">Operation completed successfully.</span>
+        </div>
+
+        <!-- Review Grid -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden p-6 space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Pending Roster Approvals</h2>
+            <div class="flex flex-wrap gap-2">
+              <input type="text" id="review-search" class="form-input text-xs py-1.5 px-3 max-w-xs" placeholder="Search by name, chest or team...">
+            </div>
+          </div>
+
+          <!-- Students Table -->
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4">Student Participant</th>
+                  <th class="px-6 py-4 font-mono">Chest Number</th>
+                  <th class="px-6 py-4">Category</th>
+                  <th class="px-6 py-4 font-mono">Team ID</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="review-table-body" class="divide-y divide-slate-100 text-xs">
+                <tr>
+                  <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">Loading database entries...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Mandatory Rejection Reason Modal -->
+  <div id="reject-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4 select-none">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-150 max-w-md w-full overflow-hidden flex flex-col">
+      <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+        <div>
+          <p class="text-[10px] font-mono font-extrabold text-red-600 uppercase tracking-wider">Registration Approval</p>
+          <h3 class="text-base font-bold text-slate-900 font-display">Reject Student Profile</h3>
+        </div>
+        <button onclick="closeRejectModal()" class="text-slate-400 hover:text-slate-600 font-bold cursor-pointer text-sm">✕</button>
+      </div>
+
+      <form id="reject-form" class="p-6 space-y-4">
+        <input type="hidden" id="reject-student-id" value="">
+        
+        <div class="space-y-1.5">
+          <label for="reject-reason" class="text-xs font-bold text-slate-700">Rejection Reason / justification (English / Malayalam)</label>
+          <textarea id="reject-reason" required class="form-input min-h-[100px] text-xs leading-relaxed" placeholder="Please explain why this student profile cannot be approved. e.g. Invalid category choice / Chest mismatch"></textarea>
+          <p class="text-[10px] text-red-500 font-semibold">കാരണം രേഖപ്പെടുത്തൽ നിർബന്ധമാണ്.</p>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+          <button type="button" onclick="closeRejectModal()" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold cursor-pointer">
+            Cancel
+          </button>
+          <button type="submit" class="btn bg-red-600 hover:bg-red-700 py-2 px-4 text-xs font-bold text-white shadow-md cursor-pointer">
+            Confirm Rejection
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { getFestivalSettings, getAllFestivalStudents, approveStudent, rejectStudent } from "/assets/js/student-service.js";
+
+    let activeFestId = null;
+    let studentsRoster = [];
+
+    async function initPage() {
+      try {
+        await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+
+        activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
+        if (!activeFestId) {
+          alert("Please select a festival scope first.");
+          window.location.replace('/select-fest.html');
+          return;
+        }
+
+        await loadRoster();
+        setupFilters();
+        setupRejectHandler();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Roster review loading failed:", err);
+      }
+    }
+
+    async function loadRoster() {
+      try {
+        const roster = await getAllFestivalStudents() || [];
+        studentsRoster = roster.filter(s => s.status === 'pending_approval');
+        renderRoster(studentsRoster);
+      } catch (err) {
+        console.error("Failed to query student documents:", err);
+      }
+    }
+
+    function renderRoster(students) {
+      const tbody = document.getElementById('review-table-body');
+      tbody.innerHTML = '';
+
+      if (students.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No pending student registrations require your approval.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      const catNames = {
+        cat_subjunior: 'Sub-Junior',
+        cat_junior: 'Junior',
+        cat_senior: 'Senior'
+      };
+
+      students.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="font-bold text-slate-900">${s.name}</div>
+          </td>
+          <td class="px-6 py-4 font-mono font-semibold text-slate-600">${s.chestNumber}</td>
+          <td class="px-6 py-4 text-slate-600 font-medium">${catNames[s.categoryId] || s.categoryId}</td>
+          <td class="px-6 py-4 font-mono font-semibold text-slate-500">${s.teamId ? s.teamId.toUpperCase() : 'N/A'}</td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex items-center justify-end space-x-2">
+              <button class="approve-action-btn font-bold px-2.5 py-1 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] cursor-pointer" data-id="${s.id}">Approve</button>
+              <button class="reject-action-btn font-bold px-2.5 py-1 rounded-md bg-red-600 hover:bg-red-700 text-white text-[10px] cursor-pointer" data-id="${s.id}">Reject</button>
+            </div>
+          </td>
+        `;
+
+        tr.querySelector('.approve-action-btn').onclick = async () => {
+          if (confirm(`Are you sure you want to approve student registration for ${s.name}?`)) {
+            await performApprove(s.id);
+          }
+        };
+
+        tr.querySelector('.reject-action-btn').onclick = () => {
+          openRejectModal(s.id);
+        };
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function performApprove(studentId) {
+      const loader = document.getElementById('global-page-loader');
+      loader.classList.remove('hidden');
+      try {
+        await approveStudent(studentId);
+        showToast("Student profile approved successfully!");
+        await loadRoster();
+      } catch (err) {
+        alert("Approval failed: " + err.message);
+      } finally {
+        loader.classList.add('hidden');
+      }
+    }
+
+    function openRejectModal(studentId) {
+      document.getElementById('reject-student-id').value = studentId;
+      document.getElementById('reject-reason').value = '';
+      document.getElementById('reject-modal').classList.remove('hidden');
+    }
+
+    window.closeRejectModal = function() {
+      document.getElementById('reject-modal').classList.add('hidden');
+    };
+
+    function setupRejectHandler() {
+      const form = document.getElementById('reject-form');
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('reject-student-id').value;
+        const reason = document.getElementById('reject-reason').value.trim();
+
+        if (!reason) return;
+
+        closeRejectModal();
+        const loader = document.getElementById('global-page-loader');
+        loader.classList.remove('hidden');
+
+        try {
+          await rejectStudent(id, reason);
+          showToast("Student profile rejected successfully.");
+          await loadRoster();
+        } catch (err) {
+          alert("Rejection failed: " + err.message);
+        } finally {
+          loader.classList.add('hidden');
+        }
+      };
+    }
+
+    function setupFilters() {
+      const search = document.getElementById('review-search');
+
+      search.oninput = () => {
+        const queryStr = search.value.toLowerCase().trim();
+        const filtered = studentsRoster.filter(s => {
+          return s.name.toLowerCase().includes(queryStr) || 
+                 s.chestNumber.toLowerCase().includes(queryStr) || 
+                 (s.teamId && s.teamId.toLowerCase().includes(queryStr));
+        });
+        renderRoster(filtered);
+      };
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-msg');
+      const text = document.getElementById('toast-text');
+      text.textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => { toast.classList.add('hidden'); }, 4000);
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

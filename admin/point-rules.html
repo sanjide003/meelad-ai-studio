@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Point Rules Management - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Loading Point Engine rules...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Banner & Translation Toggle -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display" id="page-title-pts">Point Allocation Schemes</h1>
+            <p class="text-xs text-slate-400 font-medium" id="page-subtitle-pts">Manage standard schemes for allocating team points based on participant ranks and participation.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button id="lang-toggle-btn" class="btn btn-secondary text-xs py-2 px-3 flex items-center space-x-1 border border-slate-200 cursor-pointer">
+              <span>English / മലയാളം</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
+          
+          <!-- Add/Edit Form Card -->
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-5 xl:col-span-1">
+            <h2 class="text-sm font-bold text-slate-800 font-display" id="form-header-pts">Create Point Rule Profile</h2>
+            
+            <form id="point-rule-form" class="space-y-4">
+              <input type="hidden" id="rule-id">
+              
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 block" id="lbl-pts-name">Scheme Profile Name</label>
+                <input type="text" id="rule-name-input" required class="form-input" placeholder="e.g. Standard Arts (കലാമേള ജനറൽ)">
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 block" id="lbl-pts-mode">Calculation Mode</label>
+                <select id="rule-mode-select" required class="form-input cursor-pointer">
+                  <option value="positionAndGrade">Position Points + Grade Points</option>
+                  <option value="positionOnly">Position Points Only (Ignore Grades)</option>
+                  <option value="gradeOnly">Grade Points Only (Ignore Ranks)</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                  <label class="text-xs font-bold text-slate-700 block" id="lbl-pt-1">1st Place Points</label>
+                  <input type="number" id="pts-1-input" required class="form-input" min="0" value="5">
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-xs font-bold text-slate-700 block" id="lbl-pt-2">2nd Place Points</label>
+                  <input type="number" id="pts-2-input" required class="form-input" min="0" value="3">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                  <label class="text-xs font-bold text-slate-700 block" id="lbl-pt-3">3rd Place Points</label>
+                  <input type="number" id="pts-3-input" required class="form-input" min="0" value="1">
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-xs font-bold text-slate-700 block" id="lbl-pt-4">4th Place Points</label>
+                  <input type="number" id="pts-4-input" required class="form-input" min="0" value="0">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                  <label class="text-xs font-bold text-slate-700 block" id="lbl-pt-5">5th Place Points</label>
+                  <input type="number" id="pts-5-input" required class="form-input" min="0" value="0">
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-xs font-bold text-slate-700 block" id="lbl-pt-part">Participation Points</label>
+                  <input type="number" id="pts-part-input" required class="form-input" min="0" value="0">
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-2 pt-2">
+                <button type="submit" id="submit-btn" class="flex-1 btn btn-accent py-2.5 text-xs font-bold text-white cursor-pointer shadow-sm">
+                  Save Scheme
+                </button>
+                <button type="button" id="cancel-btn" class="hidden btn btn-secondary py-2.5 text-xs font-bold text-slate-700 cursor-pointer">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Rules List Panel -->
+          <div class="bg-white rounded-2xl border border-slate-100 shadow-xs xl:col-span-2 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider" id="list-header-pts">Configured Schemes</h2>
+              <span id="rules-count" class="text-xs font-bold bg-slate-100 text-slate-600 py-1 px-2.5 rounded-full">0</span>
+            </div>
+
+            <div class="table-container">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                    <th class="px-6 py-4" id="th-name">Profile Scheme</th>
+                    <th class="px-6 py-4" id="th-mode">Calculation Mode</th>
+                    <th class="px-6 py-4" id="th-ranks">Ranks Points (1st - 5th)</th>
+                    <th class="px-6 py-4" id="th-part">Participation</th>
+                    <th class="px-6 py-4 text-right" id="th-actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="rules-table-body" class="divide-y divide-slate-100 text-xs text-slate-700">
+                  <tr>
+                    <td colspan="5" class="px-6 py-12 text-center text-slate-400">Loading point schemas...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { getPointRules, savePointRule, deletePointRule } from "/assets/js/firestore-service.js";
+
+    let currentLang = localStorage.getItem('meeladpulse_lang') || 'en';
+
+    const trans = {
+      en: {
+        title: "Point Allocation Schemes",
+        subtitle: "Manage standard schemes for allocating team points based on participant ranks and participation.",
+        createHeader: "Create Point Rule Profile",
+        editHeader: "Edit Point Rule Profile",
+        nameLabel: "Scheme Profile Name",
+        modeLabel: "Calculation Mode",
+        pt1: "1st Place Points",
+        pt2: "2nd Place Points",
+        pt3: "3rd Place Points",
+        pt4: "4th Place Points",
+        pt5: "5th Place Points",
+        ptPart: "Participation Points",
+        saveBtn: "Save Scheme",
+        cancelBtn: "Cancel",
+        listHeader: "Configured Schemes",
+        thName: "Profile Scheme",
+        thMode: "Calculation Mode",
+        thRanks: "Ranks Points (1st - 5th)",
+        thPart: "Participation",
+        thActions: "Actions",
+        loading: "Loading point schemas...",
+        noData: "No point rules configured for this festival.",
+        confirmDelete: "Are you sure you want to delete this point scheme?",
+        saving: "Saving...",
+        deleting: "Deleting..."
+      },
+      ml: {
+        title: "പോയിന്റ് ക്രമീകരണങ്ങൾ",
+        subtitle: "മത്സര വിജയികൾക്കും പങ്കെടുക്കുന്നവർക്കും നൽകേണ്ട പോയിന്റ് മാനദണ്ഡങ്ങൾ നിശ്ചയിക്കുക.",
+        createHeader: "പുതിയ പോയിന്റ് നിയമം സൃഷ്ടിക്കുക",
+        editHeader: "പോയിന്റ് നിയമം ഭേദഗതി ചെയ്യുക",
+        nameLabel: "പോയിന്റ് നിയമത്തിന്റെ പേര്",
+        modeLabel: "കണക്കാക്കുന്ന രീതി",
+        pt1: "ഒന്നാം സ്ഥാനം പോയിന്റുകൾ",
+        pt2: "രണ്ടാം സ്ഥാനം പോയിന്റുകൾ",
+        pt3: "മൂന്നാം സ്ഥാനം പോയിന്റുകൾ",
+        pt4: "നാലാം സ്ഥാനം പോയിന്റുകൾ",
+        pt5: "അഞ്ചാം സ്ഥാനം പോയിന്റുകൾ",
+        ptPart: "പങ്കാളിത്ത പോയിന്റുകൾ",
+        saveBtn: "പോയിന്റ് നിയമം സേവ് ചെയ്യുക",
+        cancelBtn: "റദ്ദാക്കുക",
+        listHeader: "നിലവിലുള്ള പോയിന്റ് നിയമങ്ങൾ",
+        thName: "നിയമ പ്രൊഫൈൽ",
+        thMode: "കണക്കുകൂട്ടൽ രീതി",
+        thRanks: "സ്ഥാന പോയിന്റുകൾ (1 - 5)",
+        thPart: "പങ്കാളിത്തം",
+        thActions: "നടപടികൾ",
+        loading: "നിയമങ്ങൾ ശേഖരിക്കുന്നു...",
+        noData: "ഈ ഫെസ്റ്റിവലിൽ പോയിന്റ് നിയമങ്ങളൊന്നും ക്രമീകരിച്ചിട്ടില്ല.",
+        confirmDelete: "ഈ പോയിന്റ് നിയമം ഇല്ലാതാക്കാൻ നിങ്ങൾക്ക് ഉറപ്പാണോ?",
+        saving: "സേവ് ചെയ്യുന്നു...",
+        deleting: "ഡിലീറ്റ് ചെയ്യുന്നു..."
+      }
+    };
+
+    function applyTranslations() {
+      const t = trans[currentLang];
+      document.getElementById('page-title-pts').textContent = t.title;
+      document.getElementById('page-subtitle-pts').textContent = t.subtitle;
+      document.getElementById('form-header-pts').textContent = document.getElementById('rule-id').value ? t.editHeader : t.createHeader;
+      document.getElementById('lbl-pts-name').textContent = t.nameLabel;
+      document.getElementById('lbl-pts-mode').textContent = t.modeLabel;
+      document.getElementById('lbl-pt-1').textContent = t.pt1;
+      document.getElementById('lbl-pt-2').textContent = t.pt2;
+      document.getElementById('lbl-pt-3').textContent = t.pt3;
+      document.getElementById('lbl-pt-4').textContent = t.pt4;
+      document.getElementById('lbl-pt-5').textContent = t.pt5;
+      document.getElementById('lbl-pt-part').textContent = t.ptPart;
+      document.getElementById('submit-btn').textContent = t.saveBtn;
+      document.getElementById('cancel-btn').textContent = t.cancelBtn;
+      document.getElementById('list-header-pts').textContent = t.listHeader;
+      
+      document.getElementById('th-name').textContent = t.thName;
+      document.getElementById('th-mode').textContent = t.thMode;
+      document.getElementById('th-ranks').textContent = t.thRanks;
+      document.getElementById('th-part').textContent = t.thPart;
+      document.getElementById('th-actions').textContent = t.thActions;
+    }
+
+    const form = document.getElementById('point-rule-form');
+    const tableBody = document.getElementById('rules-table-body');
+    const countBadge = document.getElementById('rules-count');
+    const cancelBtn = document.getElementById('cancel-btn');
+
+    async function initPointRulesDashboard() {
+      try {
+        await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+        applyTranslations();
+
+        // Language toggle
+        document.getElementById('lang-toggle-btn').addEventListener('click', () => {
+          currentLang = currentLang === 'en' ? 'ml' : 'en';
+          localStorage.setItem('meeladpulse_lang', currentLang);
+          applyTranslations();
+          renderPointRules();
+        });
+
+        await renderPointRules();
+
+        // Submit Form
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const t = trans[currentLang];
+          const submitBtn = document.getElementById('submit-btn');
+          submitBtn.disabled = true;
+          submitBtn.textContent = t.saving;
+
+          const payload = {
+            id: document.getElementById('rule-id').value || null,
+            name: document.getElementById('rule-name-input').value,
+            calculationMode: document.getElementById('rule-mode-select').value,
+            firstPlacePoints: parseInt(document.getElementById('pts-1-input').value) || 0,
+            secondPlacePoints: parseInt(document.getElementById('pts-2-input').value) || 0,
+            thirdPlacePoints: parseInt(document.getElementById('pts-3-input').value) || 0,
+            fourthPlacePoints: parseInt(document.getElementById('pts-4-input').value) || 0,
+            fifthPlacePoints: parseInt(document.getElementById('pts-5-input').value) || 0,
+            participationPoints: parseInt(document.getElementById('pts-part-input').value) || 0
+          };
+
+          try {
+            await savePointRule(payload);
+            resetForm();
+            await renderPointRules();
+          } catch (err) {
+            alert("Error saving point rule: " + err.message);
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = t.saveBtn;
+          }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+          resetForm();
+        });
+
+      } catch (error) {
+        console.error("Initialization error:", error);
+      }
+    }
+
+    async function renderPointRules() {
+      const t = trans[currentLang];
+      tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">${t.loading}</td></tr>`;
+      
+      try {
+        const rules = await getPointRules();
+        countBadge.textContent = rules.length;
+
+        if (rules.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">${t.noData}</td></tr>`;
+          return;
+        }
+
+        tableBody.innerHTML = "";
+        rules.forEach(r => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-50/50 transition";
+
+          let modeText = r.calculationMode;
+          if (r.calculationMode === 'positionAndGrade') modeText = "Position & Grade";
+          else if (r.calculationMode === 'positionOnly') modeText = "Position Only";
+          else if (r.calculationMode === 'gradeOnly') modeText = "Grade Only";
+
+          row.innerHTML = `
+            <td class="px-6 py-4 font-bold text-slate-850">${r.name}</td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700">${modeText}</span>
+            </td>
+            <td class="px-6 py-4 font-mono font-bold text-slate-900 space-x-1.5">
+              <span class="text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">${r.firstPlacePoints}</span>
+              <span class="text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${r.secondPlacePoints}</span>
+              <span class="text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">${r.thirdPlacePoints}</span>
+              <span class="text-slate-400 font-medium">${r.fourthPlacePoints || 0}</span>
+              <span class="text-slate-300 font-medium">${r.fifthPlacePoints || 0}</span>
+            </td>
+            <td class="px-6 py-4 font-mono text-slate-600 font-semibold">+${r.participationPoints || 0} Pts</td>
+            <td class="px-6 py-4 text-right space-x-2 shrink-0">
+              <button class="edit-btn text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer" data-id="${r.id}">Edit</button>
+              <button class="delete-btn text-xs font-bold text-rose-600 hover:text-rose-700 cursor-pointer" data-id="${r.id}">Delete</button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+        // Edit listener
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const r = rules.find(item => item.id === id);
+            if (r) {
+              document.getElementById('rule-id').value = r.id;
+              document.getElementById('rule-name-input').value = r.name;
+              document.getElementById('rule-mode-select').value = r.calculationMode;
+              document.getElementById('pts-1-input').value = r.firstPlacePoints;
+              document.getElementById('pts-2-input').value = r.secondPlacePoints;
+              document.getElementById('pts-3-input').value = r.thirdPlacePoints;
+              document.getElementById('pts-4-input').value = r.fourthPlacePoints || 0;
+              document.getElementById('pts-5-input').value = r.fifthPlacePoints || 0;
+              document.getElementById('pts-part-input').value = r.participationPoints || 0;
+
+              document.getElementById('form-header-pts').textContent = t.editHeader;
+              cancelBtn.classList.remove('hidden');
+            }
+          });
+        });
+
+        // Delete listener
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            if (confirm(t.confirmDelete)) {
+              btn.disabled = true;
+              btn.textContent = t.deleting;
+              try {
+                await deletePointPointRule(id); // mapped from service deletion
+                await renderPointRules();
+              } catch (err) {
+                // fall back delete point rule
+                try {
+                  await deletePointRule(id);
+                  await renderPointRules();
+                } catch (e2) {
+                  alert("Error deleting point rule: " + e2.message);
+                }
+              }
+            }
+          });
+        });
+
+      } catch (err) {
+        tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-rose-500">Error loading point schemas: ${err.message}</td></tr>`;
+      }
+    }
+
+    function resetForm() {
+      const t = trans[currentLang];
+      document.getElementById('rule-id').value = "";
+      form.reset();
+      document.getElementById('form-header-pts').textContent = t.createHeader;
+      cancelBtn.classList.add('hidden');
+    }
+
+    initPointRulesDashboard();
+  </script>
+</body>
+</html>

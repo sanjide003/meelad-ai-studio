@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submitted Marks Monitor - Admin Console</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700 font-display">Polling judge submissions...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex items-center justify-between">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Submitted Marks Monitor</h1>
+            <p class="text-xs text-slate-400 font-medium font-display">Comprehensive view of judge sheets and marking progress across all active events.</p>
+          </div>
+        </div>
+
+        <!-- Progress Table -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+          <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-display">Competitions Marks Status</h2>
+          </div>
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4">Code</th>
+                  <th class="px-6 py-4">Competition</th>
+                  <th class="px-6 py-4">Required Judges</th>
+                  <th class="px-6 py-4">Submissions Status</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="progress-table-body" class="divide-y divide-slate-100 text-xs">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getCompetitions, getEntries } from "/assets/js/firestore-service.js";
+    import { getJudgeAssignments } from "/assets/js/judge-service.js";
+    import { getJudgeMarksForCompetition } from "/assets/js/mark-service.js";
+
+    let adminProfile = null;
+
+    async function initPage() {
+      try {
+        adminProfile = await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+
+        await loadSubmittedStatus();
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Failed submitted marks initialization:", err);
+        document.getElementById('global-page-loader').classList.add('hidden');
+      }
+    }
+
+    async function loadSubmittedStatus() {
+      const tbody = document.getElementById('progress-table-body');
+      tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">Loading submittals...</td></tr>';
+
+      try {
+        const comps = await getCompetitions();
+        const assigns = await getJudgeAssignments();
+        const entries = await getEntries();
+
+        tbody.innerHTML = '';
+        if (comps.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">No competitions configured.</td></tr>';
+          return;
+        }
+
+        for (const c of comps) {
+          const compAssigns = assigns.filter(a => a.competitionId === c.id && a.active === true);
+          const requiredJudges = c.judgeCountRequired || 3;
+          
+          // Count sheets
+          const marks = await getJudgeMarksForCompetition(c.id);
+          const finalSubmissionsCount = [...new Set(marks.filter(m => m.submissionStatus === 'final').map(m => m.judgeUserId))].length;
+          
+          const isComplete = finalSubmissionsCount >= requiredJudges;
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+          const progressBadge = isComplete
+            ? `<span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700">Submissions Completed (${finalSubmissionsCount}/${requiredJudges})</span>`
+            : `<span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700">Incomplete (${finalSubmissionsCount}/${requiredJudges})</span>`;
+
+          tr.innerHTML = `
+            <td class="px-6 py-4 font-mono font-bold text-emerald-600">${c.code || 'CODE'}</td>
+            <td class="px-6 py-4">
+              <div class="font-bold text-slate-900">${c.name}</div>
+              <div class="text-[10px] text-slate-400 font-medium">${c.performanceType || 'Oral'} • ${c.competitionType || 'Individual'}</div>
+            </td>
+            <td class="px-6 py-4 font-bold text-slate-600">${requiredJudges}</td>
+            <td class="px-6 py-4">${progressBadge}</td>
+            <td class="px-6 py-4 text-right">
+              <a href="/admin/mark-review.html?compId=${c.id}" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[10px] font-bold transition">
+                Review Sheets
+              </a>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        }
+
+      } catch (err) {
+        console.error("Load submitted monitor failed:", err);
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-rose-600 font-bold">Failed to load mark status.</td></tr>';
+      }
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

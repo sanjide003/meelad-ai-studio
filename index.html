@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MeeladPulse - Public Portal</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .animate-bounce-slow {
+      animation: bounce 3s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(-5%);
+        animation-timing-function: cubic-bezier(0.8,0,1,1);
+      }
+      50% {
+        transform: none;
+        animation-timing-function: cubic-bezier(0,0,0.2,1);
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+  <!-- Sticky Floating Header -->
+  <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 transition-all duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Branding logo -->
+      <a href="/index.html" class="flex items-center space-x-2 group">
+        <div class="h-9 w-9 rounded-xl bg-slate-900 text-white font-extrabold flex items-center justify-center font-display shadow-sm group-hover:scale-105 transition duration-200">
+          M
+        </div>
+        <div class="flex flex-col">
+          <span class="font-extrabold text-sm text-slate-900 tracking-tight font-display group-hover:text-indigo-600 transition" id="nav-festival-title">MeeladPulse</span>
+          <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider font-mono">Official Festival Desk</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation links -->
+      <nav class="hidden md:flex items-center space-x-1">
+        <a href="/index.html" class="px-3 py-2 text-xs font-bold text-slate-900 hover:text-indigo-600 rounded-lg transition">Home</a>
+        <a href="/public/live-scoreboard.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Scoreboard</a>
+        <a href="/public/latest-results.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Latest Results</a>
+        <a href="/public/announcements.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Announcements</a>
+      </nav>
+
+      <!-- Right Side Actions (Dashboard / Auth) -->
+      <div class="flex items-center space-x-2">
+        <div id="auth-actions" class="flex items-center space-x-2">
+          <!-- Populated dynamically via Auth states -->
+          <a href="/login.html" class="px-3.5 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition duration-200 font-display shadow-xs">
+            Admin / Staff Login
+          </a>
+        </div>
+
+        <!-- Mobile Menu Trigger -->
+        <button id="mobile-menu-btn" class="p-2 text-slate-500 hover:text-slate-900 md:hidden rounded-lg hover:bg-slate-50 transition cursor-pointer">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation Menu -->
+    <div id="mobile-menu" class="hidden border-b border-slate-100 bg-white/95 backdrop-blur-md px-4 py-3 md:hidden space-y-1">
+      <a href="/index.html" class="block px-3 py-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-xl">Home</a>
+      <a href="/public/live-scoreboard.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Scoreboard</a>
+      <a href="/public/latest-results.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Latest Results</a>
+      <a href="/public/announcements.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Announcements</a>
+    </div>
+  </header>
+
+  <!-- Emergency / High-Priority Announcement Header Bar -->
+  <div id="emergency-banner" class="bg-rose-600 text-white py-2 px-4 text-center text-xs font-bold tracking-tight hidden">
+    <!-- Populated dynamically -->
+  </div>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+
+    <!-- Hero / Festival Branding Section -->
+    <section class="bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden p-8 md:p-12 relative flex flex-col md:flex-row md:items-center justify-between gap-8">
+      <div class="space-y-4 max-w-xl">
+        <div class="inline-flex px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-extrabold text-indigo-700 uppercase tracking-widest font-mono">
+          🏆 Global Festival Standing Center
+        </div>
+        <h2 id="hero-title" class="text-3xl md:text-5xl font-extrabold text-slate-950 tracking-tight leading-tight font-display">
+          Meelad Festival Standing
+        </h2>
+        <p id="hero-subtitle" class="text-xs md:text-sm text-slate-400 font-medium leading-relaxed">
+          Welcome to the official publication portal. View real-time standings, verify certificate keys, and track live podium race scores across Arts and Sports divisions.
+        </p>
+
+        <!-- Dynamic Summary Stats Cards -->
+        <div class="grid grid-cols-3 gap-3 pt-2">
+          <div class="bg-slate-50 border border-slate-100 p-3 rounded-2xl space-y-0.5 text-center">
+            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Published Events</span>
+            <div id="stat-events" class="text-xl font-extrabold text-slate-900 font-mono">0</div>
+          </div>
+          <div class="bg-slate-50 border border-slate-100 p-3 rounded-2xl space-y-0.5 text-center">
+            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Active Teams</span>
+            <div id="stat-teams" class="text-xl font-extrabold text-slate-900 font-mono">0</div>
+          </div>
+          <div class="bg-slate-50 border border-slate-100 p-3 rounded-2xl space-y-0.5 text-center">
+            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Points Awarded</span>
+            <div id="stat-points" class="text-xl font-extrabold text-slate-900 font-mono">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Result Search Component -->
+      <div class="bg-slate-50 border border-slate-100 rounded-2xl p-6 max-w-sm w-full space-y-3 shadow-xs">
+        <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-wider font-display flex items-center space-x-1.5">
+          <span>🔍 Quick Result Search</span>
+        </h3>
+        <p class="text-[10px] text-slate-400 font-medium">Verify points instantly by entering Student Name, Chest Number, or Competition.</p>
+        
+        <div class="relative">
+          <input id="search-input" type="text" class="w-full p-3 pr-10 text-xs border border-slate-200 bg-white rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium placeholder-slate-400" placeholder="e.g. 104, Muhammad, Oral...">
+          <button id="search-btn" class="absolute right-2 top-2 h-7 w-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition cursor-pointer">
+            ➔
+          </button>
+        </div>
+
+        <!-- Search results display dropdown container -->
+        <div id="search-results" class="hidden max-h-48 overflow-y-auto divide-y divide-slate-100 bg-white border border-slate-200 rounded-xl shadow-lg p-2 space-y-1 text-xs">
+          <!-- Populated instantly -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Bento Grid Content Section -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Column 1: Live Standing Podium (Top Teams) -->
+      <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col space-y-4 lg:col-span-1">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-widest font-display">🏆 Championship Race</h3>
+          <a href="/public/live-scoreboard.html" class="text-[10px] font-bold text-indigo-600 hover:underline">Full Standings</a>
+        </div>
+
+        <!-- Live Animated Podium Placement -->
+        <div class="flex items-end justify-center space-x-3 pt-6 pb-2" id="podium-container">
+          <!-- Placements rendered dynamically -->
+        </div>
+
+        <div id="scoreboard-list" class="space-y-2 flex-grow">
+          <!-- Standings rows -->
+        </div>
+      </div>
+
+      <!-- Column 2: Latest Declared Results -->
+      <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col space-y-4 lg:col-span-1">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-widest font-display">📢 Latest Declared Results</h3>
+          <a href="/public/latest-results.html" class="text-[10px] font-bold text-indigo-600 hover:underline">All Results</a>
+        </div>
+
+        <div id="latest-results-list" class="space-y-3 divide-y divide-slate-50 flex-grow">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Column 3: Announcements & Public Schedule -->
+      <div class="space-y-6 lg:col-span-1">
+        
+        <!-- Announcements box -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-widest font-display">🔔 News & Announcements</h3>
+            <a href="/public/announcements.html" class="text-[10px] font-bold text-indigo-600 hover:underline">View All</a>
+          </div>
+
+          <div id="announcements-list" class="space-y-3">
+            <!-- Loaded dynamically -->
+          </div>
+        </div>
+
+        <!-- Schedule summary box -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-widest font-display">📅 Stage Schedules</h3>
+          </div>
+
+          <div id="schedule-list" class="space-y-3">
+            <!-- Loaded dynamically -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-100 py-8 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-400">
+      <p>© MeeladPulse Standing Service. All rights reserved.</p>
+      <div class="flex space-x-4">
+        <a href="/public/sw.js" class="hover:text-indigo-600 transition">Offline Sw Service</a>
+        <a href="/login.html" class="hover:text-indigo-600 transition">Portal Terminal</a>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { auth, db } from "/assets/js/firebase-init.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    import { getActiveFestivalId, getPublicFestivalConfig } from "/assets/js/public-config-service.js";
+    import { subscribeLatestPublicResults, subscribePublicRankings, searchPublicResults } from "/assets/js/public-result-service.js";
+    import { subscribePublicAnnouncements, subscribePublicSchedule } from "/assets/js/public-home-service.js";
+
+    const festId = getActiveFestivalId();
+
+    // Init page states
+    async function loadBranding() {
+      const config = await getPublicFestivalConfig(festId);
+      if (config) {
+        document.getElementById('nav-festival-title').textContent = config.title || config.name || "MeeladPulse";
+        document.getElementById('hero-title').textContent = `${config.title || config.name || "Meelad Pulse"} Portal`;
+        if (config.subtitle) {
+          document.getElementById('hero-subtitle').textContent = config.subtitle;
+        }
+      }
+    }
+
+    function setupAuthListener() {
+      onAuthStateChanged(auth, async (user) => {
+        const container = document.getElementById('auth-actions');
+        if (user) {
+          try {
+            const userSnap = await getDoc(doc(db, 'users', user.uid));
+            if (userSnap.exists()) {
+              const uData = userSnap.data();
+              let dashboardHref = '/login.html';
+              if (uData.role === 'admin') dashboardHref = '/admin/dashboard.html';
+              else if (uData.role === 'judge') dashboardHref = '/judge/dashboard.html';
+              else if (uData.role === 'teamLeader') dashboardHref = '/team/dashboard.html';
+
+              container.innerHTML = `
+                <a href="${dashboardHref}" class="px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100 text-xs font-bold rounded-xl transition font-display flex items-center space-x-1">
+                  <span>Open Dashboard</span>
+                </a>
+                <button id="nav-logout-btn" class="px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold rounded-xl transition cursor-pointer font-display">
+                  Logout
+                </button>
+              `;
+
+              document.getElementById('nav-logout-btn').onclick = async () => {
+                await signOut(auth);
+                window.location.reload();
+              };
+              return;
+            }
+          } catch (err) {
+            console.error("Auth profile check failed:", err);
+          }
+        }
+        
+        // Default anonymous / logged out
+        container.innerHTML = `
+          <a href="/login.html" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition duration-150 font-display shadow-xs">
+            Admin / Staff Login
+          </a>
+        `;
+      });
+    }
+
+    function setupSubscribers() {
+      // 1. Standings Rankings & Podium
+      subscribePublicRankings(festId, (rankings) => {
+        renderChampionshipStandings(rankings);
+      });
+
+      // 2. Latest Declared Results
+      subscribeLatestPublicResults(festId, 5, (results) => {
+        renderLatestResults(results);
+      });
+
+      // 3. Announcements
+      subscribePublicAnnouncements(festId, (announcements) => {
+        renderAnnouncements(announcements);
+      });
+
+      // 4. Schedules
+      subscribePublicSchedule(festId, (schedule) => {
+        renderSchedule(schedule);
+      });
+    }
+
+    function renderChampionshipStandings(rankings) {
+      const podiumContainer = document.getElementById('podium-container');
+      const listContainer = document.getElementById('scoreboard-list');
+
+      if (!rankings || rankings.length === 0) {
+        podiumContainer.innerHTML = '';
+        listContainer.innerHTML = '<div class="text-center py-6 text-slate-400">Championship stands not calculated yet.</div>';
+        return;
+      }
+
+      // Sort just in case
+      rankings.sort((a, b) => b.overallTotal - a.overallTotal);
+
+      // Total point aggregation for hero statistics
+      const totalPointsAwarded = rankings.reduce((sum, r) => sum + (r.overallTotal || 0), 0);
+      document.getElementById('stat-points').textContent = totalPointsAwarded;
+      document.getElementById('stat-teams').textContent = rankings.length;
+
+      // Extract 1st, 2nd, 3rd for Podium
+      const podium = [null, null, null]; // 2nd, 1st, 3rd layout
+      if (rankings[0]) podium[1] = rankings[0]; // 1st Place (Center)
+      if (rankings[1]) podium[0] = rankings[1]; // 2nd Place (Left)
+      if (rankings[2]) podium[2] = rankings[2]; // 3rd Place (Right)
+
+      podiumContainer.innerHTML = podium.map((t, idx) => {
+        if (!t) return `<div class="w-16"></div>`; // empty placeholder
+
+        // Height mappings
+        let heightClass = 'h-16';
+        let placeLabel = '';
+        let colorClass = '';
+
+        if (idx === 0) { heightClass = 'h-20'; placeLabel = '2nd'; colorClass = 'bg-slate-100 border-slate-200 text-slate-700'; }
+        if (idx === 1) { heightClass = 'h-26 animate-bounce-slow'; placeLabel = '1st'; colorClass = 'bg-indigo-50 border-indigo-100 text-indigo-700'; }
+        if (idx === 2) { heightClass = 'h-14'; placeLabel = '3rd'; colorClass = 'bg-amber-50 border-amber-100 text-amber-800'; }
+
+        return `
+          <div class="flex flex-col items-center flex-1 max-w-[80px]">
+            <div class="h-10 w-10 rounded-full border-2 flex items-center justify-center font-bold text-xs text-slate-800" style="border-color: ${t.teamColour || '#10b981'}">
+              ${t.teamCode}
+            </div>
+            <div class="w-full ${heightClass} ${colorClass} border border-b-0 rounded-t-xl flex flex-col items-center justify-center p-1 mt-2 shadow-xs">
+              <span class="text-[9px] font-extrabold uppercase tracking-widest font-display">${placeLabel}</span>
+              <span class="text-xs font-extrabold font-mono">${t.overallTotal}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Render remaining list (all teams)
+      listContainer.innerHTML = rankings.map((r, idx) => `
+        <div class="flex items-center justify-between p-3 border border-slate-100 rounded-xl hover:bg-slate-50/50 transition">
+          <div class="flex items-center space-x-2.5">
+            <span class="h-5 w-5 rounded-full font-bold text-[10px] bg-slate-100 text-slate-600 flex items-center justify-center">
+              ${idx + 1}
+            </span>
+            <span class="h-3.5 w-3.5 rounded" style="background-color: ${r.teamColour || '#10b981'}"></span>
+            <div>
+              <div class="text-xs font-extrabold text-slate-900">${r.teamName}</div>
+              <div class="text-[9px] font-bold text-slate-400 font-mono uppercase">${r.teamCode}</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs font-extrabold font-mono text-slate-800">${r.overallTotal} Pts</div>
+            <div class="text-[8px] text-slate-400 font-bold uppercase font-mono">Arts: ${r.artsTotal} | Sprt: ${r.sportsTotal}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderLatestResults(results) {
+      const container = document.getElementById('latest-results-list');
+      if (!results || results.length === 0) {
+        container.innerHTML = '<div class="text-center py-6 text-slate-400">No official standings published yet.</div>';
+        document.getElementById('stat-events').textContent = 0;
+        return;
+      }
+
+      document.getElementById('stat-events').textContent = results.length;
+
+      container.innerHTML = results.map((r, idx) => {
+        // Build winners quick summary text
+        const topWinner = r.winners?.find(w => w.position === '1st' || w.position === '1');
+        const winnerText = topWinner ? 
+          `🏆 1st: ${topWinner.displayName} (${topWinner.teamName})` : 
+          'Standings processed';
+
+        return `
+          <div class="pt-3 ${idx === 0 ? '' : 'border-t border-slate-100'} space-y-1 hover:translate-x-0.5 transition duration-200">
+            <div class="flex items-center justify-between">
+              <span class="font-mono font-bold text-[10px] text-indigo-600">${r.competitionCode || 'CODE'}</span>
+              <span class="text-[8px] text-slate-400 font-bold uppercase font-mono">${r.publishedAt ? new Date(r.publishedAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Live'}</span>
+            </div>
+            <div class="text-xs font-extrabold text-slate-950">${r.competitionName}</div>
+            <div class="text-[10px] text-slate-500 font-medium">${winnerText}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAnnouncements(list) {
+      const banner = document.getElementById('emergency-banner');
+      const container = document.getElementById('announcements-list');
+
+      // Filter high priority/emergency
+      const emergency = list.find(a => a.priority === 'high' || a.priority === 'emergency');
+      if (emergency) {
+        banner.innerHTML = `⚠️ EMERGENCY UPDATE: ${emergency.title} - ${emergency.content}`;
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+
+      if (!list || list.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400 italic">No public announcements posted.</p>';
+        return;
+      }
+
+      container.innerHTML = list.slice(0, 3).map(a => `
+        <div class="p-3 border border-slate-100 rounded-xl bg-slate-50/20 space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-[9px] font-bold uppercase tracking-wider ${a.priority === 'high' ? 'text-rose-600' : 'text-indigo-600'}">${a.priority || 'standard'}</span>
+            <span class="text-[8px] text-slate-400 font-medium font-mono">${a.publishDate ? new Date(a.publishDate.seconds * 1000).toLocaleDateString() : 'Today'}</span>
+          </div>
+          <h4 class="text-xs font-bold text-slate-900">${a.title}</h4>
+          <p class="text-[10px] text-slate-500 leading-relaxed">${a.content}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderSchedule(list) {
+      const container = document.getElementById('schedule-list');
+      if (!list || list.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400 italic">No stages scheduled currently.</p>';
+        return;
+      }
+
+      container.innerHTML = list.slice(0, 4).map(s => `
+        <div class="flex items-center justify-between p-2.5 border border-slate-100 rounded-xl">
+          <div>
+            <div class="text-xs font-bold text-slate-900">${s.competitionName || 'Competition Stage'}</div>
+            <div class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">${s.stageName || 'TBD Stage'}</div>
+          </div>
+          <div class="text-right">
+            <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-indigo-50 text-indigo-700 font-mono">
+              ${s.scheduledTime || 'TBD'}
+            </span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Search trigger setup
+    function setupSearch() {
+      const searchInput = document.getElementById('search-input');
+      const resultsDiv = document.getElementById('search-results');
+
+      const executeSearch = async () => {
+        const val = searchInput.value.trim();
+        if (!val) {
+          resultsDiv.classList.add('hidden');
+          return;
+        }
+
+        const matches = await searchPublicResults(festId, val);
+        if (matches.length === 0) {
+          resultsDiv.innerHTML = '<div class="p-3 text-center text-slate-400 font-medium">No official matches found.</div>';
+          resultsDiv.classList.remove('hidden');
+          return;
+        }
+
+        resultsDiv.innerHTML = matches.map(m => `
+          <div class="p-2 hover:bg-slate-50 transition rounded-lg">
+            <div class="flex justify-between font-mono text-[9px] font-bold text-indigo-600">
+              <span>${m.competitionCode || 'CODE'}</span>
+              <span class="uppercase">${m.competitionType}</span>
+            </div>
+            <div class="font-extrabold text-slate-900 text-[11px]">${m.competitionName}</div>
+            <div class="mt-1 space-y-0.5 text-[10px] text-slate-600">
+              ${(m.winners || []).map(w => `
+                <div>${w.position}: <span class="font-extrabold text-slate-900">${w.displayName}</span> (${w.teamName}) - <span class="font-bold text-emerald-600 font-mono">${w.grade || 'None'}</span></div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('');
+
+        resultsDiv.classList.remove('hidden');
+      };
+
+      document.getElementById('search-btn').onclick = executeSearch;
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          executeSearch();
+        }
+      });
+
+      // Close results when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#search-input') && !e.target.closest('#search-results')) {
+          resultsDiv.classList.add('hidden');
+        }
+      });
+    }
+
+    // Hamburger menu setup
+    function setupHamburger() {
+      const btn = document.getElementById('mobile-menu-btn');
+      const menu = document.getElementById('mobile-menu');
+      if (btn && menu) {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          menu.classList.toggle('hidden');
+        };
+        document.addEventListener('click', () => {
+          menu.classList.add('hidden');
+        });
+      }
+    }
+
+    // Fire operations
+    async function start() {
+      await loadBranding();
+      setupAuthListener();
+      setupSubscribers();
+      setupSearch();
+      setupHamburger();
+    }
+
+    start();
+  </script>
+</body>
+</html>

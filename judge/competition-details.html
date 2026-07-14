@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Competition Details - Judge Panel</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700 font-display">Loading regulations...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Controls -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex items-center justify-between">
+          <div class="space-y-1">
+            <a href="/judge/competitions.html" class="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-600 mb-1.5 transition">
+              ← <span id="back-txt">Back to Assignments</span>
+            </a>
+            <h1 id="selected-name" class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Competition Regulations</h1>
+            <p id="selected-code" class="text-xs font-mono font-bold text-emerald-600 uppercase tracking-widest">CODE</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button id="lang-btn-en" class="px-2.5 py-1 text-[10px] font-bold border rounded-lg hover:bg-slate-50 cursor-pointer">EN</button>
+            <button id="lang-btn-ml" class="px-2.5 py-1 text-[10px] font-bold border rounded-lg hover:bg-slate-50 cursor-pointer">മലയാളം</button>
+          </div>
+        </div>
+
+        <!-- Rules Grid layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Core Info card -->
+          <div class="lg:col-span-2 space-y-6">
+            <!-- Details Overview -->
+            <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-6">
+              <h2 id="elig-header" class="text-xs font-bold text-slate-400 uppercase tracking-widest">Eligibility Rules & Criteria</h2>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                <div class="space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <span class="text-[10px] text-slate-400 font-bold block uppercase">Gender Eligibility</span>
+                  <p id="rule-gender" class="text-slate-900 font-bold">Unrestricted</p>
+                </div>
+                <div class="space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <span class="text-[10px] text-slate-400 font-bold block uppercase">Age Limit / Class Range</span>
+                  <p id="rule-class" class="text-slate-900 font-bold">Unrestricted</p>
+                </div>
+                <div class="space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <span class="text-[10px] text-slate-400 font-bold block uppercase">Team Entry Limit</span>
+                  <p id="rule-team-limit" class="text-slate-900 font-bold">Unrestricted</p>
+                </div>
+                <div class="space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <span class="text-[10px] text-slate-400 font-bold block uppercase">Group Size bounds</span>
+                  <p id="rule-group-size" class="text-slate-900 font-bold">Individual Only</p>
+                </div>
+                <div class="space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <span class="text-[10px] text-slate-400 font-bold block uppercase">Classification</span>
+                  <p id="rule-classification" class="text-slate-900 font-bold">Stage Performance</p>
+                </div>
+                <div class="space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <span class="text-[10px] text-slate-400 font-bold block uppercase">Maximum Marks Cap</span>
+                  <p id="rule-max-mark" class="text-slate-900 font-extrabold text-emerald-600 font-mono">100 Marks</p>
+                </div>
+              </div>
+
+              <!-- Extra Notes / Text Rules -->
+              <div class="space-y-2 pt-2 border-t border-slate-100">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Rule Book description</span>
+                <p id="text-rules" class="text-xs text-slate-600 leading-relaxed font-medium bg-slate-50/50 p-4 rounded-xl border border-slate-100">No custom regulations configured for this competition.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sideline Criteria Info -->
+          <div class="space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-6">
+              <h2 id="crit-header" class="text-xs font-bold text-slate-400 uppercase tracking-widest">Scoring Criteria Parameters</h2>
+              <div id="criteria-list-group" class="space-y-4 text-xs">
+                <!-- Loaded via javascript -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { verifyJudgeAssignment, getJudgeSafeCompetition } from "/assets/js/judge-service.js";
+    import { en } from "/assets/js/translations-en.js";
+    import { ml } from "/assets/js/translations-ml.js";
+
+    let judgeProfile = null;
+    let selectedComp = null;
+    let currentLanguage = localStorage.getItem('meeladpulse_lang') || 'en';
+
+    function getTrans(key) {
+      const dict = currentLanguage === 'ml' ? ml : en;
+      return dict[key] || key;
+    }
+
+    async function initPage() {
+      try {
+        judgeProfile = await verifyUserRole(['judge']);
+        await loadPortalLayout('judge');
+        initializeNavigation();
+        setupLanguageControls();
+
+        // Load Competition details
+        const urlParams = new URLSearchParams(window.location.search);
+        const compId = urlParams.get('compId');
+
+        if (!compId) {
+          window.location.replace("/judge/competitions.html");
+          return;
+        }
+
+        // Security check
+        const isAuthorized = await verifyJudgeAssignment(judgeProfile.uid, compId);
+        if (!isAuthorized) {
+          window.location.replace("/unauthorized.html?reason=not_assigned");
+          return;
+        }
+
+        selectedComp = await getJudgeSafeCompetition(compId);
+        renderCompetitionDetails();
+        applyTranslations();
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Failed loading details screen:", err);
+        document.getElementById('global-page-loader').classList.add('hidden');
+      }
+    }
+
+    function setupLanguageControls() {
+      const btnEn = document.getElementById('lang-btn-en');
+      const btnMl = document.getElementById('lang-btn-ml');
+      
+      const updateButtons = () => {
+        if (currentLanguage === 'ml') {
+          btnMl.className = "px-2.5 py-1 text-[10px] font-bold border border-emerald-500 bg-emerald-50 text-emerald-700 rounded-lg cursor-pointer";
+          btnEn.className = "px-2.5 py-1 text-[10px] font-bold border rounded-lg hover:bg-slate-50 cursor-pointer text-slate-500";
+        } else {
+          btnEn.className = "px-2.5 py-1 text-[10px] font-bold border border-emerald-500 bg-emerald-50 text-emerald-700 rounded-lg cursor-pointer";
+          btnMl.className = "px-2.5 py-1 text-[10px] font-bold border rounded-lg hover:bg-slate-50 cursor-pointer text-slate-500";
+        }
+      };
+
+      btnEn.onclick = () => {
+        currentLanguage = 'en';
+        localStorage.setItem('meeladpulse_lang', 'en');
+        updateButtons();
+        applyTranslations();
+        renderCompetitionDetails();
+      };
+
+      btnMl.onclick = () => {
+        currentLanguage = 'ml';
+        localStorage.setItem('meeladpulse_lang', 'ml');
+        updateButtons();
+        applyTranslations();
+        renderCompetitionDetails();
+      };
+
+      updateButtons();
+    }
+
+    function applyTranslations() {
+      document.getElementById('back-txt').textContent = getTrans('back');
+      document.getElementById('elig-header').textContent = getTrans('eligibilityRules');
+      document.getElementById('crit-header').textContent = getTrans('criteria');
+    }
+
+    function renderCompetitionDetails() {
+      if (!selectedComp) return;
+
+      document.getElementById('selected-name').textContent = selectedComp.name;
+      document.getElementById('selected-code').textContent = selectedComp.code || 'CODE';
+
+      document.getElementById('rule-gender').textContent = selectedComp.genderMode === 'boysOnly' 
+        ? (currentLanguage === 'ml' ? 'ആൺകുട്ടികൾ മാത്രം' : 'Boys Only')
+        : (selectedComp.genderMode === 'girlsOnly' 
+          ? (currentLanguage === 'ml' ? 'പെൺകുട്ടികൾ മാത്രം' : 'Girls Only')
+          : (currentLanguage === 'ml' ? 'ആൺ/പെൺകുട്ടികൾ' : 'Unrestricted / Co-Ed'));
+
+      document.getElementById('rule-class').textContent = selectedComp.rules?.classLimit || (currentLanguage === 'ml' ? 'ഡിവിഷൻ നിയന്ത്രണം മാത്രം' : 'Division restricted');
+      
+      const maxEntries = selectedComp.rules?.maxEntriesPerTeam || 'Unrestricted';
+      document.getElementById('rule-team-limit').textContent = currentLanguage === 'ml' 
+        ? `ടീമിന് പരമാവധി ${maxEntries} എൻട്രികൾ` 
+        : `Max ${maxEntries} entries per team`;
+
+      const minS = selectedComp.rules?.minGroupSize || 1;
+      const maxS = selectedComp.rules?.maxGroupSize || 1;
+      document.getElementById('rule-group-size').textContent = selectedComp.competitionType === 'Group'
+        ? (currentLanguage === 'ml' ? `ഗ്രൂപ്പ് (${minS} മുതൽ ${maxS} അംഗങ്ങൾ)` : `Group (Bounds: ${minS} to ${maxS} members)`)
+        : (currentLanguage === 'ml' ? 'വ്യക്തിഗതം' : 'Individual Performance');
+
+      const isStage = selectedComp.rules?.isStageClassification !== false;
+      document.getElementById('rule-classification').textContent = isStage 
+        ? (currentLanguage === 'ml' ? 'വേദി മത്സരം' : 'Stage performance classification')
+        : (currentLanguage === 'ml' ? 'വേദിയിതര മത്സരം' : 'Non-Stage classification');
+
+      document.getElementById('rule-max-mark').textContent = `${selectedComp.maxMark || 100} ${currentLanguage === 'ml' ? 'മാർക്ക്' : 'Marks'}`;
+
+      if (selectedComp.rules?.ruleDescription) {
+        document.getElementById('text-rules').textContent = selectedComp.rules.ruleDescription;
+      } else {
+        document.getElementById('text-rules').textContent = currentLanguage === 'ml'
+          ? "ഈ മത്സരത്തിനായി അഡ്മിൻ പ്രത്യേക നിയമങ്ങൾ രേഖപ്പെടുത്തിയിട്ടില്ല."
+          : "No specific textual description loaded in database config.";
+      }
+
+      // Load Criteria
+      const critGroup = document.getElementById('criteria-list-group');
+      critGroup.innerHTML = '';
+
+      // Set standard criteria fields
+      const criteriaList = [
+        { id: 'crit_1', name: 'Presentation & Pronunciation', maxMark: 15 },
+        { id: 'crit_2', name: 'Memory & Accuracy', maxMark: 15 },
+        { id: 'crit_3', name: 'Confidence & Rhythm', maxMark: 10 }
+      ];
+
+      criteriaList.forEach(crit => {
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl";
+        row.innerHTML = `
+          <div>
+            <p class="font-bold text-slate-800">${crit.name}</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">ID: ${crit.id}</p>
+          </div>
+          <span class="font-mono font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 border border-emerald-100 rounded-lg">Max: ${crit.maxMark}</span>
+        `;
+        critGroup.appendChild(row);
+      });
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

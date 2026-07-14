@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Leader Desk - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Verifying team privileges...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Welcome desk banner -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Team Leader Desk</h1>
+            <p class="text-xs text-slate-400 font-medium">Authorized Desk Node: <span id="auth-team-label" class="font-bold text-emerald-600 font-mono">Loading Team...</span></p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button id="add-student-btn" class="btn btn-primary py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm cursor-pointer">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+              <span>Register Student</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Announcements Board -->
+        <div id="team-announcements-panel" class="hidden bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4 animate-fade-in">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center space-x-2">
+              <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+              <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider font-display">Official Bulletins & Broadcasts</h2>
+            </div>
+            <span class="text-[10px] font-mono font-bold text-slate-400 uppercase">Live Node Updates</span>
+          </div>
+          <div id="team-announcements-list" class="space-y-3">
+            <!-- Dynamic Announcements -->
+          </div>
+        </div>
+
+        <!-- Alert Toast -->
+        <div id="alert-toast" class="hidden bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl p-4 text-xs flex items-center space-x-2">
+          <svg class="h-4 w-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="alert-toast-text">Registration saved successfully.</span>
+        </div>
+
+        <!-- Split Grid (Students Roster & Correction Requests) -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
+          
+          <!-- Students Roster (Col-span 2) -->
+          <div class="bg-white rounded-2xl border border-slate-100 shadow-xs xl:col-span-2 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Registered Team Students</h2>
+            </div>
+
+            <div class="table-container">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                    <th class="px-6 py-4">Chest / Student Info</th>
+                    <th class="px-6 py-4">Category</th>
+                    <th class="px-6 py-4">Status</th>
+                    <th class="px-6 py-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="students-table-body" class="divide-y divide-slate-100 text-xs">
+                  <tr>
+                    <td colspan="4" class="px-6 py-12 text-center text-slate-400 font-medium">Scanning team rosters...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Correction Requests Area -->
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-6 xl:col-span-1">
+            <div class="space-y-1">
+              <h2 class="text-sm font-bold text-slate-900 font-display">Correction Request Center</h2>
+              <p class="text-xs text-slate-400">Issue correction requests for participant entry edits or name spell checks.</p>
+            </div>
+
+            <form id="correction-form" class="space-y-3">
+              <div class="space-y-1">
+                <label for="correction-desc" class="text-xs font-bold text-slate-700">Detailed Description</label>
+                <textarea id="correction-desc" required rows="3" class="form-input" placeholder="e.g. Chest 101 spelling should be changed to..."></textarea>
+              </div>
+              <button type="submit" id="submit-correction-btn" class="w-full btn btn-primary py-2.5 text-xs font-bold shadow-sm cursor-pointer">
+                Issue Request
+              </button>
+            </form>
+
+            <!-- Correction Requests List -->
+            <div class="space-y-3 pt-2">
+              <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Your Correction History</h3>
+              <div id="corrections-history-list" class="space-y-2 text-xs">
+                <p class="text-slate-400 text-center py-4">Scanning history...</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Student Registration Modal -->
+        <div id="student-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4 select-none">
+          <div class="bg-white rounded-2xl shadow-2xl border border-slate-150 max-w-md w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+              <div>
+                <p class="text-[10px] font-mono font-extrabold text-emerald-600 uppercase tracking-wider"> Roster Registration</p>
+                <h3 class="text-base font-bold text-slate-900 font-display">Register Student Participant</h3>
+              </div>
+              <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 font-bold cursor-pointer text-sm">✕</button>
+            </div>
+
+            <form id="student-form" class="flex-1 overflow-y-auto p-6 space-y-4">
+              <div class="space-y-1.5">
+                <label for="student-name" class="text-xs font-bold text-slate-700">Full Name</label>
+                <input type="text" id="student-name" required class="form-input" placeholder="e.g. Liam Smith">
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="student-chest" class="text-xs font-bold text-slate-700">Chest Number (Assigned)</label>
+                <input type="text" id="student-chest" required class="form-input" placeholder="e.g. 101">
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="student-cat" class="text-xs font-bold text-slate-700">Age Category</label>
+                <select id="student-cat" class="form-input cursor-pointer" required>
+                  <option value="cat_subjunior">Sub-Junior</option>
+                  <option value="cat_junior">Junior</option>
+                  <option value="cat_senior">Senior</option>
+                </select>
+              </div>
+
+              <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <button type="button" id="modal-cancel-btn" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold cursor-pointer">
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-accent py-2 px-4 text-xs font-bold text-white shadow-md cursor-pointer">
+                  Save Registration
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAnnouncementsForRole } from "/assets/js/notification-service.js";
+
+    let leaderProfile = null;
+    let assignedTeamId = null;
+
+    async function initTeamDesk() {
+      try {
+        leaderProfile = await verifyUserRole(['teamLeader']);
+        
+        // Strictly get the teamId associated to this leader profile (No query parameter overrides!)
+        assignedTeamId = leaderProfile.teamId;
+
+        if (!assignedTeamId) {
+          window.location.replace('/unauthorized.html?reason=no_team_id');
+          return;
+        }
+
+        document.getElementById('auth-team-label').textContent = assignedTeamId.toUpperCase();
+
+        await loadPortalLayout('team');
+        initializeNavigation();
+
+        await loadStudentsRoster();
+        await loadCorrectionRequestsHistory();
+        await loadTeamAnnouncements();
+
+        // Bind modals
+        setupModals();
+      } catch (err) {
+        console.error("Failed loading team dashboard context:", err);
+      }
+    }
+
+    async function loadTeamAnnouncements() {
+      const panel = document.getElementById('team-announcements-panel');
+      const list = document.getElementById('team-announcements-list');
+      try {
+        const announcements = await getAnnouncementsForRole('teamLeader') || [];
+        if (announcements.length === 0) {
+          panel.classList.add('hidden');
+          return;
+        }
+        panel.classList.remove('hidden');
+        list.innerHTML = '';
+        announcements.forEach(a => {
+          let dateStr = "Recent";
+          if (a.createdAt && a.createdAt.seconds) {
+            dateStr = new Date(a.createdAt.seconds * 1000).toLocaleString();
+          }
+          const card = document.createElement('div');
+          card.className = "p-4 bg-amber-50/45 border border-amber-100/70 rounded-xl space-y-2";
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold text-slate-900 font-display">${a.title}</h3>
+              <span class="text-[9px] text-slate-400 font-medium">${dateStr}</span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-line">${a.content}</p>
+            <div class="text-[8px] text-slate-400 font-bold uppercase tracking-wider">Posted by: ${a.createdByName || 'Administrator'}</div>
+          `;
+          list.appendChild(card);
+        });
+      } catch (err) {
+        console.error("Failed loading announcements:", err);
+      }
+    }
+
+    async function loadStudentsRoster() {
+      const tableBody = document.getElementById('students-table-body');
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+
+      try {
+        // Query Students belonging strictly to this assigned team ID
+        const studentCol = collection(db, `festivals/${festId}/festStudents`);
+        const q = query(studentCol, where('teamId', '==', assignedTeamId));
+        const querySnapshot = await getDocs(q);
+
+        tableBody.innerHTML = '';
+
+        if (querySnapshot.empty) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="4" class="px-6 py-12 text-center text-slate-400 font-medium">No students registered under your team code yet.</td>
+            </tr>
+          `;
+          return;
+        }
+
+        const catNames = {
+          cat_subjunior: 'Sub-Junior',
+          cat_junior: 'Junior',
+          cat_senior: 'Senior'
+        };
+
+        querySnapshot.forEach((docSnap) => {
+          const student = docSnap.data();
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+          row.innerHTML = `
+            <td class="px-6 py-4">
+              <div class="font-bold text-slate-900">${student.name || 'Participant'}</div>
+              <div class="text-[10px] font-mono text-slate-400 mt-0.5">Chest: ${student.chestNumber || 'TBA'}</div>
+            </td>
+            <td class="px-6 py-4 font-semibold text-slate-600">
+              ${catNames[student.categoryId] || student.categoryId}
+            </td>
+            <td class="px-6 py-4">
+              <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-150">
+                ${student.status || 'active'}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button class="text-[10px] font-bold text-slate-400 cursor-not-allowed">Edit Profile</button>
+            </td>
+          `;
+
+          tableBody.appendChild(row);
+        });
+
+      } catch (err) {
+        console.error("Could not fetch students team roster:", err);
+        tableBody.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-rose-600 font-bold">Failed to load roster. Collection check rejected.</td></tr>';
+      }
+    }
+
+    async function loadCorrectionRequestsHistory() {
+      const list = document.getElementById('corrections-history-list');
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+
+      try {
+        const correctCol = collection(db, `festivals/${festId}/correctionRequests`);
+        const q = query(correctCol, where('teamId', '==', assignedTeamId));
+        const querySnapshot = await getDocs(q);
+
+        list.innerHTML = '';
+
+        if (querySnapshot.empty) {
+          list.innerHTML = '<p class="text-slate-400 text-center py-6 leading-relaxed">No correction requests submitted.</p>';
+          return;
+        }
+
+        querySnapshot.forEach((docSnap) => {
+          const req = docSnap.data();
+          
+          const badgeColor = req.status === 'pending'
+            ? "bg-amber-50 text-amber-700 border border-amber-150"
+            : (req.status === 'approved' ? "bg-emerald-50 text-emerald-700 border border-emerald-150" : "bg-rose-50 text-rose-700 border border-rose-150");
+
+          const card = document.createElement('div');
+          card.className = "p-3 border border-slate-100 rounded-xl space-y-2 bg-slate-50/20";
+          
+          card.innerHTML = `
+            <div class="flex justify-between items-center">
+              <span class="text-[9px] font-mono text-slate-400">ID: ${docSnap.id.slice(0,6)}</span>
+              <span class="inline-flex px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider ${badgeColor}">${req.status}</span>
+            </div>
+            <p class="text-xs text-slate-600 font-medium leading-normal">${req.description}</p>
+          `;
+          list.appendChild(card);
+        });
+      } catch (err) {
+        console.error("Could not load correction history:", err);
+        list.innerHTML = '<p class="text-rose-600 text-center py-4 font-bold">Failed loading history.</p>';
+      }
+    }
+
+    // Modal forms bindings
+    function setupModals() {
+      const modal = document.getElementById('student-modal');
+      const showBtn = document.getElementById('add-student-btn');
+      const hideBtn = document.getElementById('modal-close-btn');
+      const cancelBtn = document.getElementById('modal-cancel-btn');
+      const studentForm = document.getElementById('student-form');
+      const correctionForm = document.getElementById('correction-form');
+
+      showBtn.onclick = () => { modal.classList.remove('hidden'); };
+      hideBtn.onclick = () => { modal.classList.add('hidden'); };
+      cancelBtn.onclick = () => { modal.classList.add('hidden'); };
+
+      studentForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('student-name').value.trim();
+        const chest = document.getElementById('student-chest').value.trim();
+        const category = document.getElementById('student-cat').value;
+
+        const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+        const studentId = `stud_${assignedTeamId}_${chest}`;
+
+        const studentProfile = {
+          id: studentId,
+          studentId: studentId,
+          festId,
+          teamId: assignedTeamId,
+          categoryId: category,
+          name: name,
+          chestNumber: chest,
+          status: 'active',
+          notes: '',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+
+        try {
+          const loader = document.getElementById('global-page-loader');
+          loader.classList.remove('hidden');
+
+          const docRef = doc(db, `festivals/${festId}/festStudents`, studentId);
+          await setDoc(docRef, studentProfile);
+
+          modal.classList.add('hidden');
+          studentForm.reset();
+          loader.classList.add('hidden');
+
+          showToast("Student participant registered successfully!");
+          await loadStudentsRoster();
+
+        } catch (err) {
+          console.error("Could not register student:", err);
+          alert(`Error: ${err.message}`);
+        }
+      };
+
+      correctionForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const desc = document.getElementById('correction-desc').value.trim();
+        const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+
+        const requestId = `req_${Date.now()}`;
+        const requestData = {
+          id: requestId,
+          teamId: assignedTeamId,
+          description: desc,
+          status: 'pending',
+          createdBy: leaderProfile.email,
+          createdAt: serverTimestamp()
+        };
+
+        try {
+          const loader = document.getElementById('global-page-loader');
+          loader.classList.remove('hidden');
+
+          const docRef = doc(db, `festivals/${festId}/correctionRequests`, requestId);
+          await setDoc(docRef, requestData);
+
+          correctionForm.reset();
+          loader.classList.add('hidden');
+
+          showToast("Correction request successfully queued.");
+          await loadCorrectionRequestsHistory();
+
+        } catch (err) {
+          console.error("Could not submit correction request:", err);
+          alert(`Error: ${err.message}`);
+        }
+      };
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('alert-toast');
+      const text = document.getElementById('alert-toast-text');
+      text.textContent = message;
+      toast.classList.remove('hidden');
+      
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 4000);
+    }
+
+    initTeamDesk();
+  </script>
+</body>
+</html>

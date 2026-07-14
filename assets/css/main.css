@@ -1,0 +1,9 @@
+/* MeeladPulse Central Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Chilanka&family=Manjari:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@import "./variables.css";
+@import "./components.css";
+@import "./login.css";
+@import "./public.css";
+@import "./responsive.css";

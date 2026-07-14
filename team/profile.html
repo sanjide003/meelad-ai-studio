@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Profile - Team Leader Desk</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen animate-fade-in">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Verifying team privileges...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8 max-w-4xl">
+        
+        <!-- Header Section -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Leader Profile</h1>
+            <p class="text-xs text-slate-400 font-medium">Verify your credentials and active festival context node</p>
+          </div>
+        </div>
+
+        <!-- Profile Details Card -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+          <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-display">Account Information</h2>
+          </div>
+          <div class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-semibold">
+              <div class="space-y-1.5 p-4 border border-slate-50 bg-slate-50/20 rounded-xl">
+                <span class="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">Leader Name</span>
+                <span id="profile-name" class="text-sm font-bold text-slate-900">...</span>
+              </div>
+              <div class="space-y-1.5 p-4 border border-slate-50 bg-slate-50/20 rounded-xl">
+                <span class="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">Email Address</span>
+                <span id="profile-email" class="text-sm font-mono font-bold text-slate-800">...</span>
+              </div>
+              <div class="space-y-1.5 p-4 border border-slate-50 bg-slate-50/20 rounded-xl">
+                <span class="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">Assigned Privileges</span>
+                <span class="text-sm font-bold text-emerald-600 uppercase tracking-wide">TEAM LEADER DESK</span>
+              </div>
+              <div class="space-y-1.5 p-4 border border-slate-50 bg-slate-50/20 rounded-xl">
+                <span class="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">Assigned Team Code</span>
+                <span id="profile-team" class="text-sm font-mono font-black text-emerald-600 uppercase tracking-widest">...</span>
+              </div>
+            </div>
+
+            <!-- Device Node Info -->
+            <div class="bg-amber-50 border border-amber-100 p-4 rounded-xl text-xs text-amber-800 leading-normal flex items-start space-x-3">
+              <svg class="h-4 w-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              <div>
+                <span class="font-bold">Security Constraint Notice:</span>
+                <p class="mt-0.5 text-slate-600 font-medium">To protect team isolation and secure competitor scoring, your managed Team Code is locked to your account profile in Firestore. You are strictly restricted to updating rosters and entries belonging exclusively to this Team Code.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+
+    async function initPage() {
+      try {
+        const profile = await verifyUserRole(['teamLeader']);
+        
+        document.getElementById('profile-name').textContent = profile.name || 'Team Leader';
+        document.getElementById('profile-email').textContent = profile.email || 'no-email';
+        document.getElementById('profile-team').textContent = (profile.teamId || 'NONE').toUpperCase();
+
+        await loadPortalLayout('team');
+        initializeNavigation();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Profile page loading failed:", err);
+      }
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

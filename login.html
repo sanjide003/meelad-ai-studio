@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col justify-between login-bg">
+  
+  <!-- Global loading overlay -->
+  <div id="global-page-loader" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden">
+    <div class="bg-white p-5 rounded-2xl flex flex-col items-center space-y-3 shadow-2xl">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700" id="loader-text">Securing session...</p>
+    </div>
+  </div>
+
+  <!-- Header Translation Bar -->
+  <header class="w-full px-6 py-4 flex justify-end">
+    <div class="flex items-center space-x-1">
+      <button id="lang-en-btn" class="language-selector-btn active cursor-pointer">English</button>
+      <button id="lang-ml-btn" class="language-selector-btn cursor-pointer">മലയാളം</button>
+    </div>
+  </header>
+
+  <!-- Main Box Content -->
+  <main class="flex-1 flex items-center justify-center px-4 py-8">
+    <div class="max-w-md w-full bg-white rounded-2xl login-card p-8 space-y-6">
+      
+      <!-- Brand & Header -->
+      <div class="text-center space-y-2">
+        <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500 text-white font-extrabold text-2xl font-display shadow-md shadow-emerald-500/20 mb-1">
+          MP
+        </div>
+        <h1 id="txt-title" class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">MeeladPulse</h1>
+        <p id="txt-subtitle" class="text-xs text-slate-400 font-medium">Competition Management Portal</p>
+      </div>
+
+      <!-- Live Error Summary Alert -->
+      <div id="error-summary-box" class="hidden bg-rose-50 border border-rose-100 text-rose-700 rounded-xl p-4 text-xs flex items-start space-x-2.5">
+        <svg class="h-4 w-4 text-rose-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span id="error-summary-text">Invalid login credentials. Please try again.</span>
+      </div>
+
+      <!-- Authentication Form -->
+      <form id="login-form" class="space-y-4">
+        
+        <!-- Email field -->
+        <div class="space-y-1.5">
+          <label id="lbl-email" for="email" class="text-xs font-bold text-slate-700">Email Address</label>
+          <input type="email" id="email" required class="form-input" placeholder="name@domain.com">
+          <p id="err-email" class="hidden text-[10px] text-rose-600 font-medium"></p>
+        </div>
+
+        <!-- Password field -->
+        <div class="space-y-1.5">
+          <div class="flex justify-between items-center">
+            <label id="lbl-password" for="password" class="text-xs font-bold text-slate-700">Password</label>
+            <a id="lnk-forgot" href="/forgot-password.html" class="text-[10px] font-bold text-emerald-600 hover:text-emerald-500 transition">Forgot Password?</a>
+          </div>
+          <div class="relative">
+            <input type="password" id="password" required class="form-input pr-10" placeholder="••••••••">
+            <!-- Toggle password button -->
+            <button type="button" id="toggle-password-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer" aria-label="Toggle password visibility">
+              <svg id="eye-icon" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+          <p id="err-password" class="hidden text-[10px] text-rose-600 font-medium"></p>
+        </div>
+
+        <!-- Remember Me option -->
+        <div class="flex items-center">
+          <input type="checkbox" id="remember-me" class="h-4 w-4 text-emerald-500 border-slate-200 rounded focus:ring-emerald-400 focus:ring-offset-0">
+          <label id="lbl-remember" for="remember-me" class="ml-2 text-xs font-medium text-slate-600 cursor-pointer">Remember me for future sessions</label>
+        </div>
+
+        <!-- Submit button -->
+        <button type="submit" id="submit-btn" class="w-full btn btn-primary py-3 font-bold text-white transition-all shadow-md shadow-slate-900/10 cursor-pointer flex items-center justify-center space-x-2">
+          <span id="txt-login-btn">Sign In</span>
+        </button>
+
+      </form>
+    </div>
+  </main>
+
+  <!-- Footer Info -->
+  <footer class="w-full text-center py-6 border-t border-slate-100 bg-white">
+    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-widest">MeeladPulse Secured Platform • Verified Access Nodes</p>
+  </footer>
+
+  <!-- Module Core Auth Script -->
+  <script type="module">
+    import { loginWithEmailAndPassword } from "/assets/js/auth.js";
+
+    // Simple dual translation database
+    const t = {
+      en: {
+        title: "MeeladPulse",
+        subtitle: "Competition Management Portal",
+        email: "Email Address",
+        password: "Password",
+        remember: "Remember me for future sessions",
+        login: "Sign In",
+        forgot: "Forgot Password?",
+        loading: "Verifying Authentication...",
+        invalidEmail: "Please enter a valid email address.",
+        emptyPassword: "Password cannot be empty.",
+        btnSigningIn: "Signing In..."
+      },
+      ml: {
+        title: "മീലാദ്പൾസ്",
+        subtitle: "മത്സര ക്രമീകരണ പോർട്ടൽ",
+        email: "ഇമെയിൽ വിലാസം",
+        password: "പാസ്‌വേഡ്",
+        remember: "ഭാവി സെഷനുകൾക്കായി എന്നെ ഓർക്കുക",
+        login: "പ്രവേശിക്കുക",
+        forgot: "പാസ്‌വേഡ് മറന്നോ?",
+        loading: "പരിശോധിക്കുന്നു...",
+        invalidEmail: "ശരിയായ ഇമെയിൽ വിലാസം നൽകുക.",
+        emptyPassword: "പാസ്‌വേഡ് നൽകേണ്ടതാണ്.",
+        btnSigningIn: "പ്രവേശിക്കുന്നു..."
+      }
+    };
+
+    let activeLang = 'en';
+
+    function setLanguage(lang) {
+      activeLang = lang;
+      document.getElementById('txt-title').textContent = t[lang].title;
+      document.getElementById('txt-subtitle').textContent = t[lang].subtitle;
+      document.getElementById('lbl-email').textContent = t[lang].email;
+      document.getElementById('lbl-password').textContent = t[lang].password;
+      document.getElementById('lbl-remember').textContent = t[lang].remember;
+      document.getElementById('txt-login-btn').textContent = t[lang].login;
+      document.getElementById('lnk-forgot').textContent = t[lang].forgot;
+      document.getElementById('loader-text').textContent = t[lang].loading;
+
+      document.getElementById('lang-en-btn').classList.toggle('active', lang === 'en');
+      document.getElementById('lang-ml-btn').classList.toggle('active', lang === 'ml');
+    }
+
+    document.getElementById('lang-en-btn').addEventListener('click', () => setLanguage('en'));
+    document.getElementById('lang-ml-btn').addEventListener('click', () => setLanguage('ml'));
+
+    // Toggle password visibility logic
+    const togglePasswordBtn = document.getElementById('toggle-password-btn');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eye-icon');
+
+    togglePasswordBtn.addEventListener('click', () => {
+      const isPassword = passwordInput.getAttribute('type') === 'password';
+      passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+      
+      if (isPassword) {
+        eyeIcon.innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+        `;
+      } else {
+        eyeIcon.innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+        `;
+      }
+    });
+
+    // Form submission sequence
+    const form = document.getElementById('login-form');
+    const errorBox = document.getElementById('error-summary-box');
+    const errorText = document.getElementById('error-summary-text');
+    const loader = document.getElementById('global-page-loader');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Reset errors
+      errorBox.classList.add('hidden');
+      document.getElementById('err-email').classList.add('hidden');
+      document.getElementById('err-password').classList.add('hidden');
+
+      const email = document.getElementById('email').value.trim();
+      const password = passwordInput.value;
+      const rememberMe = document.getElementById('remember-me').checked;
+
+      // Simple validations
+      if (!email.includes('@')) {
+        const errEmail = document.getElementById('err-email');
+        errEmail.textContent = t[activeLang].invalidEmail;
+        errEmail.classList.remove('hidden');
+        return;
+      }
+      if (!password) {
+        const errPass = document.getElementById('err-password');
+        errPass.textContent = t[activeLang].emptyPassword;
+        errPass.classList.remove('hidden');
+        return;
+      }
+
+      // Enter loading state
+      loader.classList.remove('hidden');
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.querySelector('span').textContent = t[activeLang].btnSigningIn;
+
+      try {
+        const redirectPath = await loginWithEmailAndPassword(email, password, rememberMe);
+        window.location.replace(redirectPath);
+      } catch (err) {
+        console.error("Auth transaction failed:", err);
+        errorText.textContent = err.message || "An authentication error occurred. Please verify your email and password.";
+        errorBox.classList.remove('hidden');
+        
+        // Recover state
+        loader.classList.add('hidden');
+        submitBtn.disabled = false;
+        submitBtn.querySelector('span').textContent = t[activeLang].login;
+      }
+    });
+
+    // Register PWA Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => console.log('[PWA] Service Worker registered successfully:', reg.scope))
+          .catch((err) => console.warn('[PWA] Service Worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

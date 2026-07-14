@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Category Standings - Public Portal</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+  <header id="public-header" class="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-100"></header>
+
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
+    
+    <!-- Title Card -->
+    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <h1 class="text-2xl font-extrabold text-slate-950 tracking-tight font-display" id="page-title">Category Standings</h1>
+        <p class="text-xs text-slate-400 font-medium font-display" id="page-subtitle">Grouped team standings, ranks, and medals across specific categories. Malayalam: വിഭാഗങ്ങൾ</p>
+      </div>
+      <div class="flex items-center space-x-3 shrink-0">
+        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono shrink-0">Select Category:</label>
+        <select id="category-selector" class="w-48 p-2.5 text-xs border border-slate-250 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-500 font-extrabold text-indigo-700 font-display">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Standings Log Card -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+      <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+        <h2 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest font-display" id="table-heading">Leaderboard</h2>
+        <span id="selected-category-badge" class="px-2.5 py-1 text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full font-display uppercase tracking-wider">ALL EVENTS</span>
+      </div>
+      <div class="table-container">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+              <th class="px-6 py-4 w-16">Rank</th>
+              <th class="px-6 py-4">Team</th>
+              <th class="px-6 py-4 font-mono text-center">Stage Pts</th>
+              <th class="px-6 py-4 font-mono text-center">Non-Stage Pts</th>
+              <th class="px-6 py-4 text-center">Medals (1st / 2nd / 3rd)</th>
+              <th class="px-6 py-4 font-mono text-right">Category Total</th>
+            </tr>
+          </thead>
+          <tbody id="standings-table-body" class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+            <tr>
+              <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium font-display">Awaiting standings data stream...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <footer id="public-footer" class="bg-white border-t border-slate-100 py-8"></footer>
+
+  <script type="module">
+    import { getActiveFestivalId } from "/assets/js/public-config-service.js";
+    import { getPublicResultsOneTime } from "/assets/js/public-result-service.js";
+    import { initializePublicNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const festId = getActiveFestivalId();
+    let publishedResults = [];
+    let teams = [];
+    let categories = [];
+    let selectedCategoryId = '';
+
+    async function init() {
+      await initializePublicNavigation();
+
+      const lang = localStorage.getItem('meeladpulse_lang') || 'en';
+      translatePage(lang);
+
+      // Load teams and categories reference datasets
+      await Promise.all([
+        loadTeams(),
+        loadCategories()
+      ]);
+
+      document.getElementById('category-selector').onchange = (e) => {
+        selectedCategoryId = e.target.value;
+        const selectedText = e.target.options[e.target.selectedIndex].text;
+        document.getElementById('selected-category-badge').textContent = selectedCategoryId ? selectedText.toUpperCase() : "ALL EVENTS";
+        calculateAndRender();
+      };
+
+      try {
+        publishedResults = await getPublicResultsOneTime(festId);
+        calculateAndRender();
+      } catch (err) {
+        console.error("Error loading category results standings:", err);
+      }
+    }
+
+    function translatePage(lang) {
+      if (lang === 'ml') {
+        document.getElementById('page-title').textContent = "വിഭാഗങ്ങൾ (Category Standings)";
+        document.getElementById('page-subtitle').textContent = "വിവിധ വിഭാഗങ്ങളിലെ (സബ്ജൂനിയർ, ജൂനിയർ, സീനിയർ) ഗ്രൂപ്പ് റാങ്കിംഗുകൾ.";
+        document.getElementById('table-heading').textContent = "ലീഡർബോർഡ്";
+      }
+    }
+
+    async function loadTeams() {
+      try {
+        const snap = await getDocs(collection(db, `festivals/${festId}/teams`));
+        teams = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (e) {
+        console.error("Failed to load teams for category stand:", e);
+      }
+    }
+
+    async function loadCategories() {
+      const select = document.getElementById('category-selector');
+      try {
+        const snap = await getDocs(collection(db, `festivals/${festId}/categories`));
+        categories = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        categories.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.id;
+          opt.textContent = cat.name;
+          select.appendChild(opt);
+        });
+      } catch (e) {
+        console.error("Failed to load categories reference:", e);
+      }
+    }
+
+    function calculateAndRender() {
+      const body = document.getElementById('standings-table-body');
+      body.innerHTML = '';
+
+      if (teams.length === 0) {
+        body.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">Loading standings dataset...</td></tr>`;
+        return;
+      }
+
+      // Initialize team tallies for category
+      const tallies = {};
+      teams.forEach(t => {
+        tallies[t.id] = {
+          teamId: t.id,
+          teamName: t.name,
+          teamCode: t.code || t.id,
+          teamColour: t.colour || '#10b981',
+          stagePoints: 0,
+          nonStagePoints: 0,
+          firstCount: 0,
+          secondCount: 0,
+          thirdCount: 0,
+          total: 0
+        };
+      });
+
+      // Filter and aggregate
+      const filteredResults = selectedCategoryId ? 
+        publishedResults.filter(r => r.categoryId === selectedCategoryId) : 
+        publishedResults;
+
+      filteredResults.forEach(res => {
+        const isStage = (res.performanceType || 'stage').toLowerCase() === 'stage';
+        
+        if (res.winners && Array.isArray(res.winners)) {
+          // If we have winners published with team-points metadata
+          // We can also double check details or read teamPoints awarded
+          // Let's read from the results participants details if present, fallback to winners array
+          const winners = res.winners;
+          winners.forEach(w => {
+            // Find team matching name or chest sequence
+            // Best is to match by teamName since results subcollection winners has w.teamName
+            const matchingTeam = teams.find(t => t.name === w.teamName);
+            if (!matchingTeam) return;
+
+            // In results publicData winners, we store positions 1st, 2nd, 3rd
+            // Since publicData/resultswinners only contains the winners that got positions!
+            // Let's award position points: 1st=5, 2nd=3, 3rd=1.
+            // Or we can fetch exact points if stored in w.points (not stored directly in publicwinners, but we can compute or read from res.teamPoints)
+            let pts = 0;
+            if (res.teamPoints && Array.isArray(res.teamPoints)) {
+              // we have res.teamPoints list matching {teamName, points} or {teamId, points}
+              const teamPtsRecord = res.teamPoints.find(tp => tp.teamId === matchingTeam.id || tp.teamName === matchingTeam.name);
+              if (teamPtsRecord) pts = Number(teamPtsRecord.points) || 0;
+            } else {
+              // Fallback default points rule
+              if (w.position === '1st') pts = 5;
+              else if (w.position === '2nd') pts = 3;
+              else if (w.position === '3rd') pts = 1;
+            }
+
+            if (isStage) {
+              tallies[matchingTeam.id].stagePoints += pts;
+            } else {
+              tallies[matchingTeam.id].nonStagePoints += pts;
+            }
+
+            if (w.position === '1st') tallies[matchingTeam.id].firstCount++;
+            else if (w.position === '2nd') tallies[matchingTeam.id].secondCount++;
+            else if (w.position === '3rd') tallies[matchingTeam.id].thirdCount++;
+          });
+        }
+      });
+
+      // Sum totals
+      const list = Object.values(tallies);
+      list.forEach(item => {
+        item.total = item.stagePoints + item.nonStagePoints;
+      });
+
+      // Sort
+      list.sort((a, b) => b.total - a.total);
+
+      list.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+        let rankBadge = `<span class="font-bold text-slate-400 font-mono">#${idx + 1}</span>`;
+        if (idx === 0) {
+          rankBadge = `<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-50 text-amber-700 text-[10px] border border-amber-200 font-extrabold font-mono">🏆 1</span>`;
+        } else if (idx === 1) {
+          rankBadge = `<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-100 text-slate-700 text-[10px] border border-slate-200 font-extrabold font-mono">🥈 2</span>`;
+        } else if (idx === 2) {
+          rankBadge = `<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-500/10 text-amber-900 text-[10px] border border-amber-900/10 font-extrabold font-mono">🥉 3</span>`;
+        }
+
+        tr.innerHTML = `
+          <td class="px-6 py-4">${rankBadge}</td>
+          <td class="px-6 py-4">
+            <div class="flex items-center space-x-2">
+              <span class="h-2.5 w-2.5 rounded-full" style="background-color: ${row.teamColour}"></span>
+              <span class="font-extrabold text-slate-900">${row.teamName} (${row.teamCode})</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-center font-mono font-bold text-slate-500">${row.stagePoints}</td>
+          <td class="px-6 py-4 text-center font-mono font-bold text-slate-500">${row.nonStagePoints}</td>
+          <td class="px-6 py-4 text-center font-mono text-slate-400">
+            <span class="font-bold text-slate-800">${row.firstCount}</span> / 
+            <span class="font-bold text-slate-800">${row.secondCount}</span> / 
+            <span class="font-bold text-slate-800">${row.thirdCount}</span>
+          </td>
+          <td class="px-6 py-4 text-right font-extrabold text-indigo-700 font-mono text-sm">${row.total}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

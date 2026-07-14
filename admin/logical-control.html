@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logical Controls Terminal - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Loading Diagnostics Cluster...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Banner & Execution -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-xs">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display" id="page-title-diag">Logical Audit Terminal</h1>
+            <p class="text-xs text-slate-400 font-medium" id="page-subtitle-diag">Run rules diagnostics to identify duplicate participants, student limit violations, group size errors, and schedule conflicts.</p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button id="lang-toggle-btn" class="btn btn-secondary text-xs py-2.5 px-3 border border-slate-200 cursor-pointer">
+              <span>English / മലയാളം</span>
+            </button>
+            <button id="run-audit-btn" class="btn btn-accent bg-rose-600 hover:bg-rose-700 text-white text-xs py-2.5 px-5 font-bold cursor-pointer flex items-center space-x-2 shadow-md shadow-rose-500/10">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              <span id="btn-audit-text">Execute Rules Audit Scan</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Audit Summary Widgets -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-xs space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest" id="lbl-card-dup">Duplicate Sign-ups</span>
+            <div class="flex items-baseline space-x-1">
+              <span id="stat-duplicates" class="text-2xl font-extrabold text-slate-900">0</span>
+              <span class="text-xs text-slate-400 font-medium">violations</span>
+            </div>
+          </div>
+
+          <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-xs space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest" id="lbl-card-limits">Item Limit Excesses</span>
+            <div class="flex items-baseline space-x-1">
+              <span id="stat-limits" class="text-2xl font-extrabold text-slate-900">0</span>
+              <span class="text-xs text-slate-400 font-medium font-display">violations</span>
+            </div>
+          </div>
+
+          <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-xs space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest" id="lbl-card-size">Group Size Issues</span>
+            <div class="flex items-baseline space-x-1">
+              <span id="stat-group-sizes" class="text-2xl font-extrabold text-slate-900">0</span>
+              <span class="text-xs text-slate-400 font-medium">violations</span>
+            </div>
+          </div>
+
+          <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-xs space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest" id="lbl-card-sched">Schedule Overlaps</span>
+            <div class="flex items-baseline space-x-1">
+              <span id="stat-conflicts" class="text-2xl font-extrabold text-slate-900">0</span>
+              <span class="text-xs text-slate-400 font-medium">violations</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audit Violations Logs Table -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider" id="lbl-viol-logs">Violations Diagnostic Log</h2>
+            <button id="resolve-all-btn" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer hidden">Batch Bypass Audits</button>
+          </div>
+
+          <div class="table-container overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[800px]">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4" id="th-type">Anomaly Type</th>
+                  <th class="px-6 py-4" id="th-target">Target Entity</th>
+                  <th class="px-6 py-4" id="th-details">Violation Details</th>
+                  <th class="px-6 py-4" id="th-severity">Severity</th>
+                  <th class="px-6 py-4 text-right" id="th-actions">Logical Override</th>
+                </tr>
+              </thead>
+              <tbody id="violations-table-body" class="divide-y divide-slate-100 text-xs text-slate-700">
+                <tr>
+                  <td colspan="5" class="px-6 py-12 text-center text-slate-400" id="lbl-diag-empty">No active audit scans run yet. Click 'Execute Rules Audit Scan' to initiate analysis.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { 
+      getEntries, 
+      getCompetitions, 
+      getCategories, 
+      getStudents, 
+      getTeams,
+      bypassAuditOverride 
+    } from "/assets/js/firestore-service.js";
+    import { 
+      checkGenderEligibility, 
+      checkCategoryEligibility, 
+      checkStudentItemLimits, 
+      checkGroupSize, 
+      checkDuplicateParticipant, 
+      checkScheduleConflict 
+    } from "/assets/js/validation.js";
+
+    let currentLang = localStorage.getItem('meeladpulse_lang') || 'en';
+
+    const trans = {
+      en: {
+        title: "Logical Audit Terminal",
+        subtitle: "Run rules diagnostics to identify duplicate participants, student limit violations, group size errors, and schedule conflicts.",
+        btnAudit: "Execute Rules Audit Scan",
+        btnRunning: "Analyzing Datasets...",
+        lblDup: "Duplicate Sign-ups",
+        lblLimits: "Item Limit Excesses",
+        lblSize: "Group Size Issues",
+        lblSched: "Schedule Overlaps",
+        lblViolLogs: "Violations Diagnostic Log",
+        thType: "Anomaly Type",
+        thTarget: "Target Entity",
+        thDetails: "Violation Details",
+        thSeverity: "Severity",
+        thActions: "Logical Override",
+        empty: "No active audit scans run yet. Click 'Execute Rules Audit Scan' to initiate analysis.",
+        clean: "Rules engine audit complete. 100% compliant! No exceptions or logical violations found.",
+        override: "Override",
+        overridden: "Exempted"
+      },
+      ml: {
+        title: "നിയമ ലംഘന പരിശോധന",
+        subtitle: "ഡ്യൂപ്ലിക്കേറ്റ് എൻട്രികൾ, ഒരു വിദ്യാർത്ഥിക്ക് പങ്കെടുക്കാവുന്ന മത്സരങ്ങളുടെ പരിധി, സമയ ക്രമ വൈരുദ്ധ്യങ്ങൾ എന്നിവ പരിശോധിക്കുക.",
+        btnAudit: "ലംഘന പരിശോധന നടത്തുക",
+        btnRunning: "പരിശോധിക്കുന്നു...",
+        lblDup: "ഡ്യൂപ്ലിക്കേറ്റ് പങ്കാളികൾ",
+        lblLimits: "ഇനങ്ങളുടെ പരിധി ലംഘിച്ചവർ",
+        lblSize: "ഗ്രൂപ്പ് വലുപ്പ വ്യത്യാസങ്ങൾ",
+        lblSched: "സമയ വൈരുദ്ധ്യങ്ങൾ",
+        lblViolLogs: "നിയമലംഘന ലോഗ്",
+        thType: "ലംഘന വിഭാഗം",
+        thTarget: "മത്സരാർത്ഥി / ഇനം",
+        thDetails: "ലംഘന വിവരങ്ങൾ",
+        thSeverity: "തീവ്രത",
+        thActions: "പ്രത്യേക അനുമതി",
+        empty: "ഇതുവരെ പരിശോധന നടത്തിയിട്ടില്ല. മുകളിലെ 'ലംഘന പരിശോധന നടത്തുക' ബട്ടൺ ക്ലിക്ക് ചെയ്യുക.",
+        clean: "ഫെസ്റ്റിവലിലെ എല്ലാ എൻട്രികളും പൂർണ്ണമായും നിയമവിധേയമാണ്! നിയമലംഘനങ്ങളൊന്നും കണ്ടെത്തിയിട്ടില്ല.",
+        override: "പ്രത്യേക അനുമതി",
+        overridden: "അനുമതി നൽകി"
+      }
+    };
+
+    function applyTranslations() {
+      const t = trans[currentLang];
+      document.getElementById('page-title-diag').textContent = t.title;
+      document.getElementById('page-subtitle-diag').textContent = t.subtitle;
+      
+      const btn = document.getElementById('run-audit-btn');
+      if (!btn.disabled) {
+        document.getElementById('btn-audit-text').textContent = t.btnAudit;
+      } else {
+        document.getElementById('btn-audit-text').textContent = t.btnRunning;
+      }
+
+      document.getElementById('lbl-card-dup').textContent = t.lblDup;
+      document.getElementById('lbl-card-limits').textContent = t.lblLimits;
+      document.getElementById('lbl-card-size').textContent = t.lblSize;
+      document.getElementById('lbl-card-sched').textContent = t.lblSched;
+      document.getElementById('lbl-viol-logs').textContent = t.lblViolLogs;
+      
+      document.getElementById('th-type').textContent = t.thType;
+      document.getElementById('th-target').textContent = t.thTarget;
+      document.getElementById('th-details').textContent = t.thDetails;
+      document.getElementById('th-severity').textContent = t.thSeverity;
+      document.getElementById('th-actions').textContent = t.thActions;
+    }
+
+    const auditBtn = document.getElementById('run-audit-btn');
+    const tableBody = document.getElementById('violations-table-body');
+    const statDup = document.getElementById('stat-duplicates');
+    const statLim = document.getElementById('stat-limits');
+    const statGrp = document.getElementById('stat-group-sizes');
+    const statConf = document.getElementById('stat-conflicts');
+
+    async function initLogicalControlDashboard() {
+      try {
+        await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+        applyTranslations();
+
+        // Language toggle
+        document.getElementById('lang-toggle-btn').addEventListener('click', () => {
+          currentLang = currentLang === 'en' ? 'ml' : 'en';
+          localStorage.setItem('meeladpulse_lang', currentLang);
+          applyTranslations();
+        });
+
+        // Run Audit Event
+        auditBtn.addEventListener('click', async () => {
+          const t = trans[currentLang];
+          auditBtn.disabled = true;
+          document.getElementById('btn-audit-text').textContent = t.btnRunning;
+          
+          try {
+            await performLogicalDiagnostics();
+          } catch (err) {
+            alert("Diagnostics scan failed: " + err.message);
+          } finally {
+            auditBtn.disabled = false;
+            document.getElementById('btn-audit-text').textContent = t.btnAudit;
+          }
+        });
+
+      } catch (error) {
+        console.error("Initialization failed:", error);
+      }
+    }
+
+    async function performLogicalDiagnostics() {
+      const t = trans[currentLang];
+      
+      // Load raw datasets
+      const [entries, competitions, categories, students, teams] = await Promise.all([
+        getEntries(),
+        getCompetitions(),
+        getCategories(),
+        getStudents(),
+        getTeams()
+      ]);
+
+      const violations = [];
+      let dupCount = 0;
+      let limCount = 0;
+      let grpCount = 0;
+      let confCount = 0;
+
+      // 1. Diagnose Duplicate Registrations & Overlaps
+      for (let i = 0; i < entries.length; i++) {
+        const e = entries[i];
+        if (e.overrideApproved === true) continue; // Exempted
+
+        const comp = competitions.find(c => c.id === e.competitionId);
+        if (!comp) continue;
+
+        const team = teams.find(tm => tm.id === e.teamId);
+        const teamName = team ? team.name : "Unknown Team";
+
+        // Check Group Size
+        if (comp.competitionType !== 'individual' && e.memberStudentIds) {
+          const sizeCheck = checkGroupSize(e.memberStudentIds, comp, currentLang);
+          if (!sizeCheck.valid) {
+            grpCount++;
+            violations.push({
+              id: `grp-${e.id}`,
+              entryId: e.id,
+              type: "Group Sizing Error",
+              target: `${comp.name} (${teamName})`,
+              details: sizeCheck.error,
+              severity: "high"
+            });
+          }
+        }
+
+        // Student-specific checks
+        if (e.memberStudentIds) {
+          for (const studentId of e.memberStudentIds) {
+            const stud = students.find(s => s.id === studentId);
+            const studName = stud ? stud.fullName : studentId;
+
+            // Duplicate registration check within same competition
+            // Check if student exists in another entry for this competition
+            const otherSameComp = entries.some((oe, idx) => 
+              idx > i && 
+              oe.competitionId === e.competitionId && 
+              oe.memberStudentIds && 
+              oe.memberStudentIds.includes(studentId)
+            );
+            if (otherSameComp) {
+              dupCount++;
+              violations.push({
+                id: `dup-${e.id}-${studentId}`,
+                entryId: e.id,
+                type: "Duplicate Participant",
+                target: `${studName} (${teamName})`,
+                details: checkDuplicateParticipant(studentId, entries.slice(i + 1), e.competitionId, studName, currentLang).error || `Duplicate registration in ${comp.name}`,
+                severity: "critical"
+              });
+            }
+
+            // Student Category Item Limits Check
+            if (stud && comp.categoryId) {
+              const cat = categories.find(c => c.id === comp.categoryId);
+              if (cat) {
+                const limCheck = checkStudentItemLimits(studentId, entries, competitions, cat, comp.competitionType, currentLang);
+                if (!limCheck.valid) {
+                  limCount++;
+                  violations.push({
+                    id: `lim-${e.id}-${studentId}`,
+                    entryId: e.id,
+                    type: "Item Limit Exceeded",
+                    target: `${studName} (${teamName})`,
+                    details: limCheck.error,
+                    severity: "medium"
+                  });
+                }
+              }
+            }
+
+            // Schedule Conflicts Checks
+            const schedCheck = checkScheduleConflict(studentId, comp, entries, competitions, studName, currentLang);
+            if (!schedCheck.valid) {
+              confCount++;
+              violations.push({
+                id: `conf-${e.id}-${studentId}`,
+                entryId: e.id,
+                type: "Schedule Overlap Conflict",
+                target: `${studName} (${teamName})`,
+                details: schedCheck.error,
+                severity: "high"
+              });
+            }
+          }
+        }
+      }
+
+      // Update summary cards
+      statDup.textContent = dupCount;
+      statLim.textContent = limCount;
+      statGrp.textContent = grpCount;
+      statConf.textContent = confCount;
+
+      if (violations.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center text-emerald-600 font-bold bg-emerald-50/20">${t.clean}</td>
+          </tr>`;
+        return;
+      }
+
+      tableBody.innerHTML = "";
+      violations.forEach(v => {
+        const row = document.createElement('tr');
+        row.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+        let sevBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700">Medium</span>`;
+        if (v.severity === 'critical') {
+          sevBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 animate-pulse">Critical</span>`;
+        } else if (v.severity === 'high') {
+          sevBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700">High</span>`;
+        }
+
+        row.innerHTML = `
+          <td class="px-6 py-4 font-bold text-slate-800 shrink-0">${v.type}</td>
+          <td class="px-6 py-4 font-semibold text-slate-800">${v.target}</td>
+          <td class="px-6 py-4 text-slate-500 font-medium max-w-sm break-words">${v.details}</td>
+          <td class="px-6 py-4">${sevBadge}</td>
+          <td class="px-6 py-4 text-right shrink-0">
+            <button class="override-btn btn btn-primary py-1.5 px-3 text-[10px] bg-slate-900 hover:bg-slate-800 text-white rounded cursor-pointer" data-id="${v.entryId}">
+              ${t.override}
+            </button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      // Override click
+      document.querySelectorAll('.override-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const entryId = btn.getAttribute('data-id');
+          btn.disabled = true;
+          btn.textContent = t.overridden;
+          try {
+            await bypassAuditOverride(entryId);
+            // Refresh audit list
+            await performLogicalDiagnostics();
+          } catch (err) {
+            alert("Override save failed: " + err.message);
+            btn.disabled = false;
+            btn.textContent = t.override;
+          }
+        });
+      });
+    }
+
+    initLogicalControlDashboard();
+  </script>
+</body>
+</html>

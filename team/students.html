@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Roster - Team Leader Desk</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen animate-fade-in">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Verifying team privileges...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Section -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Student Roster</h1>
+            <p class="text-xs text-slate-400 font-medium">Manage and register students for your team: <span id="auth-team-label" class="font-bold text-emerald-600 font-mono">Loading Team...</span></p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button id="add-student-btn" class="btn btn-primary py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm cursor-pointer">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+              <span>Register Student</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mode Restriction Notice Banners -->
+        <div id="admin-only-banner" class="hidden bg-amber-50 border border-amber-100 text-amber-900 rounded-2xl p-5 space-y-2">
+          <div class="flex items-start space-x-3">
+            <svg class="h-5 w-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <div class="space-y-1">
+              <p class="text-xs font-bold">Roster Administration Restricted (രജിസ്ട്രേഷൻ അഡ്മിൻ പാനൽ വഴി മാത്രം)</p>
+              <p class="text-[11px] text-amber-700 leading-relaxed">Student registration and profile modifications are managed exclusively by System Administrators. Team leaders are restricted to read-only views of their roster.</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="registration-closed-banner" class="hidden bg-red-50 border border-red-100 text-red-900 rounded-2xl p-5 space-y-2">
+          <div class="flex items-start space-x-3">
+            <svg class="h-5 w-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div class="space-y-1">
+              <p class="text-xs font-bold">Student Registration Closed (രജിസ്ട്രേഷൻ താല്കാലികമായി നിർത്തിവെച്ചിരിക്കുന്നു)</p>
+              <p class="text-[11px] text-red-700 leading-relaxed"> Roster submissions and edits are frozen. New profile creations are temporarily suspended across all nodes.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alert Toast -->
+        <div id="alert-toast" class="hidden bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl p-4 text-xs flex items-center space-x-2">
+          <svg class="h-4 w-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="alert-toast-text">Roster updated successfully.</span>
+        </div>
+
+        <!-- Roster List and Filters -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden space-y-4 p-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Registered Roster</h2>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input type="text" id="roster-search" class="form-input text-xs py-1.5 px-3 max-w-xs" placeholder="Search by name or chest...">
+              <select id="roster-category-filter" class="form-input text-xs py-1.5 px-3 cursor-pointer">
+                <option value="all">All Categories</option>
+                <option value="cat_subjunior">Sub-Junior</option>
+                <option value="cat_junior">Junior</option>
+                <option value="cat_senior">Senior</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4">Student Info</th>
+                  <th class="px-6 py-4 font-mono">Chest Number</th>
+                  <th class="px-6 py-4">Category</th>
+                  <th class="px-6 py-4">Status</th>
+                  <th class="px-6 py-4 text-right" id="actions-header-column">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="students-table-body" class="divide-y divide-slate-100 text-xs">
+                <tr>
+                  <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">Scanning roster databases...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Student Registration Modal -->
+        <div id="student-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4 select-none">
+          <div class="bg-white rounded-2xl shadow-2xl border border-slate-150 max-w-md w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+              <div>
+                <p class="text-[10px] font-mono font-extrabold text-emerald-600 uppercase tracking-wider">Roster Administration</p>
+                <h3 id="modal-title" class="text-base font-bold text-slate-900 font-display">Register Student Participant</h3>
+              </div>
+              <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 font-bold cursor-pointer text-sm">✕</button>
+            </div>
+
+            <form id="student-form" class="flex-1 overflow-y-auto p-6 space-y-4">
+              <input type="hidden" id="edit-student-id" value="">
+              
+              <div class="space-y-1.5">
+                <label for="student-name" class="text-xs font-bold text-slate-700">Full Name</label>
+                <input type="text" id="student-name" required class="form-input" placeholder="e.g. Liam Smith">
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="student-chest" class="text-xs font-bold text-slate-700">Chest Number (Assigned)</label>
+                <input type="text" id="student-chest" required class="form-input" placeholder="e.g. 101">
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="student-cat" class="text-xs font-bold text-slate-700">Age Category</label>
+                <select id="student-cat" class="form-input cursor-pointer" required>
+                  <option value="cat_subjunior">Sub-Junior</option>
+                  <option value="cat_junior">Junior</option>
+                  <option value="cat_senior">Senior</option>
+                </select>
+              </div>
+
+              <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <button type="button" id="modal-cancel-btn" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold cursor-pointer">
+                  Cancel
+                </button>
+                <button type="submit" id="submit-student-btn" class="btn btn-accent py-2 px-4 text-xs font-bold text-white shadow-md cursor-pointer">
+                  Save Registration
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFestivalSettings, createFestivalStudent, updateFestivalStudent, canCurrentUserCreateStudent, canCurrentUserEditStudent } from "/assets/js/student-service.js";
+
+    let leaderProfile = null;
+    let assignedTeamId = null;
+    let allStudents = [];
+    let festivalSettings = null;
+
+    async function initPage() {
+      try {
+        leaderProfile = await verifyUserRole(['teamLeader']);
+        assignedTeamId = leaderProfile.teamId;
+
+        if (!assignedTeamId) {
+          window.location.replace('/unauthorized.html?reason=no_team_id');
+          return;
+        }
+
+        document.getElementById('auth-team-label').textContent = assignedTeamId.toUpperCase();
+
+        await loadPortalLayout('team');
+        initializeNavigation();
+
+        const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+        festivalSettings = await getFestivalSettings(festId);
+
+        applyModeVisualState();
+
+        await loadStudents();
+        setupFilters();
+        setupModalEvents();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Student page load error:", err);
+      }
+    }
+
+    function applyModeVisualState() {
+      const mode = festivalSettings.studentRegistrationMode || 'adminOnly';
+      const isOpen = festivalSettings.studentRegistrationOpen !== false;
+
+      const addBtn = document.getElementById('add-student-btn');
+      const adminOnlyBanner = document.getElementById('admin-only-banner');
+      const closedBanner = document.getElementById('registration-closed-banner');
+
+      if (mode === 'adminOnly') {
+        addBtn.classList.add('hidden');
+        adminOnlyBanner.classList.remove('hidden');
+        closedBanner.classList.add('hidden');
+      } else if (!isOpen) {
+        addBtn.classList.add('hidden');
+        adminOnlyBanner.classList.add('hidden');
+        closedBanner.classList.remove('hidden');
+      } else {
+        addBtn.classList.remove('hidden');
+        adminOnlyBanner.classList.add('hidden');
+        closedBanner.classList.add('hidden');
+      }
+    }
+
+    async function loadStudents() {
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+      try {
+        const studentCol = collection(db, `festivals/${festId}/festStudents`);
+        const q = query(studentCol, where('teamId', '==', assignedTeamId));
+        const snap = await getDocs(q);
+
+        allStudents = [];
+        snap.forEach(d => {
+          allStudents.push({ id: d.id, ...d.data() });
+        });
+
+        renderRoster(allStudents);
+      } catch (err) {
+        console.error("Roster query failed:", err);
+      }
+    }
+
+    function renderRoster(students) {
+      const tbody = document.getElementById('students-table-body');
+      tbody.innerHTML = '';
+
+      const mode = festivalSettings.studentRegistrationMode || 'adminOnly';
+      const isOpen = festivalSettings.studentRegistrationOpen !== false;
+
+      // Hide actions column completely if under adminOnly mode
+      if (mode === 'adminOnly') {
+        document.getElementById('actions-header-column').classList.add('hidden');
+      } else {
+        document.getElementById('actions-header-column').classList.remove('hidden');
+      }
+
+      if (students.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No students match your criteria.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      const catNames = {
+        cat_subjunior: 'Sub-Junior',
+        cat_junior: 'Junior',
+        cat_senior: 'Senior'
+      };
+
+      students.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+        let badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-100";
+        let statusLabel = s.status || 'active';
+
+        if (s.status === 'pending_approval') {
+          badgeStyle = "bg-amber-50 text-amber-700 border-amber-100 animate-pulse";
+          statusLabel = "Pending Approval (അനുമതിക്കായി)";
+        } else if (s.status === 'rejected') {
+          badgeStyle = "bg-red-50 text-red-700 border-red-100";
+          statusLabel = "Rejected (നിരസിക്കപ്പെട്ടു)";
+        } else {
+          statusLabel = "Approved (അംഗീകരിക്കപ്പെട്ടു)";
+        }
+
+        let actionTdHTML = '';
+        if (mode !== 'adminOnly') {
+          // If registration is open and student is not pending or is pending, they can edit.
+          const showEditButton = isOpen;
+          actionTdHTML = `
+            <td class="px-6 py-4 text-right">
+              ${showEditButton ? `<button class="edit-btn text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer" data-id="${s.id}">Edit</button>` : `<span class="text-slate-400 italic">Locked</span>`}
+            </td>
+          `;
+        }
+
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="font-bold text-slate-900">${s.name}</div>
+            ${s.emergencyOverride ? `<p class="text-[9px] text-amber-600 font-medium mt-0.5">⚠️ Admin Adjusted</p>` : ''}
+          </td>
+          <td class="px-6 py-4 font-mono font-semibold text-slate-600">${s.chestNumber}</td>
+          <td class="px-6 py-4 text-slate-600 font-medium">${catNames[s.categoryId] || s.categoryId}</td>
+          <td class="px-6 py-4">
+            <div class="flex flex-col space-y-1">
+              <span class="inline-flex w-fit px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeStyle} uppercase tracking-wider">
+                ${statusLabel}
+              </span>
+              ${s.status === 'rejected' && s.rejectionReason ? `<p class="text-[9px] text-red-500 font-medium italic truncate max-w-[150px]" title="${s.rejectionReason}">Reason: ${s.rejectionReason}</p>` : ''}
+            </div>
+          </td>
+          ${actionTdHTML}
+        `;
+
+        if (mode !== 'adminOnly' && isOpen) {
+          tr.querySelector('.edit-btn').onclick = () => openEditModal(s);
+        }
+        tbody.appendChild(tr);
+      });
+    }
+
+    function setupFilters() {
+      const search = document.getElementById('roster-search');
+      const catFilter = document.getElementById('roster-category-filter');
+
+      const applyFilters = () => {
+        const queryStr = search.value.toLowerCase().trim();
+        const catVal = catFilter.value;
+
+        const filtered = allStudents.filter(s => {
+          const matchesSearch = s.name.toLowerCase().includes(queryStr) || s.chestNumber.toLowerCase().includes(queryStr);
+          const matchesCat = catVal === 'all' || s.categoryId === catVal;
+          return matchesSearch && matchesCat;
+        });
+
+        renderRoster(filtered);
+      };
+
+      search.oninput = applyFilters;
+      catFilter.onchange = applyFilters;
+    }
+
+    function setupModalEvents() {
+      const modal = document.getElementById('student-modal');
+      const addBtn = document.getElementById('add-student-btn');
+      const closeBtn = document.getElementById('modal-close-btn');
+      const cancelBtn = document.getElementById('modal-cancel-btn');
+      const studentForm = document.getElementById('student-form');
+
+      addBtn.onclick = () => {
+        const mode = festivalSettings.studentRegistrationMode || 'adminOnly';
+        const isOpen = festivalSettings.studentRegistrationOpen !== false;
+
+        if (mode !== 'teamLeadersOnly' || !isOpen) {
+          alert(" Roster creation is closed or restricted.");
+          return;
+        }
+
+        document.getElementById('edit-student-id').value = '';
+        document.getElementById('modal-title').textContent = 'Register Student Participant';
+        document.getElementById('submit-student-btn').textContent = 'Save Registration';
+        studentForm.reset();
+        modal.classList.remove('hidden');
+      };
+
+      closeBtn.onclick = () => modal.classList.add('hidden');
+      cancelBtn.onclick = () => modal.classList.add('hidden');
+
+      studentForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const editId = document.getElementById('edit-student-id').value;
+        const name = document.getElementById('student-name').value.trim();
+        const chestNumber = document.getElementById('student-chest').value.trim();
+        const categoryId = document.getElementById('student-cat').value;
+
+        const studentData = {
+          name,
+          chestNumber,
+          categoryId,
+          teamId: assignedTeamId
+        };
+
+        try {
+          const loader = document.getElementById('global-page-loader');
+          loader.classList.remove('hidden');
+
+          if (editId) {
+            await updateFestivalStudent(editId, studentData);
+          } else {
+            await createFestivalStudent(studentData);
+          }
+
+          modal.classList.add('hidden');
+          studentForm.reset();
+          loader.classList.add('hidden');
+
+          showToast(editId ? "Roster updated successfully!" : "Student participant registered successfully!");
+          await loadStudents();
+        } catch (err) {
+          console.error("Student save failed:", err);
+          document.getElementById('global-page-loader').classList.add('hidden');
+          alert("Save failed: " + err.message);
+        }
+      };
+    }
+
+    function openEditModal(student) {
+      document.getElementById('edit-student-id').value = student.id;
+      document.getElementById('modal-title').textContent = 'Edit Student Participant';
+      document.getElementById('submit-student-btn').textContent = 'Update Profile';
+      document.getElementById('student-name').value = student.name;
+      document.getElementById('student-chest').value = student.chestNumber;
+      document.getElementById('student-cat').value = student.categoryId;
+
+      document.getElementById('student-modal').classList.remove('hidden');
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('alert-toast');
+      const text = document.getElementById('alert-toast-text');
+      text.textContent = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => { toast.classList.add('hidden'); }, 4000);
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

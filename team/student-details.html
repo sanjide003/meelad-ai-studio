@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Details - Team Leader Desk</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Fetching Student Profile Details...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8 max-w-4xl">
+        
+        <!-- Header Banner -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+          <div class="space-y-1">
+            <h1 class="text-xl font-extrabold text-slate-900 tracking-tight font-display">Student Participant Details</h1>
+            <p class="text-xs text-slate-400 font-medium">View registration status, category specifications, and administrative feedback.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <a href="/team/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-1.5 px-3 text-xs font-bold">
+              Back to Roster
+            </a>
+            <a id="edit-link" href="#" class="btn btn-primary py-1.5 px-3 text-xs font-bold hidden">
+              Edit Profile
+            </a>
+          </div>
+        </div>
+
+        <!-- Student General Information & Details Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Column 1: General Info Card -->
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-5 md:col-span-1">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Profile Card</h2>
+            
+            <div class="space-y-3">
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block uppercase">Student Participant</span>
+                <span id="stud-name" class="text-base font-extrabold text-slate-900 font-display">Loading...</span>
+              </div>
+
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block uppercase">Chest Number</span>
+                <span id="stud-chest" class="text-xs font-mono font-bold bg-slate-100 text-slate-850 px-2 py-0.5 rounded">Loading...</span>
+              </div>
+
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block uppercase">Age Category</span>
+                <span id="stud-cat" class="text-xs font-bold text-slate-700">Loading...</span>
+              </div>
+
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block uppercase">Competing Team</span>
+                <span id="stud-team" class="text-xs font-mono font-bold text-emerald-600">Loading...</span>
+              </div>
+
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block uppercase">Approval Status</span>
+                <span id="stud-status" class="inline-flex mt-1">Loading...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Audit Trail & Admin Feedback -->
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-5 md:col-span-2">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Registration Status & Feedback</h2>
+
+            <div class="space-y-4">
+              
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-150 space-y-3">
+                <div>
+                  <span class="text-[10px] font-bold text-slate-400 uppercase block">Registration Source</span>
+                  <span id="audit-source" class="text-xs font-bold text-slate-800">Loading...</span>
+                </div>
+                <div>
+                  <span class="text-[10px] font-bold text-slate-400 uppercase block">Registration Status Message</span>
+                  <p id="status-desc" class="text-xs text-slate-600 leading-relaxed">Loading...</p>
+                </div>
+              </div>
+
+              <!-- Rejection Notice if applicable -->
+              <div id="rejection-box" class="hidden bg-rose-50 border border-rose-100 p-4 rounded-xl text-rose-800 space-y-2">
+                <span class="text-xs font-bold uppercase tracking-wider block text-rose-700">⚠️ Administrative Rejection Feedback</span>
+                <p id="rejection-reason" class="text-xs leading-relaxed font-semibold">No details provided.</p>
+                <p class="text-[10px] text-rose-600">Please review the reason, select "Edit Profile" to correct the details, and re-submit the application.</p>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFestivalSettings } from "/assets/js/student-service.js";
+
+    let activeFestId = null;
+    let leaderProfile = null;
+    let studentId = null;
+
+    async function initPage() {
+      try {
+        leaderProfile = await verifyUserRole(['teamLeader']);
+        await loadPortalLayout('team');
+        initializeNavigation();
+
+        activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
+        if (!activeFestId) {
+          alert("Please select a festival scope first.");
+          window.location.replace('/select-fest.html');
+          return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        studentId = params.get('id');
+        if (!studentId) {
+          alert("No student ID specified.");
+          window.location.replace('/team/students.html');
+          return;
+        }
+
+        await loadStudentDetails();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Student details page initialization failed:", err);
+      }
+    }
+
+    async function loadStudentDetails() {
+      const docRef = doc(db, `festivals/${activeFestId}/festStudents`, studentId);
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) {
+        alert("Student record not found.");
+        window.location.replace('/team/students.html');
+        return;
+      }
+
+      const s = snap.data();
+      if (s.teamId !== leaderProfile.teamId) {
+        alert("Security Error: This student profile does not belong to your team.");
+        window.location.replace('/team/students.html');
+        return;
+      }
+
+      document.getElementById('stud-name').textContent = s.name;
+      document.getElementById('stud-chest').textContent = s.chestNumber;
+      
+      const cats = {
+        cat_subjunior: 'Sub-Junior (സബ് ജൂനിയർ)',
+        cat_junior: 'Junior (ജൂനിയർ)',
+        cat_senior: 'Senior (സീനിയർ)'
+      };
+      document.getElementById('stud-cat').textContent = cats[s.categoryId] || s.categoryId;
+      document.getElementById('stud-team').textContent = s.teamId.toUpperCase();
+
+      // Status Badge
+      const statusSpan = document.getElementById('stud-status');
+      statusSpan.className = "px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider";
+      
+      const descText = document.getElementById('status-desc');
+
+      if (s.status === 'pending_approval') {
+        statusSpan.classList.add('bg-amber-50', 'text-amber-700', 'border-amber-100');
+        statusSpan.textContent = "Pending Approval";
+        descText.textContent = "This registration is currently under review by MeeladPulse Administrators. It is read-only until approved or returned with feedback.";
+      } else if (s.status === 'rejected') {
+        statusSpan.classList.add('bg-red-50', 'text-red-700', 'border-red-100');
+        statusSpan.textContent = "Rejected";
+        descText.textContent = "This registration was rejected by System Administrators. Please check the feedback below to correct and resubmit.";
+        
+        document.getElementById('rejection-box').classList.remove('hidden');
+        document.getElementById('rejection-reason').textContent = s.rejectionReason || "No details provided.";
+      } else {
+        statusSpan.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-100');
+        statusSpan.textContent = "Approved / Active";
+        descText.textContent = "This registration is fully approved and active in the festival database. The student is eligible to enter scheduled competitions.";
+      }
+
+      document.getElementById('audit-source').textContent = s.registrationSource ? s.registrationSource.toUpperCase() : "TEAM LEADER SYSTEM";
+
+      // Edit Button
+      const settings = await getFestivalSettings(activeFestId);
+      const isRegOpen = settings.studentRegistrationOpen !== false;
+      const isRegModeTeam = settings.studentRegistrationMode === 'teamLeadersOnly';
+      
+      if (isRegOpen && isRegModeTeam) {
+        const editLink = document.getElementById('edit-link');
+        editLink.href = `/team/student-edit.html?id=${studentId}`;
+        editLink.classList.remove('hidden');
+      }
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

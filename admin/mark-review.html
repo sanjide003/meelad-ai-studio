@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Granular Mark Sheets Review - Admin Console</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700 font-display">Analyzing submitted sheets...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Controls -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex items-center justify-between">
+          <div class="space-y-1">
+            <a href="/admin/submitted-marks.html" class="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-600 mb-1.5 transition">
+              ← Back to Monitor
+            </a>
+            <h1 id="comp-name-title" class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Competition Mark Sheets Review</h1>
+            <p id="comp-code-subtitle" class="text-xs font-mono font-bold text-emerald-600 uppercase tracking-widest">CODE</p>
+          </div>
+        </div>
+
+        <!-- Automated Diagnostic Warnings Banner -->
+        <div id="audit-alerts-container" class="space-y-3 hidden">
+          <h3 class="text-xs font-bold text-rose-700 uppercase tracking-widest">🚨 Automated Validation Findings</h3>
+          <div id="alerts-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Loaded dynamically -->
+          </div>
+        </div>
+
+        <!-- Review Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Column 1: Judge submission cards with Reopen/Return actions -->
+          <div class="lg:col-span-1 space-y-4">
+            <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-4">
+              <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-display">Authorized Evaluators</h2>
+              <div id="judges-list-group" class="space-y-3">
+                <!-- Dynamically filled -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Granular scores matrix table -->
+          <div class="lg:col-span-2 space-y-4">
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+              <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-display">Participant Marking Breakdown</h2>
+              </div>
+              <div class="table-container">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                      <th class="px-6 py-4">Chest / Code</th>
+                      <th class="px-6 py-4">Judge / Evaluator</th>
+                      <th class="px-6 py-4">Status</th>
+                      <th class="px-6 py-4 font-mono">Scores</th>
+                      <th class="px-6 py-4 font-mono text-right">Raw Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="scores-matrix-body" class="divide-y divide-slate-100 text-xs">
+                    <!-- Loaded dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Custom Prompt Modal Component for Reopen/Return reasons -->
+        <div id="reason-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4 select-none">
+          <div class="bg-white rounded-2xl shadow-2xl border border-slate-150 max-w-md w-full overflow-hidden flex flex-col">
+            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50">
+              <h3 id="modal-title-header" class="text-sm font-bold text-slate-900 font-display">Enter Action Reason</h3>
+            </div>
+            <div class="p-6 space-y-4">
+              <div class="space-y-1.5">
+                <label for="reason-input-field" class="text-xs font-bold text-slate-700">Audit / Feedback Reason</label>
+                <textarea id="reason-input-field" rows="3" class="form-input text-xs" placeholder="Describe the reason for this action..."></textarea>
+              </div>
+              <div class="flex items-center justify-end space-x-2 pt-2">
+                <button id="modal-cancel-btn" class="btn border border-slate-200 text-slate-600 hover:bg-slate-50 py-2 px-4 text-xs font-bold cursor-pointer">
+                  Cancel
+                </button>
+                <button id="modal-confirm-btn" class="btn btn-accent py-2 px-4 text-xs font-bold text-white shadow-md cursor-pointer">
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getJudgeSafeCompetition, getJudgeSafeParticipants, getJudgeAssignments } from "/assets/js/judge-service.js";
+    import { getJudgeMarksForCompetition, reopenMarkSheet, returnMarkSheetForCorrection } from "/assets/js/mark-service.js";
+    import { getAuditLogsForTarget } from "/assets/js/audit-service.js";
+
+    let adminProfile = null;
+    let selectedComp = null;
+    let marksList = [];
+    let assignments = [];
+    let activeParticipants = [];
+
+    // Reason Modal controllers
+    let activeJudgeId = null;
+    let modalActionType = null; // 'reopen' | 'return'
+
+    async function initPage() {
+      try {
+        adminProfile = await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const compId = urlParams.get('compId');
+
+        if (!compId) {
+          window.location.replace("/admin/submitted-marks.html");
+          return;
+        }
+
+        selectedComp = await getJudgeSafeCompetition(compId);
+        document.getElementById('comp-name-title').textContent = selectedComp.name;
+        document.getElementById('comp-code-subtitle').textContent = selectedComp.code || 'CODE';
+
+        await loadAuditingData();
+        setupModalEvents();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Audit dashboard failed:", err);
+        document.getElementById('global-page-loader').classList.add('hidden');
+      }
+    }
+
+    async function loadAuditingData() {
+      const allAssigns = await getJudgeAssignments();
+      assignments = allAssigns.filter(a => a.competitionId === selectedComp.id && a.active === true);
+      
+      marksList = await getJudgeMarksForCompetition(selectedComp.id);
+      activeParticipants = await getJudgeSafeParticipants(selectedComp.id, 'none'); // Full view for admin
+
+      renderEvaluators();
+      renderBreakdownMatrix();
+      performAnomalyValidation();
+    }
+
+    function renderEvaluators() {
+      const group = document.getElementById('judges-list-group');
+      group.innerHTML = '';
+
+      if (assignments.length === 0) {
+        group.innerHTML = '<div class="text-xs text-slate-400 p-4 text-center">No judges assigned to this competition.</div>';
+        return;
+      }
+
+      assignments.forEach(a => {
+        const judgeMarks = marksList.filter(m => m.judgeUserId === a.judgeId);
+        const finalizedCount = judgeMarks.filter(m => m.submissionStatus === 'final').length;
+        const totalDrafts = judgeMarks.filter(m => m.submissionStatus !== 'final').length;
+        
+        let statusTag = '';
+        const hasSubmitted = finalizedCount >= activeParticipants.length && activeParticipants.length > 0;
+        
+        if (hasSubmitted) {
+          statusTag = `<span class="inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold bg-emerald-50 text-emerald-700 font-mono">Submitted</span>`;
+        } else if (totalDrafts > 0) {
+          statusTag = `<span class="inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-50 text-amber-700 font-mono">Drafting</span>`;
+        } else {
+          statusTag = `<span class="inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-50 text-slate-400 font-mono">No Marks</span>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = "p-4 border border-slate-100 rounded-xl space-y-3 bg-slate-50/50";
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 text-xs">${a.judgeName}</span>
+            ${statusTag}
+          </div>
+          <p class="text-[10px] text-slate-400 font-medium">Sheets: ${finalizedCount}/${activeParticipants.length} Completed</p>
+          <div class="flex items-center justify-end space-x-2 pt-1 border-t border-slate-100">
+            <button class="return-btn text-[9px] font-bold text-rose-600 hover:bg-rose-50 border border-rose-100 px-2.5 py-1 rounded-md cursor-pointer transition">
+              Return Correction
+            </button>
+            <button class="reopen-btn text-[9px] font-bold text-slate-700 hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md cursor-pointer transition">
+              Reopen Sheet
+            </button>
+          </div>
+        `;
+
+        // Actions binders
+        card.querySelector('.return-btn').onclick = () => openReasonModal(a.judgeId, 'return');
+        card.querySelector('.reopen-btn').onclick = () => openReasonModal(a.judgeId, 'reopen');
+
+        group.appendChild(card);
+      });
+    }
+
+    function renderBreakdownMatrix() {
+      const tbody = document.getElementById('scores-matrix-body');
+      tbody.innerHTML = '';
+
+      if (activeParticipants.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">No approved participants rostered.</td></tr>';
+        return;
+      }
+
+      activeParticipants.forEach(p => {
+        const participantMarks = marksList.filter(m => m.entryId === p.id);
+
+        if (participantMarks.length === 0) {
+          const tr = document.createElement('tr');
+          tr.className = "border-b border-slate-100 text-slate-400";
+          tr.innerHTML = `
+            <td class="px-6 py-4 font-bold text-slate-700">${p.displayName}</td>
+            <td colspan="4" class="px-6 py-4 text-center">Unscored by all assigned evaluators.</td>
+          `;
+          tbody.appendChild(tr);
+          return;
+        }
+
+        participantMarks.forEach((m, idx) => {
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+          // Format criteria marks
+          const critScores = [];
+          if (m.criteria) {
+            Object.entries(m.criteria).forEach(([critId, val]) => {
+              critScores.push(`${critId.slice(-1)}: ${val}`);
+            });
+          }
+          const critText = critScores.length > 0 ? critScores.join(' | ') : 'No criterion data';
+
+          const attendanceBadge = m.participantStatus === 'absent' 
+            ? '<span class="text-red-500 font-bold">ABSENT</span>'
+            : (m.participantStatus === 'withdrawn' ? '<span class="text-amber-500 font-bold">WD</span>' : 'Present');
+
+          tr.innerHTML = `
+            <td class="px-6 py-4 font-bold text-slate-900">${idx === 0 ? p.displayName : ''}</td>
+            <td class="px-6 py-4 font-medium text-slate-500">${m.judgeName || 'Judge'}</td>
+            <td class="px-6 py-4">${attendanceBadge}</td>
+            <td class="px-6 py-4 font-mono font-medium text-slate-400 text-[10px]">${critText}</td>
+            <td class="px-6 py-4 text-right font-bold text-slate-900 font-mono text-sm">${m.rawTotal || 0}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    function performAnomalyValidation() {
+      const container = document.getElementById('audit-alerts-container');
+      const alertsList = document.getElementById('alerts-list');
+      alertsList.innerHTML = '';
+
+      const alerts = [];
+
+      // 1. Missing submissions check
+      const evaluatorsSubmitted = [...new Set(marksList.filter(m => m.submissionStatus === 'final').map(m => m.judgeUserId))];
+      const requiredJudges = selectedComp.judgeCountRequired || 3;
+      if (evaluatorsSubmitted.length < requiredJudges) {
+        alerts.push({
+          type: 'danger',
+          title: 'Missing Judge Submissions',
+          text: `Only ${evaluatorsSubmitted.length} of ${requiredJudges} required judges have finalised and submitted their mark sheets.`
+        });
+      }
+
+      // 2. Large scoring differences check
+      activeParticipants.forEach(p => {
+        const participantMarks = marksList.filter(m => m.entryId === p.id && m.submissionStatus === 'final' && m.participantStatus === 'participated');
+        if (participantMarks.length > 1) {
+          const scores = participantMarks.map(m => m.rawTotal);
+          const max = Math.max(...scores);
+          const min = Math.min(...scores);
+          if (max - min > 15) {
+            alerts.push({
+              type: 'warning',
+              title: 'Large Scoring Difference',
+              text: `Discrepancy of ${max - min} marks detected for participant <strong>${p.displayName}</strong>. High scoring: ${max}, Low scoring: ${min}.`
+            });
+          }
+        }
+      });
+
+      // Show warnings if found
+      if (alerts.length > 0) {
+        container.classList.remove('hidden');
+        alerts.forEach(a => {
+          const card = document.createElement('div');
+          card.className = a.type === 'danger'
+            ? "p-4 bg-rose-50 border border-rose-100 text-rose-800 rounded-xl text-xs space-y-1 shadow-sm"
+            : "p-4 bg-amber-50 border border-amber-100 text-amber-800 rounded-xl text-xs space-y-1 shadow-sm";
+          
+          card.innerHTML = `
+            <h4 class="font-extrabold uppercase tracking-wide flex items-center">
+              <span class="mr-1.5">●</span> ${a.title}
+            </h4>
+            <p class="leading-relaxed font-medium">${a.text}</p>
+          `;
+          alertsList.appendChild(card);
+        });
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    // Modal Events Setup
+    function openReasonModal(judgeUserId, actionType) {
+      activeJudgeId = judgeUserId;
+      modalActionType = actionType;
+
+      const title = actionType === 'reopen' ? 'Reopen Judge Mark Sheet' : 'Return Sheet for Correction';
+      document.getElementById('modal-title-header').textContent = title;
+      document.getElementById('reason-input-field').value = '';
+
+      document.getElementById('reason-modal').classList.remove('hidden');
+    }
+
+    function setupModalEvents() {
+      const modal = document.getElementById('reason-modal');
+      const cancelBtn = document.getElementById('modal-cancel-btn');
+      const confirmBtn = document.getElementById('modal-confirm-btn');
+
+      cancelBtn.onclick = () => {
+        modal.classList.add('hidden');
+        activeJudgeId = null;
+        modalActionType = null;
+      };
+
+      confirmBtn.onclick = async () => {
+        const reason = document.getElementById('reason-input-field').value.trim();
+        if (!reason) {
+          alert("Reason is mandatory for auditing trace logs.");
+          return;
+        }
+
+        modal.classList.add('hidden');
+        document.getElementById('global-page-loader').classList.remove('hidden');
+
+        try {
+          if (modalActionType === 'reopen') {
+            await reopenMarkSheet(selectedComp.id, activeJudgeId, adminProfile.email, reason);
+            alert("Mark sheet reopened successfully for the judge.");
+          } else {
+            await returnMarkSheetForCorrection(selectedComp.id, activeJudgeId, adminProfile.email, reason);
+            alert("Mark sheet successfully returned to the judge for correction.");
+          }
+
+          // Reload dashboard
+          await loadAuditingData();
+        } catch (err) {
+          alert("Action failed: " + err.message);
+        } finally {
+          document.getElementById('global-page-loader').classList.add('hidden');
+          activeJudgeId = null;
+          modalActionType = null;
+        }
+      };
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

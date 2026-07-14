@@ -1,0 +1,88 @@
+/* MeeladPulse Custom Components & Transitions */
+
+/* Global Page Loader styling */
+#global-page-loader {
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Loading state to hide body content while verifying auth */
+html.loading-state body {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--color-slate-900);
+  color: #ffffff;
+}
+.btn-primary:hover {
+  background-color: var(--color-slate-800);
+}
+
+.btn-accent {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+.btn-accent:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* Sidebar Navigation Items */
+.nav-link-item {
+  display: flex;
+  align-items: center;
+  space-x: 3px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  color: var(--color-slate-700);
+  transition: all 0.15s ease-in-out;
+}
+.nav-link-item:hover {
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-900);
+}
+
+/* Inputs */
+.form-input {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid var(--color-slate-200);
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--color-slate-900);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+
+/* Cards */
+.card-panel {
+  background-color: #ffffff;
+  border: 1px solid var(--color-slate-100);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Sticky layout and transitions */
+.mobile-nav-transition {
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out;
+}

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mark Sheets Monitor - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Loading progress monitors...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Banner -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 space-y-1 shadow-xs">
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Mark Sheets Monitor</h1>
+          <p class="text-xs text-slate-400 font-medium font-sans">Monitor live judge entries, compare criteria totals, and reopen locked mark sheets for correction.</p>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="alert-toast" class="hidden bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl p-4 text-xs flex items-center space-x-2">
+          <svg class="h-4 w-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="alert-toast-text">Sheet unlocked successfully.</span>
+        </div>
+
+        <!-- Main Screen Split Layout: Left List, Right Detail -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          
+          <!-- Left: Competitions Progress List -->
+          <div class="xl:col-span-1 space-y-4">
+            <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs">
+              <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Competitions</h2>
+              <div id="competitions-list-container" class="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+                <p class="text-xs text-slate-400 text-center py-8">Fetching competition sheets...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Detailed Judge Comparison Panel -->
+          <div class="xl:col-span-2 space-y-6">
+            <div id="details-empty-state" class="bg-white rounded-2xl border border-slate-100 p-12 text-center space-y-3 shadow-xs">
+              <svg class="h-10 w-10 text-slate-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              <h3 class="font-bold text-sm text-slate-800">Select a Competition</h3>
+              <p class="text-xs text-slate-400 max-w-xs mx-auto">Click on a competition on the left to monitor judge entries, check for variances, or unlock finalised sheets.</p>
+            </div>
+
+            <!-- Detail Dashboard (Hidden by default) -->
+            <div id="details-panel" class="hidden space-y-6">
+              
+              <!-- Selected Competition Metadata Card -->
+              <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="space-y-1">
+                  <span id="detail-comp-code" class="text-[9px] font-bold font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 uppercase tracking-wider"></span>
+                  <h3 id="detail-comp-name" class="text-lg font-extrabold text-slate-900 tracking-tight font-display"></h3>
+                  <p class="text-xs text-slate-400">Required Judges: <span id="detail-comp-req-judges" class="font-bold text-slate-700"></span> • Entries Registered: <span id="detail-comp-entries" class="font-bold text-slate-700"></span></p>
+                </div>
+                
+                <button id="tabulate-btn" class="btn btn-accent bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-2.5 px-4 font-bold rounded-xl cursor-pointer shadow-xs flex items-center space-x-1.5">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                  <span>Compile & Approve Result</span>
+                </button>
+              </div>
+
+              <!-- Judge Sheet Status Grid -->
+              <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-4">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Assigned Judge Statuses</h4>
+                <div id="judges-status-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <!-- Dynamic status cards -->
+                </div>
+              </div>
+
+              <!-- Comparison Table Card -->
+              <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-xs">
+                <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+                  <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Marks Comparison Grid</h4>
+                </div>
+                
+                <div class="table-container overflow-x-auto">
+                  <table class="w-full text-left border-collapse min-w-[600px]">
+                    <thead id="comparison-table-head">
+                      <!-- Dynamic headers based on assigned judges -->
+                    </thead>
+                    <tbody id="comparison-table-body" class="divide-y divide-slate-100 text-xs text-slate-700">
+                      <!-- Dynamic rows comparing entries -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { getCompetitions, getEntries } from "/assets/js/firestore-service.js";
+    import { getJudgeAssignments } from "/assets/js/judge-service.js";
+    import { getJudgeMarksForCompetition, reopenMarkSheet } from "/assets/js/mark-service.js";
+
+    let competitions = [];
+    let entries = [];
+    let assignments = [];
+    let selectedComp = null;
+
+    async function initMarkMonitor() {
+      try {
+        await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+
+        await loadCoreData();
+        renderCompetitionsList();
+      } catch (error) {
+        console.error("Failed loading monitor portal:", error);
+      }
+    }
+
+    async function loadCoreData() {
+      const [comps, ents, assigns] = await Promise.all([
+        getCompetitions(),
+        getEntries(),
+        getJudgeAssignments()
+      ]);
+      competitions = comps;
+      entries = ents;
+      assignments = assigns;
+    }
+
+    function renderCompetitionsList() {
+      const container = document.getElementById('competitions-list-container');
+      container.innerHTML = '';
+
+      if (competitions.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-8">No competitions registered in this festival.</p>`;
+        return;
+      }
+
+      competitions.forEach(c => {
+        // Find assigned judges
+        const compAssigns = assignments.filter(a => a.competitionId === c.id);
+        const assignedJudgeNames = compAssigns.map(a => a.judgeName).join(', ') || 'No judges assigned';
+
+        const card = document.createElement('div');
+        card.className = "p-4 rounded-xl border border-slate-100 hover:border-slate-300 hover:bg-slate-50 transition cursor-pointer select-none bg-white space-y-2";
+        card.setAttribute('data-id', c.id);
+
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <span class="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 uppercase tracking-wider">${c.code}</span>
+            <span class="inline-flex h-2 w-2 rounded-full ${c.status === 'Published' ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
+          </div>
+          <div class="space-y-0.5">
+            <h4 class="text-xs font-bold text-slate-800 leading-snug">${c.name}</h4>
+            <p class="text-[10px] text-slate-400 font-medium truncate">${assignedJudgeNames}</p>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          // Highlight selected
+          document.querySelectorAll('#competitions-list-container > div').forEach(d => {
+            d.classList.remove('border-slate-900', 'bg-slate-50/50');
+          });
+          card.classList.add('border-slate-900', 'bg-slate-50/50');
+          
+          showCompetitionDetails(c);
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    async function showCompetitionDetails(comp) {
+      selectedComp = comp;
+      document.getElementById('details-empty-state').classList.add('hidden');
+      const panel = document.getElementById('details-panel');
+      panel.classList.remove('hidden');
+
+      // Set titles
+      document.getElementById('detail-comp-code').textContent = comp.code;
+      document.getElementById('detail-comp-name').textContent = comp.name;
+      document.getElementById('detail-comp-req-judges').textContent = comp.judgeCountRequired || 3;
+
+      const compEntries = entries.filter(e => e.competitionId === comp.id);
+      document.getElementById('detail-comp-entries').textContent = compEntries.length;
+
+      // Link Tabulate Button to Provisional Results page
+      document.getElementById('tabulate-btn').onclick = () => {
+        window.location.href = `/admin/provisional-results.html?compId=${comp.id}`;
+      };
+
+      // Load marks for this competition
+      const marks = await getJudgeMarksForCompetition(comp.id);
+      
+      // Load assigned judges
+      const compAssigns = assignments.filter(a => a.competitionId === comp.id);
+
+      renderJudgeStatuses(compAssigns, marks, compEntries.length);
+      renderComparisonGrid(compAssigns, marks, compEntries);
+    }
+
+    function renderJudgeStatuses(compAssigns, marks, totalEntries) {
+      const container = document.getElementById('judges-status-grid');
+      container.innerHTML = '';
+
+      if (compAssigns.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 py-4 col-span-full text-center font-medium">No judges assigned to this competition.</p>`;
+        return;
+      }
+
+      compAssigns.forEach(a => {
+        // Find marks submitted by this judge
+        const judgeMarks = marks.filter(m => m.judgeUserId === a.judgeId);
+        const scoredCount = judgeMarks.length;
+        
+        // Find if they submitted final
+        const isFinal = judgeMarks.some(m => m.submissionStatus === 'final');
+        const isDraft = judgeMarks.some(m => m.submissionStatus === 'draft');
+        
+        let statusText = "No Marks";
+        let statusColor = "bg-slate-100 text-slate-600 border-slate-200";
+
+        if (isFinal) {
+          statusText = "Final Submitted";
+          statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
+        } else if (isDraft || scoredCount > 0) {
+          statusText = "Drafting Mode";
+          statusColor = "bg-amber-50 text-amber-700 border-amber-200";
+        }
+
+        const card = document.createElement('div');
+        card.className = "p-4 rounded-xl border border-slate-100 bg-slate-50/30 space-y-3 flex flex-col justify-between";
+        card.innerHTML = `
+          <div class="space-y-1">
+            <h5 class="text-xs font-bold text-slate-900">${a.judgeName}</h5>
+            <div class="flex items-center space-x-1.5">
+              <span class="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold border uppercase tracking-wider ${statusColor}">${statusText}</span>
+              <span class="text-[10px] text-slate-400 font-bold">${scoredCount}/${totalEntries} scored</span>
+            </div>
+          </div>
+          ${isFinal ? `
+            <button class="reopen-btn btn btn-secondary w-full py-1.5 text-[10px] bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer font-bold transition" data-judge-id="${a.judgeId}">
+              Unlock Sheet
+            </button>
+          ` : ''}
+        `;
+
+        if (isFinal) {
+          card.querySelector('.reopen-btn').addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            if (!confirm(`Are you sure you want to unlock ${a.judgeName}'s mark sheet? This will return it to draft state so they can edit it.`)) return;
+            btn.disabled = true;
+            btn.textContent = "Unlocking...";
+            try {
+              await reopenMarkSheet(selectedComp.id, a.judgeId);
+              showToast(`Unlocked ${a.judgeName}'s sheet.`);
+              // Refresh details
+              await showCompetitionDetails(selectedComp);
+            } catch (err) {
+              alert("Failed to unlock sheet: " + err.message);
+              btn.disabled = false;
+              btn.textContent = "Unlock Sheet";
+            }
+          });
+        }
+
+        container.appendChild(card);
+      });
+    }
+
+    function renderComparisonGrid(compAssigns, marks, compEntries) {
+      const thead = document.getElementById('comparison-table-head');
+      const tbody = document.getElementById('comparison-table-body');
+
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+
+      if (compEntries.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-slate-400">No participants registered for this event.</td></tr>`;
+        return;
+      }
+
+      // Build Headers
+      const trHead = document.createElement('tr');
+      trHead.className = "border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20";
+      
+      let htmlHead = `
+        <th class="px-6 py-4">Participant Name</th>
+        <th class="px-6 py-4">Associated Team</th>
+      `;
+
+      compAssigns.forEach(a => {
+        htmlHead += `<th class="px-6 py-4">${a.judgeName}</th>`;
+      });
+
+      htmlHead += `<th class="px-6 py-4 text-right">Average Score</th>`;
+      trHead.innerHTML = htmlHead;
+      thead.appendChild(trHead);
+
+      // Build Rows
+      compEntries.forEach(e => {
+        const row = document.createElement('tr');
+        row.className = "hover:bg-slate-50/50 transition";
+
+        let htmlRow = `
+          <td class="px-6 py-4 font-bold text-slate-900">${e.groupName || 'Individual Participant'}</td>
+          <td class="px-6 py-4 font-semibold text-slate-500 font-mono">${e.teamId}</td>
+        `;
+
+        let totalMarks = 0;
+        let judgesCounted = 0;
+
+        compAssigns.forEach(a => {
+          // Find if this judge entered marks for this entry
+          const m = marks.find(mk => mk.judgeUserId === a.judgeId && mk.entryId === e.id);
+          if (m) {
+            let scoreDisplay = m.participantStatus === 'absent' ? 'ABS' : (m.participantStatus === 'disqualified' ? 'DISQ' : m.rawTotal);
+            htmlRow += `<td class="px-6 py-4 font-mono font-bold text-slate-700">${scoreDisplay}</td>`;
+            if (m.participantStatus === 'participated') {
+              totalMarks += Number(m.rawTotal) || 0;
+              judgesCounted++;
+            }
+          } else {
+            htmlRow += `<td class="px-6 py-4 text-slate-300 italic font-medium">Pending</td>`;
+          }
+        });
+
+        const avg = judgesCounted > 0 ? (totalMarks / judgesCounted).toFixed(2) : '-';
+        htmlRow += `<td class="px-6 py-4 text-right font-mono font-extrabold text-emerald-600">${avg}</td>`;
+
+        row.innerHTML = htmlRow;
+        tbody.appendChild(row);
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('alert-toast');
+      document.getElementById('alert-toast-text').textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => { toast.classList.add('hidden'); }, 4000);
+    }
+
+    initMarkMonitor();
+  </script>
+</body>
+</html>

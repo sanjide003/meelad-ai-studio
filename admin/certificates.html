@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificates Terminal - Admin Portal</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/certificates.css">
+  <!-- Ensure high-end premium typography is loaded for rendering the certificates -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&family=JetBrains+Mono:wght@400;700&display=swap">
+  <style>
+    /* Compact certificate miniature scaling for modal and grid preview */
+    .cert-scale-wrapper {
+      transform: scale(0.65);
+      transform-origin: top center;
+    }
+    @media (min-width: 640px) {
+      .cert-scale-wrapper {
+        transform: scale(0.8);
+      }
+    }
+    @media (min-width: 1024px) {
+      .cert-scale-wrapper {
+        transform: scale(0.9);
+      }
+    }
+    .cert-preview-container-box {
+      width: 100%;
+      height: 550px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      background-color: #f1f5f9;
+      border-radius: 12px;
+      padding: 24px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <!-- Print Layout Overlay (Hidden on screen, prints in landscape A4) -->
+  <div id="print-zone" class="hidden absolute top-0 left-0 w-full bg-white z-50 p-0"></div>
+
+  <!-- Regular Screen Layout -->
+  <div class="min-h-screen flex flex-col lg:flex-row no-print">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Panel -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Certificate Desk</h1>
+            <p class="text-xs text-slate-400 font-medium">Query eligibilities, verify merit standings, and batch generate certified credentials for the grand festival.</p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button id="print-selected-btn" class="btn btn-primary py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm cursor-pointer">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-3a2 2 0 00-2-2H9a2 2 0 00-2 2v3a2 2 0 002 2zm5-11V3m-3 3h6"/></svg>
+              <span>Batch Print Selected</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Bento Grid -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Certificate Selection & Configurations</h2>
+            <div class="flex flex-wrap gap-2">
+              <select id="cert-type" class="form-input text-xs py-1.5 px-3 cursor-pointer bg-slate-50 font-bold text-slate-800">
+                <option value="participation">Participation Certificates (പങ്കാളിത്തം)</option>
+                <option value="merit">Merit & Grade Certificates (യോഗ്യത/ഗ്രേഡ്)</option>
+                <option value="championship">Championship Standings (ഗ്രൂപ്പ് ചാമ്പ്യൻഷിപ്പ്)</option>
+              </select>
+              <select id="team-filter" class="form-input text-xs py-1.5 px-3 cursor-pointer">
+                <option value="all">All Teams</option>
+              </select>
+              <select id="category-filter" class="form-input text-xs py-1.5 px-3 cursor-pointer">
+                <option value="all">All Categories</option>
+                <option value="cat_subjunior">Sub-Junior</option>
+                <option value="cat_junior">Junior</option>
+                <option value="cat_senior">Senior</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Selection & Summary Metrics -->
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center space-x-1.5 cursor-pointer select-none">
+                <input type="checkbox" id="select-all-certs" class="h-4 w-4 rounded border-slate-200 text-emerald-500 focus:ring-0">
+                <span>Select All Records</span>
+              </label>
+              <span id="selected-count-label">0 records selected</span>
+            </div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" id="total-results-badge">
+              0 results retrieved
+            </div>
+          </div>
+        </div>
+
+        <!-- Data table layout for easy audit before generating -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-100 text-left">
+              <thead class="bg-slate-50/70 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <tr>
+                  <th scope="col" class="py-3 px-6 w-12">Select</th>
+                  <th scope="col" class="py-3 px-6" id="th-recipient">Recipient Name</th>
+                  <th scope="col" class="py-3 px-6" id="th-team">Team</th>
+                  <th scope="col" class="py-3 px-6" id="th-details">Details / Merits</th>
+                  <th scope="col" class="py-3 px-6 text-right w-36">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="certs-table-body" class="divide-y divide-slate-100 text-xs text-slate-600">
+                <tr>
+                  <td colspan="5" class="py-12 text-center text-slate-400 italic">
+                    Retrieving credentials registry...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Realtime Certificate Scaled-down Preview Modal -->
+  <div id="preview-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-4xl overflow-hidden flex flex-col transform scale-95 transition-all duration-200">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="space-y-0.5">
+          <h3 class="text-sm font-bold text-slate-900">Certificate Generation Preview</h3>
+          <p class="text-[11px] text-slate-400">Review typography margins and signatures before triggering print pools.</p>
+        </div>
+        <button id="close-modal-btn" class="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg flex items-center justify-center transition">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-6 bg-slate-100 flex items-center justify-center">
+        <div class="cert-preview-container-box">
+          <div class="cert-scale-wrapper">
+            <!-- Dynamic Certificate Layout -->
+            <div id="modal-certificate-render"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+        <span class="text-xs text-slate-400 font-medium">Verify content matches standard registry fields.</span>
+        <div class="flex items-center space-x-2">
+          <button id="modal-print-btn" class="btn btn-primary py-2 px-4 text-xs font-bold space-x-1.5 shadow-xs cursor-pointer">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-3a2 2 0 00-2-2H9a2 2 0 00-2 2v3a2 2 0 002 2zm5-11V3m-3 3h6"/></svg>
+            <span>Print Single Copy</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { getTeams } from "/assets/js/firestore-service.js";
+    import { 
+      getParticipationCertificatesData, 
+      getMeritCertificatesData, 
+      getChampionshipCertificatesData,
+      issueCertificate
+    } from "/assets/js/certificate-service.js";
+
+    let activeFestId = null;
+    let festivalTitle = "MeeladPulse Grand Festival";
+    
+    // Loaded records arrays
+    let participationRecords = [];
+    let meritRecords = [];
+    let championshipRecords = [];
+    
+    // Filters and current selected records
+    let currentType = 'participation'; // 'participation', 'merit', 'championship'
+    let currentPreviewRecord = null; // Storing matching item for single print/preview
+
+    async function initPage() {
+      try {
+        await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+
+        activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
+        const savedTitle = localStorage.getItem('meeladpulse_selected_fest_title');
+        if (savedTitle) festivalTitle = savedTitle;
+
+        if (!activeFestId) {
+          alert("Please select a festival scope first.");
+          window.location.replace('/select-fest.html');
+          return;
+        }
+
+        await loadTeamsDropdown();
+        await fetchAllCertificateData();
+        setupFilters();
+        setupInteractiveControls();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Certificate Portal Init Failure:", err);
+      }
+    }
+
+    async function loadTeamsDropdown() {
+      try {
+        const teams = await getTeams() || [];
+        const select = document.getElementById('team-filter');
+        teams.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = `${t.name} (${t.id.toUpperCase()})`;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Error loading teams:", err);
+      }
+    }
+
+    async function fetchAllCertificateData() {
+      try {
+        // Parallel retrieval of data from services
+        const [participation, merit, championship] = await Promise.all([
+          getParticipationCertificatesData(),
+          getMeritCertificatesData(),
+          getChampionshipCertificatesData()
+        ]);
+        
+        participationRecords = participation || [];
+        meritRecords = merit || [];
+        championshipRecords = championship || [];
+
+        renderTable();
+      } catch (err) {
+        console.error("Error retrieving certificates database:", err);
+        const tbody = document.getElementById('certs-table-body');
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-12 text-center text-red-500 font-bold">
+              Database Sync Failure: ${err.message || err}
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    function setupFilters() {
+      const typeSelect = document.getElementById('cert-type');
+      const teamSelect = document.getElementById('team-filter');
+      const catSelect = document.getElementById('category-filter');
+      const selectAllCheck = document.getElementById('select-all-certs');
+
+      typeSelect.onchange = () => {
+        currentType = typeSelect.value;
+        
+        // Context-aware filters
+        if (currentType === 'championship') {
+          teamSelect.disabled = true;
+          catSelect.disabled = true;
+          teamSelect.classList.add('opacity-50');
+          catSelect.classList.add('opacity-50');
+        } else {
+          teamSelect.disabled = false;
+          catSelect.disabled = false;
+          teamSelect.classList.remove('opacity-50');
+          catSelect.classList.remove('opacity-50');
+        }
+
+        // Adjust Table Header Text
+        const thRecipient = document.getElementById('th-recipient');
+        const thDetails = document.getElementById('th-details');
+        const thTeam = document.getElementById('th-team');
+        
+        if (currentType === 'championship') {
+          thRecipient.textContent = "Championship Winner / Group";
+          thTeam.textContent = "Standings Context";
+          thDetails.textContent = "Calculated Total Points";
+        } else {
+          thRecipient.textContent = "Recipient Name";
+          thTeam.textContent = "Team";
+          thDetails.textContent = "Details / Merits";
+        }
+
+        renderTable();
+      };
+
+      teamSelect.onchange = renderTable;
+      catSelect.onchange = renderTable;
+
+      selectAllCheck.onchange = () => {
+        const rowChecks = document.querySelectorAll('.cert-row-checkbox');
+        rowChecks.forEach(c => {
+          c.checked = selectAllCheck.checked;
+        });
+        updateSelectedCounter();
+      };
+    }
+
+    function setupInteractiveControls() {
+      // Print Selected Action
+      document.getElementById('print-selected-btn').onclick = async () => {
+        const checked = document.querySelectorAll('.cert-row-checkbox:checked');
+        if (checked.length === 0) {
+          alert("Please select at least one certificate record to generate print pool.");
+          return;
+        }
+
+        const originalHTML = document.getElementById('print-selected-btn').innerHTML;
+        document.getElementById('print-selected-btn').disabled = true;
+        document.getElementById('print-selected-btn').innerHTML = `
+          <div class="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span>Issuing...</span>
+        `;
+
+        try {
+          const printZone = document.getElementById('print-zone');
+          printZone.innerHTML = '';
+
+          for (const cb of checked) {
+            const id = cb.getAttribute('data-id');
+            const data = getRecordById(id);
+            if (data) {
+              await issueCertificate(data);
+              const certHTML = buildCertificateHTML(data);
+              printZone.innerHTML += certHTML;
+            }
+          }
+
+          // Trigger native landscape print flow
+          printZone.classList.remove('hidden');
+          window.print();
+          printZone.classList.add('hidden');
+          printZone.innerHTML = '';
+        } catch (err) {
+          console.error("Issuance failed:", err);
+          alert("Failed to issue official certificates: " + err.message);
+        } finally {
+          document.getElementById('print-selected-btn').disabled = false;
+          document.getElementById('print-selected-btn').innerHTML = originalHTML;
+        }
+      };
+
+      // Modal management
+      const modal = document.getElementById('preview-modal');
+      const closeModal = document.getElementById('close-modal-btn');
+      
+      closeModal.onclick = () => {
+        modal.classList.add('hidden');
+        currentPreviewRecord = null;
+      };
+
+      document.getElementById('modal-print-btn').onclick = async () => {
+        if (!currentPreviewRecord) return;
+        
+        const btn = document.getElementById('modal-print-btn');
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = "Issuing...";
+
+        try {
+          await issueCertificate(currentPreviewRecord);
+          
+          const printZone = document.getElementById('print-zone');
+          printZone.innerHTML = buildCertificateHTML(currentPreviewRecord);
+          
+          printZone.classList.remove('hidden');
+          window.print();
+          printZone.classList.add('hidden');
+          printZone.innerHTML = '';
+        } catch (err) {
+          alert("Failed to issue certificate: " + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = `
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-3a2 2 0 00-2-2H9a2 2 0 00-2 2v3a2 2 0 002 2zm5-11V3m-3 3h6"/></svg>
+            <span>Print Single Copy</span>
+          `;
+        }
+      };
+    }
+
+    function getRecordById(id) {
+      if (currentType === 'participation') {
+        return participationRecords.find(r => r.id === id);
+      } else if (currentType === 'merit') {
+        return meritRecords.find(r => r.id === id);
+      } else {
+        return championshipRecords.find(r => r.id === id);
+      }
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('certs-table-body');
+      tbody.innerHTML = '';
+
+      const teamFilterVal = document.getElementById('team-filter').value;
+      const catFilterVal = document.getElementById('category-filter').value;
+      
+      let sourceArray = [];
+      if (currentType === 'participation') {
+        sourceArray = participationRecords;
+      } else if (currentType === 'merit') {
+        sourceArray = meritRecords;
+      } else {
+        sourceArray = championshipRecords;
+      }
+
+      // Filter local lists
+      const filtered = sourceArray.filter(item => {
+        if (currentType === 'championship') return true; // Standings are global
+
+        const matchesTeam = teamFilterVal === 'all' || item.teamId === teamFilterVal;
+        const matchesCat = catFilterVal === 'all' || item.categoryId === catFilterVal;
+        return matchesTeam && matchesCat;
+      });
+
+      document.getElementById('total-results-badge').textContent = `${filtered.length} records retrieved`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-12 text-center text-slate-400 italic">
+              No festival records match the selected configurations.
+            </td>
+          </tr>
+        `;
+        document.getElementById('selected-count-label').textContent = "0 records selected";
+        document.getElementById('select-all-certs').checked = false;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 transition duration-150";
+
+        // Layout attributes depending on certificate types
+        let recipientName = "";
+        let teamLabel = "";
+        let detailsText = "";
+
+        if (currentType === 'participation') {
+          recipientName = item.name;
+          teamLabel = item.teamId ? item.teamId.toUpperCase() : 'N/A';
+          const cats = { cat_subjunior: 'Sub-Junior', cat_junior: 'Junior', cat_senior: 'Senior' };
+          detailsText = `<span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold text-[10px] tracking-wide">${cats[item.categoryId] || 'Unknown Category'}</span>`;
+        } else if (currentType === 'merit') {
+          recipientName = item.studentName;
+          teamLabel = item.teamId ? item.teamId.toUpperCase() : 'N/A';
+          
+          let rankLabel = "";
+          if (item.rank === 1) rankLabel = "1st Place";
+          else if (item.rank === 2) rankLabel = "2nd Place";
+          else if (item.rank === 3) rankLabel = "3rd Place";
+          else if (item.rank) rankLabel = `${item.rank} Place`;
+
+          const gradeBadge = item.grade ? `<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md font-extrabold font-mono text-[11px]">${item.grade} Grade</span>` : '';
+          const rankBadge = rankLabel ? `<span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-md font-bold text-[11px]">${rankLabel}</span>` : '';
+          
+          detailsText = `
+            <div class="space-y-1">
+              <div class="font-bold text-slate-800 leading-tight">${item.competitionName}</div>
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                ${rankBadge}
+                ${gradeBadge}
+                <span class="text-[10px] text-slate-400 font-medium">Scored: ${item.point || 0} pts</span>
+              </div>
+            </div>
+          `;
+        } else if (currentType === 'championship') {
+          recipientName = item.teamName;
+          
+          const idx = championshipRecords.findIndex(r => r.teamId === item.teamId);
+          let positionText = "";
+          if (idx === 0) positionText = "Winner (Champion)";
+          else if (idx === 1) positionText = "First Runner-Up";
+          else if (idx === 2) positionText = "Second Runner-Up";
+          else positionText = `${idx + 1}th Position`;
+
+          teamLabel = `<span class="text-[10px] font-extrabold text-emerald-600 tracking-wide">${positionText.toUpperCase()}</span>`;
+          detailsText = `<span class="font-mono font-extrabold text-slate-900 text-sm">${item.totalPoints} GRAND POINTS</span>`;
+        }
+
+        tr.innerHTML = `
+          <td class="py-4 px-6">
+            <input type="checkbox" class="cert-row-checkbox h-4 w-4 rounded border-slate-200 text-emerald-500 focus:ring-0 cursor-pointer" data-id="${item.id}">
+          </td>
+          <td class="py-4 px-6 font-semibold text-slate-900 font-display">${recipientName}</td>
+          <td class="py-4 px-6 font-mono font-bold text-slate-500">${teamLabel}</td>
+          <td class="py-4 px-6">${detailsText}</td>
+          <td class="py-4 px-6 text-right">
+            <button class="preview-cert-row-btn inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50/20 font-bold text-[11px] transition cursor-pointer" data-id="${item.id}">
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              <span>Preview</span>
+            </button>
+          </td>
+        `;
+
+        tr.querySelector('.cert-row-checkbox').onchange = updateSelectedCounter;
+        tr.querySelector('.preview-cert-row-btn').onclick = () => {
+          showPreviewModal(item);
+        };
+
+        tbody.appendChild(tr);
+      });
+
+      updateSelectedCounter();
+    }
+
+    function updateSelectedCounter() {
+      const selected = document.querySelectorAll('.cert-row-checkbox:checked').length;
+      document.getElementById('selected-count-label').textContent = `${selected} records selected`;
+
+      const allBox = document.getElementById('select-all-certs');
+      const totalChecks = document.querySelectorAll('.cert-row-checkbox').length;
+      allBox.checked = totalChecks > 0 && selected === totalChecks;
+    }
+
+    function showPreviewModal(record) {
+      currentPreviewRecord = record;
+      const modal = document.getElementById('preview-modal');
+      const renderZone = document.getElementById('modal-certificate-render');
+      
+      renderZone.innerHTML = buildCertificateHTML(record);
+      modal.classList.remove('hidden');
+    }
+
+    function buildCertificateHTML(item) {
+      let title = "Certificate of Participation";
+      let textHTML = "";
+
+      if (currentType === 'participation') {
+        title = "Certificate of Participation";
+        const cats = { cat_subjunior: 'Sub-Junior', cat_junior: 'Junior', cat_senior: 'Senior' };
+        const categoryLabel = cats[item.categoryId] || 'Festival';
+        textHTML = `
+          This is proudly presented to
+          <div class="cert-recipient-name">${item.name}</div>
+          <p class="cert-body-text">
+            representing <strong class="text-slate-900 font-extrabold uppercase">${item.teamId ? item.teamId.toUpperCase() : 'INDIVIDUAL'}</strong>, 
+            who has actively and honorably participated in the <strong class="text-slate-900 font-extrabold">${categoryLabel}</strong> division category events 
+            during the <strong class="text-emerald-700 font-extrabold">${festivalTitle}</strong> Grand Festival.
+          </p>
+        `;
+      } else if (currentType === 'merit') {
+        title = "Certificate of Merit";
+        
+        let meritPhrase = "";
+        if (item.rank && item.grade) {
+          let rankLabel = "";
+          if (item.rank === 1) rankLabel = "1st Place";
+          else if (item.rank === 2) rankLabel = "2nd Place";
+          else if (item.rank === 3) rankLabel = "3rd Place";
+          else rankLabel = `${item.rank} Place`;
+          meritPhrase = `has secured <strong class="text-slate-900 font-black">${rankLabel}</strong> with a prestigious <strong class="text-emerald-700 font-black">${item.grade} Grade</strong>`;
+        } else if (item.rank) {
+          let rankLabel = "";
+          if (item.rank === 1) rankLabel = "1st Place";
+          else if (item.rank === 2) rankLabel = "2nd Place";
+          else if (item.rank === 3) rankLabel = "3rd Place";
+          else rankLabel = `${item.rank} Place`;
+          meritPhrase = `has secured <strong class="text-slate-900 font-black">${rankLabel}</strong>`;
+        } else if (item.grade) {
+          meritPhrase = `has secured a prestigious <strong class="text-emerald-700 font-black">${item.grade} Grade</strong>`;
+        } else {
+          meritPhrase = "has shown exceptional merit";
+        }
+
+        textHTML = `
+          This is proudly presented to
+          <div class="cert-recipient-name">${item.studentName}</div>
+          <p class="cert-body-text">
+            representing <strong class="text-slate-900 font-extrabold uppercase">${item.teamId ? item.teamId.toUpperCase() : 'INDIVIDUAL'}</strong>, 
+            who ${meritPhrase} scoring <strong class="text-slate-900 font-extrabold">${item.point || 0}</strong> points in the competition event 
+            <strong class="text-slate-900 font-extrabold">"${item.competitionName}"</strong> during the <strong class="text-emerald-700 font-extrabold">${festivalTitle}</strong>.
+          </p>
+        `;
+      } else if (currentType === 'championship') {
+        title = "Championship Certificate";
+        
+        const idx = championshipRecords.findIndex(r => r.teamId === item.teamId);
+        let standingLabel = "";
+        if (idx === 0) standingLabel = "GRAND CHAMPIONSHIP WINNER";
+        else if (idx === 1) standingLabel = "FIRST RUNNER-UP POSITION";
+        else if (idx === 2) standingLabel = "SECOND RUNNER-UP POSITION";
+        else standingLabel = `${idx + 1}TH POSITION CONTENDER`;
+
+        textHTML = `
+          This is proudly presented to
+          <div class="cert-recipient-name">${item.teamName}</div>
+          <p class="cert-body-text">
+            for securing the prestigious <strong class="text-slate-900 font-black uppercase tracking-wide text-md block my-1.5">${standingLabel}</strong>
+            with a Grand Total of <strong class="text-amber-600 font-mono font-black text-lg">${item.totalPoints} Points</strong> in the group championship tally 
+            during the <strong class="text-emerald-700 font-extrabold">${festivalTitle}</strong>.
+          </p>
+        `;
+      }
+
+      return `
+        <div class="certificate-container print-page-break">
+          <div class="certificate-inner-border"></div>
+          <div class="cert-header space-y-1">
+            <span class="text-[10px] font-black tracking-widest text-emerald-600 font-mono uppercase">MEELADPULSE SECURED REGISTRY</span>
+            <h2 class="cert-title-display">${title}</h2>
+          </div>
+          
+          <div class="flex-1 flex flex-col justify-center items-center text-center mt-3 space-y-1">
+            ${textHTML}
+          </div>
+
+          <div class="cert-footer">
+            <div class="signature-line">
+              <span>Festival Director</span>
+            </div>
+            <div class="cert-seal">
+              <div class="flex flex-col items-center">
+                <span class="text-[8px] font-black leading-none">VALID</span>
+                <span class="text-[9px] font-black tracking-wider text-white mt-0.5">MP</span>
+                <span class="text-[7px] font-semibold leading-none text-slate-100 mt-0.5">SEAL</span>
+              </div>
+            </div>
+            <div class="signature-line">
+              <span>General Convener</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

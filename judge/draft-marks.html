@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Draft Scoring Sheets - Judge Panel</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700 font-display font-medium">Checking draft records...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Controls -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex items-center justify-between">
+          <div class="space-y-1">
+            <h1 id="title-main" class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Draft Mark Sheets</h1>
+            <p id="desc-main" class="text-xs text-slate-400 font-medium font-display">Work in progress evaluations and corrections requested.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button id="lang-btn-en" class="px-2.5 py-1 text-[10px] font-bold border rounded-lg hover:bg-slate-50 cursor-pointer">EN</button>
+            <button id="lang-btn-ml" class="px-2.5 py-1 text-[10px] font-bold border rounded-lg hover:bg-slate-50 cursor-pointer">മലയാളം</button>
+          </div>
+        </div>
+
+        <!-- Draft Sheets Table -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+          <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+            <h2 id="table-header-title" class="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Draft Sheets</h2>
+          </div>
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4">Competition</th>
+                  <th class="px-6 py-4">Chest / Code</th>
+                  <th class="px-6 py-4">Draft Score</th>
+                  <th class="px-6 py-4">Status</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="drafts-table-body" class="divide-y divide-slate-100 text-xs">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAssignmentsForJudge, getJudgeSafeCompetition, getJudgeSafeParticipants } from "/assets/js/judge-service.js";
+    import { getJudgeMarksForCompetitionAndJudge } from "/assets/js/mark-service.js";
+    import { en } from "/assets/js/translations-en.js";
+    import { ml } from "/assets/js/translations-ml.js";
+
+    let judgeProfile = null;
+    let currentLanguage = localStorage.getItem('meeladpulse_lang') || 'en';
+
+    function getTrans(key) {
+      const dict = currentLanguage === 'ml' ? ml : en;
+      return dict[key] || key;
+    }
+
+    async function initPage() {
+      try {
+        judgeProfile = await verifyUserRole(['judge']);
+        await loadPortalLayout('judge');
+        initializeNavigation();
+        setupLanguageControls();
+        applyTranslations();
+
+        await loadDrafts();
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Failed opening drafts console:", err);
+        document.getElementById('global-page-loader').classList.add('hidden');
+      }
+    }
+
+    function setupLanguageControls() {
+      const btnEn = document.getElementById('lang-btn-en');
+      const btnMl = document.getElementById('lang-btn-ml');
+      
+      const updateButtons = () => {
+        if (currentLanguage === 'ml') {
+          btnMl.className = "px-2.5 py-1 text-[10px] font-bold border border-emerald-500 bg-emerald-50 text-emerald-700 rounded-lg cursor-pointer";
+          btnEn.className = "px-2.5 py-1 text-[10px] font-bold border rounded-lg hover:bg-slate-50 cursor-pointer text-slate-500";
+        } else {
+          btnEn.className = "px-2.5 py-1 text-[10px] font-bold border border-emerald-500 bg-emerald-50 text-emerald-700 rounded-lg cursor-pointer";
+          btnMl.className = "px-2.5 py-1 text-[10px] font-bold border rounded-lg hover:bg-slate-50 cursor-pointer text-slate-500";
+        }
+      };
+
+      btnEn.onclick = () => {
+        currentLanguage = 'en';
+        localStorage.setItem('meeladpulse_lang', 'en');
+        updateButtons();
+        applyTranslations();
+        loadDrafts();
+      };
+
+      btnMl.onclick = () => {
+        currentLanguage = 'ml';
+        localStorage.setItem('meeladpulse_lang', 'ml');
+        updateButtons();
+        applyTranslations();
+        loadDrafts();
+      };
+
+      updateButtons();
+    }
+
+    function applyTranslations() {
+      document.getElementById('title-main').textContent = getTrans('draftSheets');
+      document.getElementById('table-header-title').textContent = getTrans('draftSheets');
+    }
+
+    async function loadDrafts() {
+      const tbody = document.getElementById('drafts-table-body');
+      tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">Searching active drafts...</td></tr>';
+
+      try {
+        const assigns = await getAssignmentsForJudge(judgeProfile.uid);
+        const draftsList = [];
+
+        for (const a of assigns) {
+          const comp = await getJudgeSafeCompetition(a.competitionId);
+          const marks = await getJudgeMarksForCompetitionAndJudge(a.competitionId, judgeProfile.uid);
+          const parts = await getJudgeSafeParticipants(a.competitionId, comp.blindJudgingMode || 'none');
+
+          // Filter only drafts
+          const activeDrafts = marks.filter(m => m.submissionStatus !== 'final');
+
+          activeDrafts.forEach(m => {
+            const entry = parts.find(p => p.id === m.entryId);
+            draftsList.push({
+              mark: m,
+              competition: comp,
+              participant: entry || { displayName: `Entry #${m.entryId}`, chestNumber: 'Unknown' }
+            });
+          });
+        }
+
+        tbody.innerHTML = '';
+        if (draftsList.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                <p class="font-bold text-slate-700">No Drafts Pending</p>
+                <p class="text-[11px] text-slate-400 mt-1">Excellent! All your marks are finalized and locked.</p>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        draftsList.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+          let statusTag = '';
+          if (item.mark.submissionStatus === 'reopened') {
+            statusTag = `<span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-100">${getTrans('reopenedSheets')}</span>`;
+          } else if (item.mark.submissionStatus === 'correction_required') {
+            statusTag = `<span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-100">${getTrans('returnedForCorrection')}</span>`;
+          } else {
+            statusTag = `<span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-100">Draft Save</span>`;
+          }
+
+          tr.innerHTML = `
+            <td class="px-6 py-4">
+              <span class="text-[10px] font-mono font-bold text-emerald-600 block">${item.competition.code}</span>
+              <span class="font-bold text-slate-800">${item.competition.name}</span>
+            </td>
+            <td class="px-6 py-4 font-bold text-slate-900">${item.participant.displayName}</td>
+            <td class="px-6 py-4 font-bold text-slate-600 font-mono text-sm">${item.mark.rawTotal || 0}</td>
+            <td class="px-6 py-4">${statusTag}</td>
+            <td class="px-6 py-4 text-right">
+              <a href="/judge/mark-entry.html?compId=${item.competition.id}" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[10px] font-bold transition">
+                Continue Scoring
+              </a>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } catch (err) {
+        console.error("Drafts loading error:", err);
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-rose-600 font-bold">Failed to load draft scoring sheets.</td></tr>';
+      }
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

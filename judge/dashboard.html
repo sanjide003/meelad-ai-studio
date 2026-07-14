@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Judge Panel - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Verifying judge assignments...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Dashboard Header -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-2">
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Judge Station Portal</h1>
+          <p class="text-xs text-slate-400 font-medium">Authorised scoring station. Verify participant details, input criteria marks, and submit evaluations.</p>
+        </div>
+
+        <!-- Assignments Grid -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-6">
+          <div>
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Assigned Competitions</h2>
+            <p class="text-[11px] text-slate-400 mt-1">Select an assigned item to view entries and manage scores.</p>
+          </div>
+
+          <div id="assignments-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Loading template -->
+            <div class="col-span-full py-12 text-center text-slate-400">
+              <p class="text-xs font-medium">Checking security assignments...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secure Scoring Area (Only visible when competition selected) -->
+        <div id="scoring-area-panel" class="hidden bg-white rounded-2xl border border-slate-150 p-6 shadow-md space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+              <span id="selected-comp-code" class="text-xs font-mono font-bold text-emerald-600 uppercase tracking-wider">COMP CODE</span>
+              <h2 id="selected-comp-name" class="text-xl font-extrabold text-slate-900 font-display">Select a Competition</h2>
+            </div>
+            <button id="close-scoring-btn" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-1.5 px-3 text-xs font-bold cursor-pointer">
+              Close Evaluation
+            </button>
+          </div>
+
+          <!-- Entries Roster list -->
+          <div class="space-y-4">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Participants Entry List</h3>
+            
+            <div class="table-container">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/40">
+                    <th class="px-6 py-3">Chest / Code</th>
+                    <th class="px-6 py-3">Status</th>
+                    <th class="px-6 py-3">Score State</th>
+                    <th class="px-6 py-3 text-right font-display">Scoring Action</th>
+                  </tr>
+                </thead>
+                <tbody id="entries-table-body" class="divide-y divide-slate-100 text-xs">
+                  <!-- Loaded when competition is active -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Participant Criteria Scoring Modal Component -->
+        <div id="scoring-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4 select-none">
+          <div class="bg-white rounded-2xl shadow-2xl border border-slate-150 max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+              <div>
+                <p id="modal-chest-number" class="text-[10px] font-mono font-extrabold text-emerald-600 uppercase tracking-wider">CHEST-101</p>
+                <h3 id="modal-participant-title" class="text-base font-bold text-slate-900 font-display">Evaluate Participant</h3>
+              </div>
+              <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 font-extrabold cursor-pointer text-sm">✕</button>
+            </div>
+
+            <!-- Modal Content (Scrollable criteria inputs) -->
+            <form id="evaluation-form" class="flex-1 overflow-y-auto p-6 space-y-6">
+              
+              <!-- Evaluation info / status -->
+              <div class="space-y-1.5">
+                <label for="participant-status-select" class="text-xs font-bold text-slate-700">Participation Attendance Status</label>
+                <select id="participant-status-select" class="form-input cursor-pointer" required>
+                  <option value="participated">Participated (Present)</option>
+                  <option value="absent">Absent</option>
+                  <option value="withdrawn">Withdrawn</option>
+                  <option value="disqualified">Disqualified</option>
+                </select>
+              </div>
+
+              <!-- Dynamic Criteria fields (Loaded via JS) -->
+              <div id="criteria-inputs-group" class="space-y-4">
+                <!-- Template input row -->
+              </div>
+
+              <!-- General comments -->
+              <div class="space-y-1.5">
+                <label for="evaluation-notes" class="text-xs font-bold text-slate-700">Judge Notes / Comments</label>
+                <textarea id="evaluation-notes" rows="2" class="form-input" placeholder="Feedback or observations..."></textarea>
+              </div>
+
+              <!-- Error Alert -->
+              <div id="modal-error-box" class="hidden bg-rose-50 border border-rose-100 text-rose-800 rounded-xl p-3 text-xs leading-relaxed">
+                Marks input validation error.
+              </div>
+
+              <!-- Modal Footer Buttons -->
+              <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <button type="button" id="btn-save-draft" class="btn border border-slate-200 hover:bg-slate-50 text-slate-700 py-2.5 px-4 text-xs font-bold cursor-pointer">
+                  Save Draft Score
+                </button>
+                <button type="submit" id="btn-submit-final" class="btn btn-accent py-2.5 px-4 text-xs font-bold text-white shadow-md cursor-pointer">
+                  Submit Final Score
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    let judgeProfile = null;
+    let selectedAssignment = null;
+    let selectedCompetition = null;
+    let assignedCompetitionIds = [];
+
+    async function initJudgePanel() {
+      try {
+        judgeProfile = await verifyUserRole(['judge']);
+        await loadPortalLayout('judge');
+        initializeNavigation();
+
+        await loadJudgeAssignments();
+      } catch (err) {
+        console.error("Failed loading judge dashboard context:", err);
+      }
+    }
+
+    async function loadJudgeAssignments() {
+      const grid = document.getElementById('assignments-grid');
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+      
+      try {
+        // Query assignments strictly belonging to this judge
+        const assignCol = collection(db, `festivals/${festId}/judgeAssignments`);
+        const q = query(assignCol, where('judgeUserId', '==', judgeProfile.uid), where('active', '==', true));
+        const querySnapshot = await getDocs(q);
+
+        grid.innerHTML = '';
+        assignedCompetitionIds = [];
+
+        if (querySnapshot.empty) {
+          grid.innerHTML = `
+            <div class="col-span-full bg-slate-50 border border-slate-100 rounded-2xl p-8 text-center space-y-2">
+              <p class="text-sm font-bold text-slate-700">No Assignments Found</p>
+              <p class="text-xs text-slate-400 leading-relaxed">You are not currently assigned to any active competitions in this festival scope. Please ask your administrator to authorize your assignments.</p>
+            </div>
+          `;
+          return;
+        }
+
+        for (const docSnap of querySnapshot.docs) {
+          const assign = docSnap.data();
+          const assignId = docSnap.id;
+          
+          assignedCompetitionIds.push(assign.competitionId);
+
+          // Get Competition Details
+          const compDocRef = doc(db, `festivals/${festId}/competitions`, assign.competitionId);
+          const compSnap = await getDoc(compDocRef);
+          
+          if (compSnap.exists()) {
+            const comp = compSnap.data();
+            
+            const card = document.createElement('button');
+            card.className = "w-full text-left bg-white border border-slate-100 hover:border-emerald-500 hover:shadow-md rounded-2xl p-5 transition cursor-pointer flex flex-col justify-between space-y-4 group";
+            
+            card.innerHTML = `
+              <div class="space-y-1.5">
+                <span class="text-[10px] font-mono font-bold text-emerald-600 uppercase tracking-wider">${comp.code || 'CODE'}</span>
+                <h3 class="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition font-display">${comp.name}</h3>
+                <p class="text-xs text-slate-400">${comp.performanceType || 'Oral'} • ${comp.competitionType || 'Individual'}</p>
+              </div>
+              <div class="inline-flex text-[10px] font-bold text-emerald-600 group-hover:underline">
+                <span>Start Evaluation Screen</span>
+                <svg class="h-3 w-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </div>
+            `;
+
+            card.addEventListener('click', () => {
+              loadScoringArea(assignId, compSnap.id, comp);
+            });
+
+            grid.appendChild(card);
+          }
+        }
+      } catch (err) {
+        console.error("Could not query judge assignments:", err);
+        grid.innerHTML = `
+          <div class="col-span-full bg-rose-50 border border-rose-100 rounded-2xl p-6 text-center">
+            <p class="text-xs font-bold text-rose-800">Operational Failure: Assignments check failed.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function loadScoringArea(assignId, competitionId, compDetails) {
+      // Security Check: Verify if this competition is indeed in the assigned list
+      if (!assignedCompetitionIds.includes(competitionId)) {
+        alert("Security Breach Blocked: You do not have permission to view this competition.");
+        window.location.replace("/unauthorized.html?reason=access_denied");
+        return;
+      }
+
+      selectedAssignment = assignId;
+      selectedCompetition = competitionId;
+
+      document.getElementById('selected-comp-code').textContent = compDetails.code || 'CODE';
+      document.getElementById('selected-comp-name').textContent = compDetails.name;
+
+      const entriesTableBody = document.getElementById('entries-table-body');
+      entriesTableBody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">Loading entries roster...</td></tr>';
+
+      document.getElementById('scoring-area-panel').classList.remove('hidden');
+      document.getElementById('scoring-area-panel').scrollIntoView({ behavior: 'smooth' });
+
+      try {
+        const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+        
+        // Fetch all entries for this competition
+        const entriesCol = collection(db, `festivals/${festId}/entries`);
+        const q = query(entriesCol, where('competitionId', '==', competitionId));
+        const querySnapshot = await getDocs(q);
+
+        entriesTableBody.innerHTML = '';
+
+        if (querySnapshot.empty) {
+          entriesTableBody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">No participant entries have been approved for this competition yet.</td></tr>';
+          return;
+        }
+
+        for (const entryDoc of querySnapshot.docs) {
+          const entry = entryDoc.data();
+          const entryId = entryDoc.id;
+
+          // Query if marks already exist from this judge
+          const markDocId = `${competitionId}_${entryId}_${judgeProfile.uid}`;
+          const markDocRef = doc(db, `festivals/${festId}/judgeMarks`, markDocId);
+          const markSnap = await getDoc(markDocRef);
+          
+          let scoreStatusText = '<span class="text-slate-300 font-normal">Not Graded</span>';
+          let isFinal = false;
+
+          if (markSnap.exists()) {
+            const mark = markSnap.data();
+            isFinal = mark.submissionStatus === 'final';
+            scoreStatusText = isFinal 
+              ? `<span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700">Final (Score: ${mark.rawTotal || 0})</span>`
+              : `<span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700">Draft (Score: ${mark.rawTotal || 0})</span>`;
+          }
+
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+          // Chest number or participant code (depending on competition blind judging mode)
+          const participantLabel = compDetails.blindJudgingMode === 'participantCodeOnly'
+            ? `Code: ${entry.participantCode || 'PC-' + entryId.slice(0, 4)}`
+            : `Chest: ${entry.chestNumber || 'CN-' + entryId.slice(0, 4)}`;
+
+          row.innerHTML = `
+            <td class="px-6 py-4 font-bold text-slate-950">${participantLabel}</td>
+            <td class="px-6 py-4 font-mono font-bold uppercase tracking-wider text-slate-400">${entry.entryStatus || 'approved'}</td>
+            <td class="px-6 py-4">${scoreStatusText}</td>
+            <td class="px-6 py-4 text-right">
+              <button class="evaluate-btn px-3 py-1.5 border rounded-lg text-[10px] font-bold transition cursor-pointer ${isFinal ? 'text-slate-400 bg-slate-50 border-slate-200 hover:bg-slate-50' : 'text-emerald-600 hover:bg-emerald-50 border-emerald-200'}" data-entry-id="${entryId}" data-participant-label="${participantLabel}">
+                ${isFinal ? 'View Evaluation' : 'Evaluate Marks'}
+              </button>
+            </td>
+          `;
+
+          // Bind evaluate click
+          row.querySelector('.evaluate-btn').addEventListener('click', () => {
+            openScoringModal(entryId, participantLabel, compDetails, markSnap.exists() ? markSnap.data() : null);
+          });
+
+          entriesTableBody.appendChild(row);
+        }
+
+      } catch (err) {
+        console.error("Could not fetch competition entries roster:", err);
+        entriesTableBody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-rose-600 font-bold">Failed to load entries. Permissions or collection access rejected.</td></tr>';
+      }
+    }
+
+    document.getElementById('close-scoring-btn').addEventListener('click', () => {
+      document.getElementById('scoring-area-panel').classList.add('hidden');
+      selectedAssignment = null;
+      selectedCompetition = null;
+    });
+
+    // Evaluation modal logic
+    const modal = document.getElementById('scoring-area-panel');
+    const scoringModal = document.getElementById('scoring-modal');
+    let activeEntryId = null;
+    let activeParticipantLabel = null;
+
+    function openScoringModal(entryId, participantLabel, compDetails, existingMark) {
+      activeEntryId = entryId;
+      activeParticipantLabel = participantLabel;
+
+      document.getElementById('modal-chest-number').textContent = participantLabel;
+      
+      const criteriaInputsGroup = document.getElementById('criteria-inputs-group');
+      criteriaInputsGroup.innerHTML = '';
+
+      // Set standard criteria fields (for now let's set 3 default criteria fields, or query criteria from DB if existed)
+      const criteria = [
+        { id: 'crit_1', name: 'Presentation & Pronunciation', maxMark: 15 },
+        { id: 'crit_2', name: 'Memory & Accuracy', maxMark: 15 },
+        { id: 'crit_3', name: 'Confidence & Rhythm', maxMark: 10 }
+      ];
+
+      criteria.forEach(crit => {
+        const value = (existingMark && existingMark.criterionMarks) ? (existingMark.criterionMarks[crit.id] || 0) : 0;
+        
+        const div = document.createElement('div');
+        div.className = "space-y-1";
+        div.innerHTML = `
+          <div class="flex justify-between items-center text-xs font-semibold text-slate-700">
+            <label for="crit-input-${crit.id}">${crit.name}</label>
+            <span class="text-slate-400 font-normal">Max: ${crit.maxMark}</span>
+          </div>
+          <input type="number" id="crit-input-${crit.id}" min="0" max="${crit.maxMark}" value="${value}" required class="form-input criteria-score-input" data-crit-id="${crit.id}" data-max-mark="${crit.maxMark}">
+        `;
+        criteriaInputsGroup.appendChild(div);
+      });
+
+      // Attendance status
+      const statusSelect = document.getElementById('participant-status-select');
+      statusSelect.value = existingMark ? (existingMark.participantStatus || 'participated') : 'participated';
+
+      // Notes
+      document.getElementById('evaluation-notes').value = existingMark ? (existingMark.notes || '') : '';
+
+      // Hide/Show final submit controls if already finalized
+      const isFinal = existingMark && existingMark.submissionStatus === 'final';
+      document.getElementById('btn-save-draft').classList.toggle('hidden', isFinal);
+      document.getElementById('btn-submit-final').classList.toggle('hidden', isFinal);
+
+      document.getElementById('modal-error-box').classList.add('hidden');
+      scoringModal.classList.remove('hidden');
+    }
+
+    document.getElementById('modal-close-btn').addEventListener('click', () => {
+      scoringModal.classList.add('hidden');
+    });
+
+    // Save Draft
+    document.getElementById('btn-save-draft').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await submitEvaluation('draft');
+    });
+
+    // Submit Final
+    document.getElementById('evaluation-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await submitEvaluation('final');
+    });
+
+    async function submitEvaluation(submissionStatus) {
+      const errBox = document.getElementById('modal-error-box');
+      errBox.classList.add('hidden');
+
+      const statusSelect = document.getElementById('participant-status-select');
+      const inputs = document.querySelectorAll('.criteria-score-input');
+      const notes = document.getElementById('evaluation-notes').value;
+
+      const criterionMarks = {};
+      let total = 0;
+
+      // Validate marks
+      for (const input of inputs) {
+        const critId = input.getAttribute('data-crit-id');
+        const maxMark = parseFloat(input.getAttribute('data-max-mark'));
+        const val = parseFloat(input.value || 0);
+
+        if (isNaN(val) || val < 0 || val > maxMark) {
+          errBox.textContent = `Validation Error: Criterion value must be between 0 and ${maxMark}.`;
+          errBox.classList.remove('hidden');
+          return;
+        }
+
+        criterionMarks[critId] = val;
+        total += val;
+      }
+
+      // Submit evaluation to Firestore
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+      const markId = `${selectedCompetition}_${activeEntryId}_${judgeProfile.uid}`;
+
+      const evaluationData = {
+        id: markId,
+        competitionId: selectedCompetition,
+        entryId: activeEntryId,
+        judgeUserId: judgeProfile.uid,
+        criterionMarks,
+        rawTotal: total,
+        penaltySuggested: 0,
+        notes,
+        participantStatus: statusSelect.value,
+        submissionStatus,
+        submittedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      try {
+        const globalLoader = document.getElementById('global-page-loader');
+        globalLoader.classList.remove('hidden');
+
+        const docRef = doc(db, `festivals/${festId}/judgeMarks`, markId);
+        await setDoc(docRef, evaluationData);
+
+        scoringModal.classList.add('hidden');
+        globalLoader.classList.add('hidden');
+
+        // Refresh Roster table list
+        // Fetch competitionDetails
+        const compDocRef = doc(db, `festivals/${festId}/competitions`, selectedCompetition);
+        const compSnap = await getDoc(compDocRef);
+        if (compSnap.exists()) {
+          await loadScoringArea(selectedAssignment, selectedCompetition, compSnap.data());
+        }
+
+      } catch (err) {
+        console.error("Failed submitting judge marks:", err);
+        errBox.textContent = `Error writing marks: ${err.message}`;
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    initJudgePanel();
+  </script>
+</body>
+</html>

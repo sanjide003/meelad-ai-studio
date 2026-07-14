@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Latest Declared Results - Public Portal</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+  <!-- Sticky Floating Header -->
+  <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="/index.html" class="flex items-center space-x-2">
+        <div class="h-9 w-9 rounded-xl bg-slate-950 text-white font-extrabold flex items-center justify-center font-display shadow-sm">
+          M
+        </div>
+        <div class="flex flex-col">
+          <span class="font-extrabold text-sm text-slate-900 tracking-tight font-display" id="nav-festival-title">MeeladPulse</span>
+          <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider font-mono">Official Gazettes</span>
+        </div>
+      </a>
+
+      <!-- Desktop Links -->
+      <nav class="hidden md:flex items-center space-x-1">
+        <a href="/index.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Home</a>
+        <a href="/public/live-scoreboard.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Scoreboard</a>
+        <a href="/public/latest-results.html" class="px-3 py-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-lg">Latest Results</a>
+        <a href="/public/announcements.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Announcements</a>
+      </nav>
+
+      <div class="flex items-center space-x-2">
+        <div id="auth-actions">
+          <a href="/login.html" class="px-3.5 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition font-display">
+            Admin / Staff Login
+          </a>
+        </div>
+        <button id="mobile-menu-btn" class="p-2 text-slate-500 hover:text-slate-900 md:hidden rounded-lg hover:bg-slate-50 transition cursor-pointer">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation Menu -->
+    <div id="mobile-menu" class="hidden border-b border-slate-100 bg-white px-4 py-3 md:hidden space-y-1">
+      <a href="/index.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl">Home</a>
+      <a href="/public/live-scoreboard.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Scoreboard</a>
+      <a href="/public/latest-results.html" class="block px-3 py-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-xl">Latest Results</a>
+      <a href="/public/announcements.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Announcements</a>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
+    
+    <!-- Header Block -->
+    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <h1 class="text-2xl font-extrabold text-slate-950 tracking-tight font-display">Official Published Results</h1>
+        <p class="text-xs text-slate-400 font-medium font-display">Official, verified standings and podium finishes signed off by the central committee.</p>
+      </div>
+      <div class="flex items-center space-x-2 shrink-0">
+        <input type="text" id="results-search" class="w-64 p-2.5 text-xs border border-slate-150 rounded-xl bg-slate-50/50 outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400 font-medium" placeholder="Search by event name or code...">
+      </div>
+    </div>
+
+    <!-- Results Cards Grid -->
+    <div id="results-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="col-span-full text-center text-slate-400 py-12 font-medium">Scanning published registries...</div>
+    </div>
+
+    <!-- Scorecard Details Modal -->
+    <div id="scorecard-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4 select-none">
+      <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-2xl w-full overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] font-mono font-extrabold text-indigo-600 uppercase tracking-wider">Official Verified Gazette</p>
+            <h3 id="modal-comp-name" class="text-base font-bold text-slate-900 font-display">Competition Name</h3>
+            <span id="modal-comp-code" class="text-[10px] font-mono text-slate-400 block mt-0.5 uppercase tracking-widest">CODE: TBA</span>
+          </div>
+          <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 font-bold cursor-pointer text-sm">✕</button>
+        </div>
+
+        <div class="flex-grow overflow-y-auto p-6 space-y-4">
+          <!-- Winners Table -->
+          <div class="table-container border border-slate-100 rounded-xl overflow-hidden">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-4 py-3 font-mono">Chest</th>
+                  <th class="px-4 py-3">Competitor / Club</th>
+                  <th class="px-4 py-3">Grade</th>
+                  <th class="px-4 py-3">Position</th>
+                  <th class="px-4 py-3 text-right">Points</th>
+                </tr>
+              </thead>
+              <tbody id="modal-winners-tbody" class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Public Safe Guarantee Notice -->
+          <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl text-[10px] text-indigo-800 leading-relaxed flex items-start space-x-2">
+            <svg class="h-3.5 w-3.5 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            <div>
+              <span class="font-bold">Public Verification Assurance:</span>
+              <p class="text-slate-500">This statement contains only final public-safe outcomes approved by the jury committee. Individual judge identities, subjective markings, and internal scoring criteria remain strictly isolated for audit protection.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 text-center space-y-1 text-xs font-medium text-slate-400">
+      <p>© MeeladPulse standing node. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { auth, db } from "/assets/js/firebase-init.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    import { getActiveFestivalId, getPublicFestivalConfig } from "/assets/js/public-config-service.js";
+    import { subscribeLatestPublicResults } from "/assets/js/public-result-service.js";
+
+    const festId = getActiveFestivalId();
+    let publishedResults = [];
+
+    async function start() {
+      // Load branding title
+      const config = await getPublicFestivalConfig(festId);
+      if (config) {
+        document.getElementById('nav-festival-title').textContent = config.title || config.name || "MeeladPulse";
+      }
+
+      // Handle mobile hamburger
+      const mobBtn = document.getElementById('mobile-menu-btn');
+      const mobMenu = document.getElementById('mobile-menu');
+      if (mobBtn && mobMenu) {
+        mobBtn.onclick = (e) => {
+          e.stopPropagation();
+          mobMenu.classList.toggle('hidden');
+        };
+        document.addEventListener('click', () => mobMenu.classList.add('hidden'));
+      }
+
+      // Auth state
+      onAuthStateChanged(auth, async (user) => {
+        const authActions = document.getElementById('auth-actions');
+        if (user) {
+          try {
+            const userSnap = await getDoc(doc(db, 'users', user.uid));
+            if (userSnap.exists()) {
+              const uData = userSnap.data();
+              let dashboardHref = '/login.html';
+              if (uData.role === 'admin') dashboardHref = '/admin/dashboard.html';
+              else if (uData.role === 'judge') dashboardHref = '/judge/dashboard.html';
+              else if (uData.role === 'teamLeader') dashboardHref = '/team/dashboard.html';
+
+              authActions.innerHTML = `
+                <a href="${dashboardHref}" class="px-3.5 py-2 bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100 text-xs font-bold rounded-xl transition font-display">
+                  Dashboard
+                </a>
+              `;
+              return;
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+        authActions.innerHTML = `
+          <a href="/login.html" class="px-3.5 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition font-display">
+            Admin / Staff Login
+          </a>
+        `;
+      });
+
+      // Bind Search input
+      document.getElementById('results-search').oninput = (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const filtered = publishedResults.filter(r => 
+          (r.competitionName || '').toLowerCase().includes(query) ||
+          (r.competitionCode || '').toLowerCase().includes(query)
+        );
+        renderResultsList(filtered);
+      };
+
+      // Subscribe to results
+      subscribeLatestPublicResults(festId, 100, (results) => {
+        publishedResults = results;
+        renderResultsList(results);
+      });
+
+      // Modal binder
+      document.getElementById('modal-close-btn').onclick = () => {
+        document.getElementById('scorecard-modal').classList.add('hidden');
+      };
+    }
+
+    function renderResultsList(results) {
+      const grid = document.getElementById('results-grid');
+      grid.innerHTML = '';
+
+      if (!results || results.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center text-slate-400 py-12 font-medium bg-white rounded-2xl border border-slate-100 shadow-xs">
+            No official standings match your query or have been published yet.
+          </div>
+        `;
+        return;
+      }
+
+      results.forEach(res => {
+        const topWinner = (res.winners || []).find(w => w.position === '1st' || w.position === '1');
+        const runnerUp = (res.winners || []).find(w => w.position === '2nd' || w.position === '2');
+
+        const card = document.createElement('div');
+        card.className = "bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col justify-between hover:shadow-md transition select-none";
+        
+        card.innerHTML = `
+          <div class="space-y-4">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[9px] font-mono font-bold text-indigo-600 bg-indigo-50/50 px-2.5 py-0.5 rounded">${res.competitionCode || 'CODE'}</span>
+                <h3 class="text-xs font-extrabold text-slate-900 mt-2 line-clamp-1 font-display">${res.competitionName}</h3>
+                <span class="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-wider block">${res.divisionName || 'Arts'} • ${res.categoryName || 'General'}</span>
+              </div>
+              <span class="inline-flex px-2 py-0.5 rounded text-[8px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 uppercase tracking-wider font-display">Published</span>
+            </div>
+
+            <div class="space-y-2 py-3 border-t border-b border-slate-50 text-[10px] text-slate-500 font-semibold">
+              <div class="flex justify-between">
+                <span>1st Place:</span>
+                <span class="text-amber-600 font-extrabold truncate max-w-[150px]">${topWinner ? topWinner.displayName : 'TBA'}</span>
+              </div>
+              <div class="flex justify-between font-medium">
+                <span>2nd Place:</span>
+                <span class="text-slate-700 font-bold truncate max-w-[150px]">${runnerUp ? runnerUp.displayName : 'TBA'}</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="view-scorecard-btn border border-slate-200 hover:bg-slate-50 text-[10px] text-slate-700 font-bold tracking-wide w-full py-2.5 mt-4 rounded-xl cursor-pointer transition font-display" data-id="${res.id}">
+            View Full Scorecard
+          </button>
+        `;
+
+        card.querySelector('.view-scorecard-btn').onclick = () => openScorecardModal(res);
+        grid.appendChild(card);
+      });
+    }
+
+    function openScorecardModal(res) {
+      document.getElementById('modal-comp-name').textContent = res.competitionName;
+      document.getElementById('modal-comp-code').textContent = `CODE: ${res.competitionCode || 'CODE'}`;
+
+      const tbody = document.getElementById('modal-winners-tbody');
+      tbody.innerHTML = '';
+
+      // Sort winners by position
+      const winners = [...(res.winners || [])];
+      winners.sort((a, b) => {
+        const order = { '1st': 1, '2nd': 2, '3rd': 3 };
+        return (order[a.position] || 9) - (order[b.position] || 9);
+      });
+
+      // Lookup points awarded to teams in res.teamPoints
+      const teamPointsMap = {};
+      (res.teamPoints || []).forEach(tp => {
+        teamPointsMap[tp.teamName] = tp.points;
+      });
+
+      winners.forEach(w => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+        let posBadge = '<span class="text-slate-400 font-mono font-medium">None</span>';
+        if (w.position === '1st') {
+          posBadge = '<span class="inline-flex px-2 py-0.5 rounded text-[9px] font-black bg-amber-50 text-amber-700 border border-amber-100">1st Place</span>';
+        } else if (w.position === '2nd') {
+          posBadge = '<span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">2nd Place</span>';
+        } else if (w.position === '3rd') {
+          posBadge = '<span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold bg-orange-50 text-orange-700 border border-orange-100">3rd Place</span>';
+        }
+
+        let gradeBadge = '<span class="text-slate-400 font-mono font-medium">--</span>';
+        if (w.grade && w.grade !== 'None') {
+          gradeBadge = `<span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 font-mono">${w.grade}</span>`;
+        }
+
+        const pts = teamPointsMap[w.teamName] || 0;
+
+        tr.innerHTML = `
+          <td class="px-4 py-3 font-mono font-bold text-slate-600">${w.publicParticipantCode || w.chestNumber || '--'}</td>
+          <td class="px-4 py-3">
+            <div class="text-slate-900 font-bold">${w.displayName}</div>
+            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">${w.teamName}</div>
+          </td>
+          <td class="px-4 py-3">${gradeBadge}</td>
+          <td class="px-4 py-3">${posBadge}</td>
+          <td class="px-4 py-3 font-mono font-black text-slate-900 text-right">${pts} Pts</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (winners.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-slate-400 font-medium">No podium standings registered.</td></tr>';
+      }
+
+      document.getElementById('scorecard-modal').classList.remove('hidden');
+    }
+
+    start();
+  </script>
+</body>
+</html>

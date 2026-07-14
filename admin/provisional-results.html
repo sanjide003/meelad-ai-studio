@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Provisional Results - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Loading results console...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Banner -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-xs">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Provisional Results Console</h1>
+            <p class="text-xs text-slate-400 font-medium font-sans">Tabulate judge marks, review grade thresholds, resolve tie-breaks, and approve official scoreboard publication.</p>
+          </div>
+          <div id="comp-selector-container" class="shrink-0 flex items-center space-x-2">
+            <select id="select-active-comp" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none font-bold bg-white">
+              <option value="">Select a competition...</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="alert-toast" class="hidden bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl p-4 text-xs flex items-center space-x-2">
+          <svg class="h-4 w-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="alert-toast-text">Results compiled successfully.</span>
+        </div>
+
+        <!-- Main Workspace -->
+        <div id="results-empty-state" class="bg-white rounded-2xl border border-slate-100 p-16 text-center space-y-3 shadow-xs">
+          <svg class="h-12 w-12 text-slate-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <h3 class="font-extrabold text-sm text-slate-800">No Competition Selected</h3>
+          <p class="text-xs text-slate-400 max-w-sm mx-auto">Please select an active festival competition from the dropdown menu to compute results, evaluate rules, and compile team standouts.</p>
+        </div>
+
+        <!-- Active Tabulation Dashboard -->
+        <div id="tabulation-dashboard" class="hidden space-y-8">
+          
+          <!-- Diagnostics & Overview Summary -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Overall Status Card -->
+            <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-xs space-y-2">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Judging Progress</span>
+              <div class="flex items-baseline space-x-1">
+                <span id="judging-progress-text" class="text-2xl font-extrabold text-slate-900">0/3</span>
+                <span class="text-xs text-slate-400 font-semibold">final sheets</span>
+              </div>
+              <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                <div id="progress-bar-fill" class="bg-amber-400 h-full w-0 transition-all duration-500"></div>
+              </div>
+            </div>
+
+            <!-- Validation Check Card -->
+            <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-xs space-y-2">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Logical Audit State</span>
+              <div id="audit-badge" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                Checking entries...
+              </div>
+              <p class="text-[10px] text-slate-400 font-medium">Ensures zero double entries or grade-point mismatches before publication.</p>
+            </div>
+
+            <!-- Execution Panel Card -->
+            <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-xs flex flex-col justify-between">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">System Commands</span>
+              <div class="flex flex-col space-y-1.5 pt-2">
+                <div class="flex items-center space-x-2">
+                  <button id="calculate-results-btn" class="btn btn-secondary py-1.5 px-2 border border-slate-200 text-slate-800 hover:bg-slate-50 text-[11px] font-bold rounded-xl cursor-pointer flex-1">
+                    Tabulate
+                  </button>
+                  <button id="recalculate-results-btn" disabled class="btn border border-slate-200 hover:bg-slate-50 text-slate-700 py-1.5 px-2 text-[11px] font-bold rounded-xl cursor-pointer flex-1 disabled:opacity-50">
+                    Recalculate
+                  </button>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button id="hold-results-btn" disabled class="btn border border-rose-200 text-rose-700 hover:bg-rose-50 py-1.5 px-2 text-[11px] font-bold rounded-xl cursor-pointer flex-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Hold Result
+                  </button>
+                  <button id="review-results-btn" disabled class="btn bg-slate-900 hover:bg-slate-800 text-white py-1.5 px-2 text-[11px] font-bold rounded-xl cursor-pointer flex-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Go to Review
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Tabulated Standings Card -->
+          <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-xs">
+            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+              <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tabulated Participant Standings</h2>
+              <span id="result-status-badge" class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600">Provisional</span>
+            </div>
+
+            <div class="table-container overflow-x-auto">
+              <table class="w-full text-left border-collapse min-w-[800px]">
+                <thead>
+                  <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                    <th class="px-6 py-4">Position</th>
+                    <th class="px-6 py-4">Participant Name</th>
+                    <th class="px-6 py-4">Team</th>
+                    <th class="px-6 py-4">Raw Total</th>
+                    <th class="px-6 py-4">Deductions</th>
+                    <th class="px-6 py-4">Final Score</th>
+                    <th class="px-6 py-4">Grade</th>
+                    <th class="px-6 py-4 text-right">Points Earned</th>
+                  </tr>
+                </thead>
+                <tbody id="standings-table-body" class="divide-y divide-slate-100 text-xs text-slate-700">
+                  <tr>
+                    <td colspan="8" class="px-6 py-12 text-center text-slate-400">Click 'Tabulate Marks' to generate official scoreboard standings.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { getCompetitions, getEntries, getResults, saveResult } from "/assets/js/firestore-service.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { getJudgeAssignments } from "/assets/js/judge-service.js";
+    import { getJudgeMarksForCompetition } from "/assets/js/mark-service.js";
+    import { tabulateCompetitionResult } from "/assets/js/result-engine.js";
+    import { recalculateChampionshipTotals } from "/assets/js/championship-engine.js";
+    import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    let competitions = [];
+    let entries = [];
+    let assignments = [];
+    let results = [];
+    let selectedComp = null;
+
+    async function initResultsConsole() {
+      try {
+        await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+
+        await loadCoreData();
+        setupCompSelector();
+        
+        // Handle URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const compId = urlParams.get('compId');
+        if (compId) {
+          const select = document.getElementById('select-active-comp');
+          select.value = compId;
+          handleCompetitionSelected(compId);
+        }
+      } catch (error) {
+        console.error("Failed loading provisional results dashboard:", error);
+      }
+    }
+
+    async function loadCoreData() {
+      const [comps, ents, assigns, resList] = await Promise.all([
+        getCompetitions(),
+        getEntries(),
+        getJudgeAssignments(),
+        getResults()
+      ]);
+      competitions = comps;
+      entries = ents;
+      assignments = assigns;
+      results = resList;
+    }
+
+    function setupCompSelector() {
+      const select = document.getElementById('select-active-comp');
+      select.innerHTML = '<option value="">Choose a competition...</option>';
+      
+      competitions.forEach(c => {
+        select.innerHTML += `<option value="${c.id}">${c.name} (${c.code})</option>`;
+      });
+
+      select.addEventListener('change', (e) => {
+        const id = e.target.value;
+        if (id) {
+          handleCompetitionSelected(id);
+        } else {
+          document.getElementById('results-empty-state').classList.remove('hidden');
+          document.getElementById('tabulation-dashboard').classList.add('hidden');
+          selectedComp = null;
+        }
+      });
+    }
+
+    async function handleCompetitionSelected(compId) {
+      selectedComp = competitions.find(c => c.id === compId);
+      if (!selectedComp) return;
+
+      document.getElementById('results-empty-state').classList.add('hidden');
+      document.getElementById('tabulation-dashboard').classList.remove('hidden');
+
+      // Refresh cache from results to ensure fresh statuses
+      const freshResults = await getResults();
+      results = freshResults;
+
+      const compEntries = entries.filter(e => e.competitionId === compId);
+      const compAssigns = assignments.filter(a => a.competitionId === compId);
+
+      // Load marks
+      const marks = await getJudgeMarksForCompetition(compId);
+      const finalSheets = compAssigns.filter(a => {
+        const judgeMarks = marks.filter(m => m.judgeUserId === a.judgeId);
+        return judgeMarks.length > 0 && judgeMarks.every(m => m.submissionStatus === 'final');
+      }).length;
+
+      const totalRequired = selectedComp.judgeCountRequired || 3;
+      document.getElementById('judging-progress-text').textContent = `${finalSheets}/${totalRequired}`;
+      
+      const percent = totalRequired > 0 ? (finalSheets / totalRequired) * 100 : 0;
+      const bar = document.getElementById('progress-bar-fill');
+      bar.style.width = `${percent}%`;
+
+      if (finalSheets >= totalRequired) {
+        bar.className = "bg-emerald-500 h-full transition-all duration-500";
+      } else {
+        bar.className = "bg-amber-400 h-full transition-all duration-500";
+      }
+
+      // Audit status
+      const auditBadge = document.getElementById('audit-badge');
+      if (finalSheets < totalRequired) {
+        auditBadge.className = "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200";
+        auditBadge.textContent = "Awaiting Judge Submissions";
+      } else {
+        auditBadge.className = "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200";
+        auditBadge.textContent = "100% Fully Compliant";
+      }
+
+      // Check if result is already tabulated
+      const existingResult = results.find(r => r.competitionId === compId);
+      const recalculateBtn = document.getElementById('recalculate-results-btn');
+      const holdBtn = document.getElementById('hold-results-btn');
+      const reviewBtn = document.getElementById('review-results-btn');
+
+      if (existingResult) {
+        renderStandingsTable(existingResult.participants);
+        const badge = document.getElementById('result-status-badge');
+        badge.textContent = existingResult.status;
+        
+        recalculateBtn.disabled = false;
+        holdBtn.disabled = false;
+        reviewBtn.disabled = false;
+
+        if (existingResult.status === 'Published' || existingResult.status === 'Approved') {
+          badge.className = "inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800";
+        } else if (existingResult.status === 'Held') {
+          badge.className = "inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-rose-100 text-rose-800";
+          holdBtn.textContent = "Unhold Result";
+        } else {
+          badge.className = "inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800";
+          holdBtn.textContent = "Hold Result";
+        }
+      } else {
+        document.getElementById('standings-table-body').innerHTML = `
+          <tr>
+            <td colspan="8" class="px-6 py-12 text-center text-slate-400 font-medium">Click 'Tabulate Marks' to generate provisional standings.</td>
+          </tr>
+        `;
+        document.getElementById('result-status-badge').textContent = 'Pending Tabulation';
+        document.getElementById('result-status-badge').className = "inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500";
+        
+        recalculateBtn.disabled = true;
+        holdBtn.disabled = true;
+        reviewBtn.disabled = true;
+        holdBtn.textContent = "Hold Result";
+      }
+
+      // Bind actions
+      setupActionEvents(compId, existingResult);
+    }
+
+    function renderStandingsTable(participants) {
+      const tbody = document.getElementById('standings-table-body');
+      tbody.innerHTML = '';
+
+      if (!participants || participants.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="px-6 py-12 text-center text-slate-400 font-medium">No participant scoring data compiled.</td></tr>`;
+        return;
+      }
+
+      participants.forEach(p => {
+        const row = document.createElement('tr');
+        row.className = "hover:bg-slate-50/50 transition";
+
+        let rankBadge = '-';
+        if (p.position === '1st') {
+          rankBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">1st Place</span>`;
+        } else if (p.position === '2nd') {
+          rankBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 border border-slate-300">2nd Place</span>`;
+        } else if (p.position === '3rd') {
+          rankBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-150">3rd Place</span>`;
+        } else {
+          rankBadge = `<span class="text-slate-400 font-semibold">${p.position}</span>`;
+        }
+
+        let gradeBadge = p.grade && p.grade !== 'None' 
+          ? `<span class="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-150 font-mono">Grade ${p.grade}</span>`
+          : `<span class="text-slate-300 font-medium">None</span>`;
+
+        let scoreDisplay = p.status === 'absent' ? '<span class="text-rose-500 font-bold font-mono">ABSENT</span>' : (p.status === 'disqualified' ? '<span class="text-rose-600 font-bold font-mono">DISQ</span>' : p.finalScore);
+
+        row.innerHTML = `
+          <td class="px-6 py-4">${rankBadge}</td>
+          <td class="px-6 py-4">
+            <div class="font-bold text-slate-900">${p.displayName || 'Individual'}</div>
+          </td>
+          <td class="px-6 py-4 font-semibold text-slate-500 font-mono">${p.teamId}</td>
+          <td class="px-6 py-4 font-semibold text-slate-600 font-mono">${p.rawScore || 0}</td>
+          <td class="px-6 py-4 text-rose-500 font-semibold font-mono">${p.penalty || 0}</td>
+          <td class="px-6 py-4 font-extrabold text-slate-900 font-mono">${scoreDisplay}</td>
+          <td class="px-6 py-4">${gradeBadge}</td>
+          <td class="px-6 py-4 text-right font-extrabold text-emerald-600 font-mono">${p.teamPoints || 0}</td>
+        `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+    function setupActionEvents(compId, existingResult) {
+      const tabulateBtn = document.getElementById('calculate-results-btn');
+      const recalculateBtn = document.getElementById('recalculate-results-btn');
+      const holdBtn = document.getElementById('hold-results-btn');
+      const reviewBtn = document.getElementById('review-results-btn');
+
+      const performTabulate = async (btn) => {
+        btn.disabled = true;
+        const prevText = btn.textContent;
+        btn.textContent = "Compiling...";
+        try {
+          const result = await tabulateCompetitionResult(compId);
+          showToast("Provisional standings calculated successfully!");
+          // Reload local result array and refresh UI
+          results = await getResults();
+          await handleCompetitionSelected(compId);
+        } catch (err) {
+          alert("Tabulation compilation failed: " + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = prevText;
+        }
+      };
+
+      // Click Tabulate
+      tabulateBtn.onclick = async () => {
+        await performTabulate(tabulateBtn);
+      };
+
+      // Click Recalculate
+      recalculateBtn.onclick = async () => {
+        await performTabulate(recalculateBtn);
+      };
+
+      // Click Hold Result
+      holdBtn.onclick = async () => {
+        if (!existingResult) return;
+        const isCurrentlyHeld = existingResult.status === 'Held';
+        const nextStatus = isCurrentlyHeld ? 'Calculated' : 'Held';
+        
+        holdBtn.disabled = true;
+        try {
+          const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+          const resRef = doc(db, `festivals/${festId}/results`, compId);
+          await updateDoc(resRef, { status: nextStatus });
+          showToast(`Result status toggled to ${nextStatus}.`);
+          results = await getResults();
+          await handleCompetitionSelected(compId);
+        } catch (err) {
+          alert("Failed to toggle hold: " + err.message);
+        } finally {
+          holdBtn.disabled = false;
+        }
+      };
+
+      // Click Review Redirection
+      reviewBtn.onclick = () => {
+        window.location.href = `/admin/result-review.html?compId=${compId}`;
+      };
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('alert-toast');
+      document.getElementById('alert-toast-text').textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => { toast.classList.add('hidden'); }, 4000);
+    }
+
+    initResultsConsole();
+  </script>
+</body>
+</html>

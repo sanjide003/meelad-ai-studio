@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Student Profile - Team Leader Desk</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Retrieving Student Data...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8 max-w-2xl">
+        
+        <!-- Header Banner -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex items-center justify-between shadow-xs">
+          <div class="space-y-1">
+            <h1 class="text-xl font-extrabold text-slate-900 tracking-tight font-display">Edit Student</h1>
+            <p class="text-xs text-slate-400 font-medium">Update student profile details in your team roster.</p>
+          </div>
+          <a href="/team/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-1.5 px-3 text-xs font-bold">
+            Back to Roster
+          </a>
+        </div>
+
+        <!-- Form Panel -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs">
+          <form id="student-edit-form" class="space-y-4">
+            
+            <div class="space-y-1.5">
+              <label for="student-name" class="text-xs font-bold text-slate-700">Student Full Name</label>
+              <input type="text" id="student-name" required class="form-input" placeholder="e.g. Liam Smith">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label for="student-chest" class="text-xs font-bold text-slate-700">Chest Number (Assigned)</label>
+                <input type="text" id="student-chest" required class="form-input" placeholder="e.g. T101">
+                <p class="text-[10px] text-slate-400 font-medium">Must be unique across the entire festival.</p>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="student-team" class="text-xs font-bold text-slate-700">Your Competing Team</label>
+                <input type="text" id="student-team" disabled class="form-input bg-slate-100 cursor-not-allowed font-semibold text-emerald-600 uppercase">
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="student-cat" class="text-xs font-bold text-slate-700">Age Category</label>
+              <select id="student-cat" required class="form-input cursor-pointer">
+                <option value="cat_subjunior">Sub-Junior</option>
+                <option value="cat_junior">Junior</option>
+                <option value="cat_senior">Senior</option>
+              </select>
+            </div>
+
+            <div id="status-notice" class="hidden p-4 rounded-xl text-xs font-medium"></div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+              <a href="/team/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold">
+                Cancel
+              </a>
+              <button type="submit" class="btn btn-primary py-2 px-4 text-xs font-bold shadow-md cursor-pointer">
+                Save Changes
+              </button>
+            </div>
+
+          </form>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFestivalSettings, updateFestivalStudent, canCurrentUserEditStudent } from "/assets/js/student-service.js";
+
+    let activeFestId = null;
+    let leaderProfile = null;
+    let studentId = null;
+    let studentRecord = null;
+
+    async function initPage() {
+      try {
+        leaderProfile = await verifyUserRole(['teamLeader']);
+        await loadPortalLayout('team');
+        initializeNavigation();
+
+        activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
+        if (!activeFestId) {
+          alert("Please select a festival scope first.");
+          window.location.replace('/select-fest.html');
+          return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        studentId = params.get('id');
+        if (!studentId) {
+          alert("No student ID specified.");
+          window.location.replace('/team/students.html');
+          return;
+        }
+
+        const settings = await getFestivalSettings(activeFestId);
+        if (settings.studentRegistrationMode === 'adminOnly') {
+          alert("Admin Only Mode is currently active.\nTeam Leaders cannot edit students directly in this mode.");
+          window.location.replace('/team/students.html');
+          return;
+        }
+
+        if (!settings.studentRegistrationOpen) {
+          alert("Student registration is currently closed.");
+          window.location.replace('/team/students.html');
+          return;
+        }
+
+        await loadStudentDetails();
+        setupFormHandler();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Student edit page initialization failed:", err);
+      }
+    }
+
+    async function loadStudentDetails() {
+      const docRef = doc(db, `festivals/${activeFestId}/festStudents`, studentId);
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) {
+        alert("Student record not found.");
+        window.location.replace('/team/students.html');
+        return;
+      }
+
+      studentRecord = snap.data();
+      if (studentRecord.teamId !== leaderProfile.teamId) {
+        alert("Security Error: This student does not belong to your team.");
+        window.location.replace('/team/students.html');
+        return;
+      }
+
+      document.getElementById('student-name').value = studentRecord.name;
+      document.getElementById('student-chest').value = studentRecord.chestNumber;
+      document.getElementById('student-team').value = studentRecord.teamId ? studentRecord.teamId.toUpperCase() : '';
+      document.getElementById('student-cat').value = studentRecord.categoryId;
+
+      const notice = document.getElementById('status-notice');
+      if (studentRecord.status === 'rejected') {
+        notice.textContent = `⚠️ This student was previously rejected. Editing and saving will resubmit it for approval. Reason: ${studentRecord.rejectionReason || 'No reason specified'}`;
+        notice.className = "p-4 rounded-xl text-xs font-medium bg-red-50 text-red-800 border border-red-150";
+        notice.classList.remove('hidden');
+      } else if (studentRecord.status === 'pending_approval') {
+        notice.textContent = `⏳ This student is pending approval. Saving changes will keep them in the approval queue.`;
+        notice.className = "p-4 rounded-xl text-xs font-medium bg-amber-50 text-amber-800 border border-amber-150";
+        notice.classList.remove('hidden');
+      }
+    }
+
+    function setupFormHandler() {
+      const form = document.getElementById('student-edit-form');
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+
+        const loader = document.getElementById('global-page-loader');
+        loader.classList.remove('hidden');
+
+        const studentData = {
+          name: document.getElementById('student-name').value.trim(),
+          chestNumber: document.getElementById('student-chest').value.trim(),
+          categoryId: document.getElementById('student-cat').value
+        };
+
+        try {
+          await updateFestivalStudent(studentId, studentData);
+          alert("Student profile updated successfully!");
+          window.location.replace('/team/students.html');
+        } catch (err) {
+          alert("Update failed: " + err.message);
+          loader.classList.add('hidden');
+        }
+      };
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

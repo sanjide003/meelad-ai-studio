@@ -1,0 +1,134 @@
+/* MeeladPulse Professional Certificate CSS */
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-page-break {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* Certificate Layout Frame: Landscape, standard scaled dimensions */
+.certificate-container {
+  width: 842px; /* Standard A4 landscape aspect ratio scaling */
+  height: 595px;
+  background-color: #ffffff;
+  border: 16px solid #1e293b; /* Dark Navy Slate Frame */
+  padding: 40px;
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Inter', system-ui, sans-serif;
+  margin: 0 auto;
+}
+
+@media print {
+  .certificate-container {
+    border: 16px solid #0f172a !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
+
+/* Inner decorative gold thin border */
+.certificate-inner-border {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  border: 2px solid #d97706; /* Amber-600 gold border */
+  pointer-events: none;
+}
+
+/* Header logos or details */
+.cert-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cert-title-display {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 36px;
+  font-weight: 900;
+  color: #1e293b;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+/* Content details */
+.cert-body-text {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #475569;
+  text-align: center;
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+.cert-recipient-name {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: #d97706; /* Gold/Amber */
+  border-b: 1px solid #e2e8f0;
+  display: inline-block;
+  padding-bottom: 4px;
+  margin: 10px 0;
+}
+
+/* Footer & Signatures section */
+.cert-footer {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 40px;
+  margin-top: 10px;
+}
+
+.signature-line {
+  width: 150px;
+  border-top: 1px solid #94a3b8;
+  text-align: center;
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 600;
+  padding-top: 6px;
+  text-transform: uppercase;
+}
+
+/* Ribbons or seals */
+.cert-seal {
+  width: 70px;
+  height: 70px;
+  background-color: #d97706;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  color: white;
+  font-size: 11px;
+  text-align: center;
+  border: 4px double #ffffff;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Competitions & Registration - Team Leader Desk</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen animate-fade-in">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Verifying team privileges...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Section -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Competitions & Registration</h1>
+            <p class="text-xs text-slate-400 font-medium">Browse available competitions and manage team registrations for: <span id="auth-team-label" class="font-bold text-emerald-600 font-mono">Loading Team...</span></p>
+          </div>
+        </div>
+
+        <!-- Alert Toast -->
+        <div id="alert-toast" class="hidden bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl p-4 text-xs flex items-center space-x-2">
+          <svg class="h-4 w-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="alert-toast-text">Registration completed successfully.</span>
+        </div>
+
+        <!-- Competitions Grid and Filters -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden p-6 space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-display">Event Catalog</h2>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input type="text" id="comp-search" class="form-input text-xs py-1.5 px-3 max-w-xs" placeholder="Search competitions...">
+              <select id="comp-category-filter" class="form-input text-xs py-1.5 px-3 cursor-pointer">
+                <option value="all">All Categories</option>
+                <!-- Dynamically loaded -->
+              </select>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4">Competition Code & Name</th>
+                  <th class="px-6 py-4">Category</th>
+                  <th class="px-6 py-4">Type</th>
+                  <th class="px-6 py-4 font-mono">Participants required</th>
+                  <th class="px-6 py-4">Registration Status</th>
+                  <th class="px-6 py-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="competitions-table-body" class="divide-y divide-slate-100 text-xs">
+                <tr>
+                  <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">Loading competition schedule...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Entry Registration Modal -->
+        <div id="register-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4 select-none">
+          <div class="bg-white rounded-2xl shadow-2xl border border-slate-150 max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+              <div>
+                <p class="text-[10px] font-mono font-extrabold text-emerald-600 uppercase tracking-wider">Secure Gate Entry</p>
+                <h3 id="modal-comp-title" class="text-base font-bold text-slate-900 font-display">Competition Registration</h3>
+              </div>
+              <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 font-bold cursor-pointer text-sm">✕</button>
+            </div>
+
+            <form id="register-form" class="flex-1 overflow-y-auto p-6 space-y-4">
+              <input type="hidden" id="register-comp-id" value="">
+              
+              <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-xs text-emerald-800 space-y-1">
+                <span class="font-bold">Entry rules:</span>
+                <p id="modal-comp-rules" class="leading-normal">Minimum: 1, Maximum: 1 participant(s)</p>
+              </div>
+
+              <!-- Chest/Participant Code -->
+              <div class="space-y-1.5">
+                <label for="entry-chest" class="text-xs font-bold text-slate-700">Custom Chest Number (Optional)</label>
+                <input type="text" id="entry-chest" class="form-input" placeholder="e.g. C101">
+              </div>
+
+              <!-- Group Name if applicable -->
+              <div id="group-name-container" class="space-y-1.5 hidden">
+                <label for="entry-group" class="text-xs font-bold text-slate-700">Group Name</label>
+                <input type="text" id="entry-group" class="form-input" placeholder="e.g. Al-Noor Group A">
+              </div>
+
+              <!-- Student checkboxes -->
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-slate-700 block">Select Students (from your registered roster)</label>
+                <div id="modal-student-selector" class="border border-slate-100 rounded-xl max-h-48 overflow-y-auto divide-y divide-slate-50 p-2">
+                  <!-- Load student check-list -->
+                  <p class="text-slate-400 text-center py-6 text-xs">Loading team students...</p>
+                </div>
+                <p id="student-selection-error" class="text-[10px] text-rose-600 hidden font-bold">Please select the correct number of participants.</p>
+              </div>
+
+              <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <button type="button" id="modal-cancel-btn" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold cursor-pointer">
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-accent py-2 px-4 text-xs font-bold text-white shadow-md cursor-pointer">
+                  Submit Registration
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getCompetitions, getCategories } from "/assets/js/firestore-service.js";
+
+    let leaderProfile = null;
+    let assignedTeamId = null;
+    let allComps = [];
+    let allCats = [];
+    let teamStudents = [];
+    let teamEntries = [];
+
+    async function initPage() {
+      try {
+        leaderProfile = await verifyUserRole(['teamLeader']);
+        assignedTeamId = leaderProfile.teamId;
+
+        if (!assignedTeamId) {
+          window.location.replace('/unauthorized.html?reason=no_team_id');
+          return;
+        }
+
+        document.getElementById('auth-team-label').textContent = assignedTeamId.toUpperCase();
+
+        await loadPortalLayout('team');
+        initializeNavigation();
+
+        await Promise.all([
+          loadCompetitionsData(),
+          loadTeamStudents(),
+          loadTeamEntries()
+        ]);
+
+        renderCategoryFilter();
+        renderCompetitions();
+        setupFilters();
+        setupModalEvents();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Competitions page loading failed:", err);
+      }
+    }
+
+    async function loadCompetitionsData() {
+      try {
+        const [comps, cats] = await Promise.all([
+          getCompetitions(),
+          getCategories()
+        ]);
+        allComps = comps || [];
+        allCats = cats || [];
+      } catch (err) {
+        console.error("Error retrieving initial data:", err);
+      }
+    }
+
+    async function loadTeamStudents() {
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+      try {
+        const snap = await getDocs(query(collection(db, `festivals/${festId}/festStudents`), where('teamId', '==', assignedTeamId)));
+        teamStudents = [];
+        snap.forEach(d => {
+          teamStudents.push({ id: d.id, ...d.data() });
+        });
+      } catch (err) {
+        console.error("Roster query failed:", err);
+      }
+    }
+
+    async function loadTeamEntries() {
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+      try {
+        const snap = await getDocs(query(collection(db, `festivals/${festId}/entries`), where('teamId', '==', assignedTeamId)));
+        teamEntries = [];
+        snap.forEach(d => {
+          teamEntries.push({ id: d.id, ...d.data() });
+        });
+      } catch (err) {
+        console.error("Entries query failed:", err);
+      }
+    }
+
+    function renderCategoryFilter() {
+      const select = document.getElementById('comp-category-filter');
+      allCats.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        select.appendChild(opt);
+      });
+    }
+
+    function renderCompetitions() {
+      const tbody = document.getElementById('competitions-table-body');
+      tbody.innerHTML = '';
+
+      if (allComps.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">No competitions loaded for this festival.</td></tr>';
+        return;
+      }
+
+      allComps.forEach(c => {
+        const category = allCats.find(cat => cat.id === c.categoryId);
+        const catName = category ? category.name : c.categoryId;
+
+        // Check if our team is already registered
+        const existingEntry = teamEntries.find(e => e.competitionId === c.id);
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+        let statusBadge = `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 uppercase tracking-wider">Unregistered</span>`;
+        let actionBtnText = "Register Entry";
+        let actionBtnClass = "btn btn-primary bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 text-xs rounded-lg cursor-pointer shadow-xs";
+
+        if (existingEntry) {
+          statusBadge = `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase tracking-wider">Registered</span>`;
+          actionBtnText = "Manage Entry";
+          actionBtnClass = "btn border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-1.5 px-3 text-xs rounded-lg cursor-pointer";
+        }
+
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="font-bold text-slate-900">${c.name}</div>
+            <div class="text-[10px] font-mono font-bold text-emerald-600 uppercase mt-0.5">${c.code || 'CODE'}</div>
+          </td>
+          <td class="px-6 py-4 font-semibold text-slate-600">${catName}</td>
+          <td class="px-6 py-4 capitalize text-slate-500 font-medium">${c.competitionType || 'individual'}</td>
+          <td class="px-6 py-4 font-mono text-slate-500 font-medium">Min ${c.minParticipantsPerEntry || 1} / Max ${c.maxParticipantsPerEntry || 1}</td>
+          <td class="px-6 py-4">${statusBadge}</td>
+          <td class="px-6 py-4 text-right">
+            <button class="register-action-btn ${actionBtnClass}" data-id="${c.id}">${actionBtnText}</button>
+          </td>
+        `;
+
+        tr.querySelector('.register-action-btn').onclick = () => openRegisterModal(c, existingEntry);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function setupFilters() {
+      const search = document.getElementById('comp-search');
+      const catFilter = document.getElementById('comp-category-filter');
+
+      const applyFilters = () => {
+        const queryStr = search.value.toLowerCase().trim();
+        const catVal = catFilter.value;
+
+        const filtered = allComps.filter(c => {
+          const matchesSearch = c.name.toLowerCase().includes(queryStr) || c.code.toLowerCase().includes(queryStr);
+          const matchesCat = catVal === 'all' || c.categoryId === catVal;
+          return matchesSearch && matchesCat;
+        });
+
+        const tbody = document.getElementById('competitions-table-body');
+        tbody.innerHTML = '';
+        if (filtered.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">No match found.</td></tr>';
+          return;
+        }
+
+        filtered.forEach(c => {
+          const category = allCats.find(cat => cat.id === c.categoryId);
+          const catName = category ? category.name : c.categoryId;
+          const existingEntry = teamEntries.find(e => e.competitionId === c.id);
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+          let statusBadge = `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 uppercase tracking-wider">Unregistered</span>`;
+          let actionBtnText = "Register Entry";
+          let actionBtnClass = "btn btn-primary bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 text-xs rounded-lg cursor-pointer shadow-xs";
+
+          if (existingEntry) {
+            statusBadge = `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase tracking-wider">Registered</span>`;
+            actionBtnText = "Manage Entry";
+            actionBtnClass = "btn border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-1.5 px-3 text-xs rounded-lg cursor-pointer";
+          }
+
+          tr.innerHTML = `
+            <td class="px-6 py-4">
+              <div class="font-bold text-slate-900">${c.name}</div>
+              <div class="text-[10px] font-mono font-bold text-emerald-600 uppercase mt-0.5">${c.code || 'CODE'}</div>
+            </td>
+            <td class="px-6 py-4 font-semibold text-slate-600">${catName}</td>
+            <td class="px-6 py-4 capitalize text-slate-500 font-medium">${c.competitionType || 'individual'}</td>
+            <td class="px-6 py-4 font-mono text-slate-500 font-medium">Min ${c.minParticipantsPerEntry || 1} / Max ${c.maxParticipantsPerEntry || 1}</td>
+            <td class="px-6 py-4">${statusBadge}</td>
+            <td class="px-6 py-4 text-right">
+              <button class="register-action-btn ${actionBtnClass}" data-id="${c.id}">${actionBtnText}</button>
+            </td>
+          `;
+
+          tr.querySelector('.register-action-btn').onclick = () => openRegisterModal(c, existingEntry);
+          tbody.appendChild(tr);
+        });
+      };
+
+      search.oninput = applyFilters;
+      catFilter.onchange = applyFilters;
+    }
+
+    function openRegisterModal(comp, existingEntry) {
+      document.getElementById('register-comp-id').value = comp.id;
+      document.getElementById('modal-comp-title').textContent = `${existingEntry ? 'Manage' : 'Register'} Entry - ${comp.name}`;
+      document.getElementById('modal-comp-rules').textContent = `Minimum Required Participants: ${comp.minParticipantsPerEntry || 1} | Maximum Allowed: ${comp.maxParticipantsPerEntry || 1}`;
+
+      const isGroup = (comp.competitionType === 'group' || comp.competitionType === 'groupResult');
+      const groupContainer = document.getElementById('group-name-container');
+      if (isGroup) {
+        groupContainer.classList.remove('hidden');
+        document.getElementById('entry-group').required = true;
+        document.getElementById('entry-group').value = existingEntry ? (existingEntry.groupName || '') : '';
+      } else {
+        groupContainer.classList.add('hidden');
+        document.getElementById('entry-group').required = false;
+        document.getElementById('entry-group').value = '';
+      }
+
+      document.getElementById('entry-chest').value = existingEntry ? (existingEntry.chestNumber || '') : '';
+
+      // Load students selector checklist
+      const selector = document.getElementById('modal-student-selector');
+      selector.innerHTML = '';
+
+      // Filter students by category match
+      const matchingStudents = teamStudents.filter(s => s.categoryId === comp.categoryId);
+
+      if (matchingStudents.length === 0) {
+        selector.innerHTML = `<p class="text-rose-500 text-center py-6 text-xs font-semibold">You have no registered students matching Category: ${comp.categoryId}. Please register students first under student roster.</p>`;
+      } else {
+        matchingStudents.forEach(s => {
+          const isChecked = existingEntry ? (existingEntry.memberStudentIds || []).includes(s.id) : false;
+
+          const label = document.createElement('label');
+          label.className = "flex items-center space-x-3 p-2.5 hover:bg-slate-50 transition cursor-pointer text-xs font-semibold text-slate-800";
+          label.innerHTML = `
+            <input type="checkbox" class="student-checkbox h-4 w-4 text-emerald-500 border-slate-200 rounded focus:ring-emerald-400 focus:ring-offset-0 cursor-pointer" value="${s.id}" ${isChecked ? 'checked' : ''}>
+            <div class="flex flex-col select-none">
+              <span>${s.name}</span>
+              <span class="text-[10px] text-slate-400 font-mono font-medium">Chest: ${s.chestNumber || 'TBA'}</span>
+            </div>
+          `;
+          selector.appendChild(label);
+        });
+      }
+
+      document.getElementById('register-modal').classList.remove('hidden');
+    }
+
+    function setupModalEvents() {
+      const modal = document.getElementById('register-modal');
+      const closeBtn = document.getElementById('modal-close-btn');
+      const cancelBtn = document.getElementById('modal-cancel-btn');
+      const registerForm = document.getElementById('register-form');
+
+      closeBtn.onclick = () => modal.classList.add('hidden');
+      cancelBtn.onclick = () => modal.classList.add('hidden');
+
+      registerForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const compId = document.getElementById('register-comp-id').value;
+        const comp = allComps.find(c => c.id === compId);
+        if (!comp) return;
+
+        const customChest = document.getElementById('entry-chest').value.trim();
+        const groupName = document.getElementById('entry-group').value.trim();
+
+        const checkboxes = document.querySelectorAll('.student-checkbox:checked');
+        const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+
+        // Validation against min/max rules
+        const minVal = comp.minParticipantsPerEntry || 1;
+        const maxVal = comp.maxParticipantsPerEntry || 1;
+        const errorMsg = document.getElementById('student-selection-error');
+
+        if (selectedIds.length < minVal || selectedIds.length > maxVal) {
+          errorMsg.textContent = `Selection violation: This competition requires minimum ${minVal} and maximum ${maxVal} participant(s). You selected ${selectedIds.length}.`;
+          errorMsg.classList.remove('hidden');
+          return;
+        } else {
+          errorMsg.classList.add('hidden');
+        }
+
+        const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+        const existingEntry = teamEntries.find(ent => ent.competitionId === comp.id);
+        const entryId = existingEntry ? existingEntry.id : `ent_${assignedTeamId}_${comp.id}`;
+
+        // Get first student name for display purposes if individual
+        let displayName = "Group Entry";
+        if (selectedIds.length === 1) {
+          const student = teamStudents.find(s => s.id === selectedIds[0]);
+          displayName = student ? student.name : "Individual Entry";
+        }
+
+        const entryPayload = {
+          id: entryId,
+          festId,
+          competitionId: compId,
+          teamId: assignedTeamId,
+          memberStudentIds: selectedIds,
+          chestNumber: customChest || (existingEntry ? existingEntry.chestNumber : `T${assignedTeamId}-${selectedIds.length > 1 ? 'GRP' : teamStudents.find(s=>s.id===selectedIds[0])?.chestNumber || ''}`),
+          groupName: groupName || '',
+          displayName: selectedIds.length === 1 ? displayName : (groupName || 'Group Entry'),
+          status: 'registered',
+          updatedAt: serverTimestamp()
+        };
+
+        if (!existingEntry) {
+          entryPayload.createdAt = serverTimestamp();
+        }
+
+        try {
+          const loader = document.getElementById('global-page-loader');
+          loader.classList.remove('hidden');
+
+          await setDoc(doc(db, `festivals/${festId}/entries`, entryId), entryPayload, { merge: true });
+
+          modal.classList.add('hidden');
+          registerForm.reset();
+          loader.classList.add('hidden');
+
+          showToast("Competition registration submitted successfully!");
+          await loadTeamEntries();
+          renderCompetitions();
+        } catch (err) {
+          console.error("Registration failed:", err);
+          alert("Registration failed: " + err.message);
+        }
+      };
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('alert-toast');
+      const text = document.getElementById('alert-toast-text');
+      text.textContent = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => { toast.classList.add('hidden'); }, 4000);
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports Terminal - Admin Portal</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-full-width {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+      }
+      .main-content-layout {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+      }
+      th, td {
+        border: 1px solid #cbd5e1 !important;
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <!-- Global page loader -->
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center no-print">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Generating analytical reports...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar" class="no-print"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout print-full-width">
+      <!-- Header -->
+      <div id="portal-header" class="no-print"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8 print-full-width">
+        
+        <!-- Header Panel -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Festival Reports Terminal</h1>
+            <p class="text-xs text-slate-400 font-medium">Export audit-ready sheets, championship aggregates, and winners circles optimized for print and announcements.</p>
+          </div>
+          <button onclick="window.print()" class="btn btn-primary py-2.5 px-5 text-xs font-bold flex items-center space-x-2 shadow-md cursor-pointer shrink-0">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-3a2 2 0 00-2-2H9a2 2 0 00-2 2v3a2 2 0 002 2zm5-11h.01"/></svg>
+            <span>Print Current Report</span>
+          </button>
+        </div>
+
+        <!-- Print-only Report Header -->
+        <div class="hidden print:block border-b-2 border-slate-900 pb-4 mb-6 space-y-1">
+          <h1 class="text-xl font-black text-slate-900 uppercase tracking-tight">MeeladPulse Official Festival Ledger</h1>
+          <p class="text-xs text-slate-500 font-bold">Scope ID: <span id="print-fest-id" class="font-mono">TBA</span> • Generated: <span id="print-timestamp" class="font-mono">TBA</span></p>
+        </div>
+
+        <!-- Quick Metrics Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
+          <div class="bg-white border border-slate-100 p-4 rounded-xl shadow-xs">
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Teams</p>
+            <p id="total-teams-metric" class="text-xl font-black text-slate-900 mt-1">...</p>
+          </div>
+          <div class="bg-white border border-slate-100 p-4 rounded-xl shadow-xs">
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Registered Students</p>
+            <p id="total-students-metric" class="text-xl font-black text-slate-900 mt-1">...</p>
+          </div>
+          <div class="bg-white border border-slate-100 p-4 rounded-xl shadow-xs">
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Competitions</p>
+            <p id="total-comps-metric" class="text-xl font-black text-slate-900 mt-1">...</p>
+          </div>
+          <div class="bg-white border border-slate-100 p-4 rounded-xl shadow-xs">
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Published Results</p>
+            <p id="total-results-metric" class="text-xl font-black text-slate-900 mt-1">...</p>
+          </div>
+        </div>
+
+        <!-- Report Type Tabs Selector -->
+        <div class="flex items-center space-x-2 border-b border-slate-100 pb-1 no-print">
+          <button id="tab-championship" class="px-4 py-2 text-xs font-bold border-b-2 border-emerald-500 text-emerald-600 focus:outline-none cursor-pointer">
+            Championship Standings
+          </button>
+          <button id="tab-winners" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 focus:outline-none cursor-pointer">
+            Winners Circle (Placements)
+          </button>
+        </div>
+
+        <!-- SECTION A: Championship Table -->
+        <div id="section-championship" class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden print-full-width">
+          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between no-print">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Championship Leaderboard Summary</h2>
+            <span class="text-[10px] font-mono text-slate-400 font-bold" id="championship-last-recalc">...</span>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4">Rank</th>
+                  <th class="px-6 py-4">Team Code & Name</th>
+                  <th class="px-6 py-4">Arts Division Points</th>
+                  <th class="px-6 py-4">Sports Division Points</th>
+                  <th class="px-6 py-4">Adjustments (Bonus/Penalties)</th>
+                  <th class="px-6 py-4 text-right">Overall Point Tally</th>
+                </tr>
+              </thead>
+              <tbody id="championship-table-body" class="divide-y divide-slate-100 text-xs">
+                <tr>
+                  <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-semibold">Pulling tabulated totals...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION B: Winners Circle Table -->
+        <div id="section-winners" class="hidden bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden print-full-width">
+          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between no-print">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Competition Winners Circle</h2>
+            <select id="category-filter" class="text-xs form-input max-w-xs cursor-pointer">
+              <option value="all">All Age Categories</option>
+              <option value="cat_subjunior">Sub-Junior Only</option>
+              <option value="cat_junior">Junior Only</option>
+              <option value="cat_senior">Senior Only</option>
+            </select>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4">Competition / Category</th>
+                  <th class="px-6 py-4">🥇 First Place Winner</th>
+                  <th class="px-6 py-4">🥈 Second Place Winner</th>
+                  <th class="px-6 py-4">🥉 Third Place Winner</th>
+                </tr>
+              </thead>
+              <tbody id="winners-table-body" class="divide-y divide-slate-100 text-xs">
+                <tr>
+                  <td colspan="4" class="px-6 py-12 text-center text-slate-400 font-semibold">Generating placement mappings...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getTeamTotals, getResults, getCompetitions, getTeams } from "/assets/js/firestore-service.js";
+
+    let activeFestId = null;
+    let cachedTotals = [];
+    let cachedResults = [];
+    let cachedComps = [];
+    let cachedTeams = [];
+
+    async function initPage() {
+      try {
+        await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+
+        activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
+        if (!activeFestId) {
+          alert("Please select a festival scope first.");
+          window.location.replace('/select-fest.html');
+          return;
+        }
+
+        document.getElementById('print-fest-id').textContent = activeFestId.toUpperCase();
+        document.getElementById('print-timestamp').textContent = new Date().toLocaleString();
+
+        await loadReportData();
+        setupTabs();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Analytical reports initialization failed:", err);
+      }
+    }
+
+    async function loadReportData() {
+      try {
+        // Query datasets
+        cachedTotals = await getTeamTotals() || [];
+        cachedResults = await getResults() || [];
+        cachedComps = await getCompetitions() || [];
+        cachedTeams = await getTeams() || [];
+
+        const studentsSnap = await getDocs(collection(db, `festivals/${activeFestId}/festStudents`));
+        const studentsCount = studentsSnap.size;
+
+        // Render Quick Metrics
+        document.getElementById('total-teams-metric').textContent = cachedTeams.length;
+        document.getElementById('total-students-metric').textContent = studentsCount;
+        document.getElementById('total-comps-metric').textContent = cachedComps.length;
+        document.getElementById('total-results-metric').textContent = cachedResults.length;
+
+        renderChampionshipReport();
+        renderWinnersCircleReport('all');
+
+        // Setup filter
+        document.getElementById('category-filter').addEventListener('change', (e) => {
+          renderWinnersCircleReport(e.target.value);
+        });
+
+      } catch (err) {
+        console.error("Retrieving records failed:", err);
+      }
+    }
+
+    function setupTabs() {
+      const tabChamp = document.getElementById('tab-championship');
+      const tabWin = document.getElementById('tab-winners');
+      const secChamp = document.getElementById('section-championship');
+      const secWin = document.getElementById('section-winners');
+
+      tabChamp.onclick = () => {
+        tabChamp.className = "px-4 py-2 text-xs font-bold border-b-2 border-emerald-500 text-emerald-600 focus:outline-none cursor-pointer";
+        tabWin.className = "px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 focus:outline-none cursor-pointer";
+        secChamp.classList.remove('hidden');
+        secWin.classList.add('hidden');
+      };
+
+      tabWin.onclick = () => {
+        tabWin.className = "px-4 py-2 text-xs font-bold border-b-2 border-emerald-500 text-emerald-600 focus:outline-none cursor-pointer";
+        tabChamp.className = "px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 focus:outline-none cursor-pointer";
+        secWin.classList.remove('hidden');
+        secChamp.classList.add('hidden');
+      };
+    }
+
+    function renderChampionshipReport() {
+      const tbody = document.getElementById('championship-table-body');
+      tbody.innerHTML = '';
+
+      if (cachedTotals.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-slate-400 italic">No scoreboard standings computed yet.</td></tr>`;
+        return;
+      }
+
+      // Sort by rank
+      cachedTotals.sort((a, b) => a.rank - b.rank);
+
+      if (cachedTotals[0].updatedAt) {
+        const dateObj = cachedTotals[0].updatedAt.toDate ? cachedTotals[0].updatedAt.toDate() : new Date(cachedTotals[0].updatedAt);
+        document.getElementById('championship-last-recalc').textContent = `Recalculated: ${dateObj.toLocaleString()}`;
+      }
+
+      cachedTotals.forEach(item => {
+        const row = document.createElement('tr');
+        row.className = "border-b border-slate-100 hover:bg-slate-50/50 transition";
+        row.innerHTML = `
+          <td class="px-6 py-4 font-mono font-bold text-slate-900">${item.rank}</td>
+          <td class="px-6 py-4">
+            <span class="font-bold text-slate-800">${item.teamName}</span>
+            <span class="text-[10px] font-mono font-bold text-slate-400 ml-1">(${item.teamCode})</span>
+          </td>
+          <td class="px-6 py-4">
+            <span class="font-bold font-mono text-slate-700">${item.artsTotal || 0}</span>
+            <span class="text-[10px] text-slate-400 ml-1">(${item.stagePoints || 0} Stage / ${item.nonStagePoints || 0} Non)</span>
+          </td>
+          <td class="px-6 py-4">
+            <span class="font-bold font-mono text-slate-700">${item.sportsTotal || 0}</span>
+            <span class="text-[10px] text-slate-400 ml-1">(${item.trackPoints || 0} Track / ${item.fieldPoints || 0} Field / ${item.teamEventPoints || 0} Team)</span>
+          </td>
+          <td class="px-6 py-4 font-mono">
+            <span class="text-emerald-600 font-bold">+${item.bonusPoints || 0}</span>
+            <span class="text-rose-600 font-bold">-${item.penaltyPoints || 0}</span>
+          </td>
+          <td class="px-6 py-4 text-right font-mono font-extrabold text-slate-900 text-sm">
+            ${item.overallPoints || 0}
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function renderWinnersCircleReport(categoryFilter) {
+      const tbody = document.getElementById('winners-table-body');
+      tbody.innerHTML = '';
+
+      const catNames = {
+        cat_subjunior: 'Sub-Junior',
+        cat_junior: 'Junior',
+        cat_senior: 'Senior'
+      };
+
+      const filteredComps = cachedComps.filter(c => {
+        if (categoryFilter === 'all') return true;
+        return c.categoryId === categoryFilter;
+      });
+
+      if (filteredComps.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400 italic">No competitions match the selected filter.</td></tr>`;
+        return;
+      }
+
+      filteredComps.forEach(comp => {
+        // Find if there is a result document matching this competition ID
+        const resultDoc = cachedResults.find(r => r.competitionId === comp.id);
+        
+        const row = document.createElement('tr');
+        row.className = "border-b border-slate-100 hover:bg-slate-50/50 transition";
+
+        let firstHtml = '<span class="text-slate-400 italic">Unpublished</span>';
+        let secondHtml = '<span class="text-slate-400 italic">Unpublished</span>';
+        let thirdHtml = '<span class="text-slate-400 italic">Unpublished</span>';
+
+        if (resultDoc && Array.isArray(resultDoc.placements)) {
+          // Placement rank structures: { rank: 1, name: "Liam", teamId: "ST", chestNumber: "101", points: 5, grade: "A" }
+          const p1 = resultDoc.placements.filter(p => Number(p.rank) === 1);
+          const p2 = resultDoc.placements.filter(p => Number(p.rank) === 2);
+          const p3 = resultDoc.placements.filter(p => Number(p.rank) === 3);
+
+          const formatPlacement = (plist) => {
+            if (plist.length === 0) return '<span class="text-slate-400 italic">No entry</span>';
+            return plist.map(p => `
+              <div class="space-y-0.5">
+                <div class="font-bold text-slate-800">${p.name || 'Participant'}</div>
+                <div class="text-[10px] text-slate-500 font-medium">Chest: ${p.chestNumber || 'N/A'} • School: ${p.teamId || p.teamCode || 'TBA'}</div>
+                <div class="text-[10px] font-mono text-emerald-600 font-extrabold">Grade: ${p.grade || 'N/A'} (${p.points || 0} Pts)</div>
+              </div>
+            `).join('<div class="border-t border-slate-100 my-1"></div>');
+          };
+
+          firstHtml = formatPlacement(p1);
+          secondHtml = formatPlacement(p2);
+          thirdHtml = formatPlacement(p3);
+        }
+
+        row.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="font-bold text-slate-900">${comp.name}</div>
+            <div class="text-[10px] font-mono text-slate-400 mt-0.5">Code: ${comp.code} • Category: ${catNames[comp.categoryId] || comp.categoryId}</div>
+          </td>
+          <td class="px-6 py-4">${firstHtml}</td>
+          <td class="px-6 py-4">${secondHtml}</td>
+          <td class="px-6 py-4">${thirdHtml}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

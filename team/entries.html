@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Team Entries - Team Leader Desk</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen animate-fade-in">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Verifying team privileges...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Section -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Registered Team Entries</h1>
+            <p class="text-xs text-slate-400 font-medium">Consolidated view of all active registrations for: <span id="auth-team-label" class="font-bold text-emerald-600 font-mono">Loading Team...</span></p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <a href="/team/competitions.html" class="btn btn-primary py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm cursor-pointer">
+              <span>Register New Entry</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Entries List -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden p-6 space-y-4">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-display">Submitted Registrations</h2>
+            <span id="entries-count-badge" class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 font-mono">0 Entries</span>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4">Competition Code & Name</th>
+                  <th class="px-6 py-4 font-mono">Chest Number</th>
+                  <th class="px-6 py-4">Registered Students</th>
+                  <th class="px-6 py-4 font-mono">Stage / Details</th>
+                  <th class="px-6 py-4">Status</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="entries-table-body" class="divide-y divide-slate-100 text-xs">
+                <tr>
+                  <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">Scanning submission logs...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, query, where, getDocs, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getCompetitions, getCategories } from "/assets/js/firestore-service.js";
+
+    let leaderProfile = null;
+    let assignedTeamId = null;
+    let allComps = [];
+    let teamStudents = [];
+    let teamEntries = [];
+
+    async function initPage() {
+      try {
+        leaderProfile = await verifyUserRole(['teamLeader']);
+        assignedTeamId = leaderProfile.teamId;
+
+        if (!assignedTeamId) {
+          window.location.replace('/unauthorized.html?reason=no_team_id');
+          return;
+        }
+
+        document.getElementById('auth-team-label').textContent = assignedTeamId.toUpperCase();
+
+        await loadPortalLayout('team');
+        initializeNavigation();
+
+        await Promise.all([
+          loadCompetitionsData(),
+          loadTeamStudents(),
+          loadTeamEntries()
+        ]);
+
+        renderEntries();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Entries page loading failed:", err);
+      }
+    }
+
+    async function loadCompetitionsData() {
+      try {
+        allComps = await getCompetitions();
+      } catch (err) {
+        console.error("Competitions query failed:", err);
+      }
+    }
+
+    async function loadTeamStudents() {
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+      try {
+        const snap = await getDocs(query(collection(db, `festivals/${festId}/festStudents`), where('teamId', '==', assignedTeamId)));
+        teamStudents = [];
+        snap.forEach(d => {
+          teamStudents.push({ id: d.id, ...d.data() });
+        });
+      } catch (err) {
+        console.error("Students query failed:", err);
+      }
+    }
+
+    async function loadTeamEntries() {
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+      try {
+        const snap = await getDocs(query(collection(db, `festivals/${festId}/entries`), where('teamId', '==', assignedTeamId)));
+        teamEntries = [];
+        snap.forEach(d => {
+          teamEntries.push({ id: d.id, ...d.data() });
+        });
+        document.getElementById('entries-count-badge').textContent = `${teamEntries.length} Entries`;
+      } catch (err) {
+        console.error("Entries query failed:", err);
+      }
+    }
+
+    function renderEntries() {
+      const tbody = document.getElementById('entries-table-body');
+      tbody.innerHTML = '';
+
+      if (teamEntries.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">You have not registered any entries yet. Go to 'Competitions' to register!</td>
+          </tr>
+        `;
+        return;
+      }
+
+      teamEntries.forEach(ent => {
+        const comp = allComps.find(c => c.id === ent.competitionId);
+        const compName = comp ? comp.name : "Unknown Competition";
+        const compCode = comp ? (comp.code || 'CODE') : 'CODE';
+        const compStage = comp ? (comp.stageId || 'TBA') : 'TBA';
+
+        // Get names of registered members
+        const studentNames = (ent.memberStudentIds || []).map(sid => {
+          const s = teamStudents.find(stud => stud.id === sid);
+          return s ? s.name : "Unknown Student";
+        }).join(', ');
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="font-bold text-slate-900">${compName}</div>
+            <div class="text-[10px] font-mono font-bold text-emerald-600 uppercase mt-0.5">${compCode}</div>
+          </td>
+          <td class="px-6 py-4 font-mono font-bold text-slate-800">${ent.chestNumber || 'TBA'}</td>
+          <td class="px-6 py-4 font-medium text-slate-600">
+            ${ent.groupName ? `<span class="block text-emerald-600 font-bold mb-1">[Group] ${ent.groupName}</span>` : ''}
+            <span class="text-xs leading-relaxed">${studentNames}</span>
+          </td>
+          <td class="px-6 py-4 font-mono text-slate-500 font-medium">
+            <div>Stage: ${compStage}</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">${comp ? (comp.eventDate || '') + ' ' + (comp.startTime || '') : ''}</div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase tracking-wider">
+              ${ent.status || 'registered'}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-right space-x-2">
+            <button class="edit-btn text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer" data-id="${ent.id}">Edit</button>
+            <button class="delete-btn text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer" data-id="${ent.id}">Remove</button>
+          </td>
+        `;
+
+        tr.querySelector('.edit-btn').onclick = () => {
+          window.location.href = `/team/competitions.html?compId=${ent.competitionId}`;
+        };
+
+        tr.querySelector('.delete-btn').onclick = async () => {
+          if (!confirm(`Are you sure you want to remove the entry for ${compName}? This action is permanent.`)) return;
+
+          try {
+            const loader = document.getElementById('global-page-loader');
+            loader.classList.remove('hidden');
+
+            const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+            await deleteDoc(doc(db, `festivals/${festId}/entries`, ent.id));
+
+            loader.classList.add('hidden');
+            alert("Entry removed successfully!");
+            await loadTeamEntries();
+            renderEntries();
+          } catch (e) {
+            console.error("Delete failed:", e);
+            alert("Failed to delete registration: " + e.message);
+          }
+        };
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

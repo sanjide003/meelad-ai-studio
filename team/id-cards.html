@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ID Cards Terminal - Team Leader Desk</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/id-cards.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <!-- Print Layout Overlay (Only shown during print) -->
+  <div id="print-zone" class="hidden absolute top-0 left-0 w-full bg-white z-50 p-4"></div>
+
+  <!-- Regular Screen Layout -->
+  <div class="min-h-screen flex flex-col lg:flex-row no-print">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Panel -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Student ID Card Terminal</h1>
+            <p class="text-xs text-slate-400 font-medium">Verify and print physical credential passes for your team's approved competitors.</p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button id="print-selected-btn" class="btn btn-primary py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm cursor-pointer">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-3a2 2 0 00-2-2H9a2 2 0 00-2 2v3a2 2 0 002 2zm5-11V3m-3 3h6"/></svg>
+              <span>Print Selected Cards</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Bento Grid -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Roster Selection</h2>
+            <div class="flex flex-wrap gap-2">
+              <select id="role-category-filter" class="form-input text-xs py-1.5 px-3 cursor-pointer">
+                <option value="all">All Categories</option>
+                <option value="cat_subjunior">Sub-Junior</option>
+                <option value="cat_junior">Junior</option>
+                <option value="cat_senior">Senior</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Selection Controls -->
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center space-x-1.5 cursor-pointer select-none">
+                <input type="checkbox" id="select-all-cards" class="h-4 w-4 rounded border-slate-200 text-emerald-500 focus:ring-0">
+                <span>Select All Cards</span>
+              </label>
+              <span id="selected-count-label">0 cards selected</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ID Card Deck Preview Grid -->
+        <div id="cards-preview-deck" class="id-cards-grid">
+          <p class="text-xs text-slate-400 italic text-center col-span-full py-12">Scanning active team roster...</p>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { getFestivalStudentsForCards, getVerificationUrl, getQrCodeImageUrl } from "/assets/js/id-card-service.js";
+
+    let activeFestId = null;
+    let leaderProfile = null;
+    let studentsData = [];
+
+    async function initPage() {
+      try {
+        leaderProfile = await verifyUserRole(['teamLeader']);
+        await loadPortalLayout('team');
+        initializeNavigation();
+
+        activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
+        if (!activeFestId) {
+          alert("Please select a festival scope first.");
+          window.location.replace('/select-fest.html');
+          return;
+        }
+
+        await loadData();
+        setupFilters();
+        setupPrinting();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("ID Cards terminal failure:", err);
+      }
+    }
+
+    async function loadData() {
+      try {
+        const raw = await getFestivalStudentsForCards() || [];
+        // Strict scope check: Team leaders can only load students belonging to their own assigned teamId.
+        studentsData = raw.filter(s => s.teamId === leaderProfile.teamId);
+        renderDeck();
+      } catch (err) {
+        console.error("Credentials loading failure:", err);
+      }
+    }
+
+    function setupFilters() {
+      const subFilter = document.getElementById('role-category-filter');
+      const selectAll = document.getElementById('select-all-cards');
+
+      subFilter.onchange = renderDeck;
+
+      selectAll.onchange = () => {
+        const checks = document.querySelectorAll('.card-checkbox');
+        checks.forEach(c => {
+          c.checked = selectAll.checked;
+        });
+        updateSelectedCount();
+      };
+    }
+
+    function renderDeck() {
+      const deck = document.getElementById('cards-preview-deck');
+      deck.innerHTML = '';
+
+      const subVal = document.getElementById('role-category-filter').value;
+
+      const filtered = studentsData.filter(item => {
+        return subVal === 'all' || item.categoryId === subVal;
+      });
+
+      if (filtered.length === 0) {
+        deck.innerHTML = `
+          <p class="text-xs text-slate-400 italic text-center col-span-full py-12">No approved students match the selection criteria.</p>
+        `;
+        document.getElementById('selected-count-label').textContent = "0 cards selected";
+        document.getElementById('select-all-cards').checked = false;
+        return;
+      }
+
+      const accentClasses = {
+        student: 'accent-student'
+      };
+
+      filtered.forEach(item => {
+        const cardAccent = accentClasses['student'];
+
+        const verifyUrl = getVerificationUrl(item.id, 'student', activeFestId);
+        const qrUrl = getQrCodeImageUrl(verifyUrl);
+
+        const cats = { cat_subjunior: 'SUB-JUNIOR', cat_junior: 'JUNIOR', cat_senior: 'SENIOR' };
+        const detailsHTML = `
+          <div class="text-[11px] font-bold text-slate-400 mt-0.5">CHEST: <span class="font-mono text-slate-900">${item.chestNumber || 'N/A'}</span></div>
+          <div class="text-[10px] font-extrabold text-emerald-600 tracking-wider mt-1">${cats[item.categoryId] || 'AGE CATEGORY'}</div>
+        `;
+
+        const div = document.createElement('div');
+        div.className = "flex flex-col space-y-3 p-4 bg-white rounded-2xl border border-slate-100 shadow-xs relative items-center group hover:border-slate-300 transition duration-200";
+        
+        div.innerHTML = `
+          <!-- Checkbox Selector -->
+          <div class="absolute top-4 left-4 z-10">
+            <input type="checkbox" class="card-checkbox h-4 w-4 rounded border-slate-200 text-emerald-500 focus:ring-0 cursor-pointer" data-id="${item.id}">
+          </div>
+
+          <!-- Printable Card Frame -->
+          <div class="id-card-container relative" id="card-${item.id}">
+            <!-- Header band -->
+            <div class="card-header-band ${cardAccent}">
+              <div class="flex flex-col text-left">
+                <span class="text-[10px] font-extrabold tracking-widest uppercase text-slate-400 leading-tight">MEELADPULSE</span>
+                <span class="text-xs font-black text-white leading-none tracking-tight">FESTIVAL PASS</span>
+              </div>
+              <span class="text-[9px] font-mono text-slate-400">#${item.id.slice(-5).toUpperCase()}</span>
+            </div>
+
+            <!-- Card Inner Body -->
+            <div class="id-card-body">
+              <!-- Avatar -->
+              <div class="card-avatar-container">
+                <div class="h-10 w-10 text-slate-300 flex items-center justify-center">
+                  <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </div>
+              </div>
+
+              <!-- General Info -->
+              <div class="flex flex-col items-center">
+                <span class="text-[9px] font-extrabold text-slate-400 tracking-wider">STUDENT COMPETITOR</span>
+                <h3 class="text-sm font-black text-slate-900 mt-1 leading-snug tracking-tight font-display max-w-[180px] truncate" title="${item.name}">${item.name}</h3>
+                ${detailsHTML}
+              </div>
+
+              <!-- Team ID Shield -->
+              <div class="bg-slate-50 border border-slate-100 px-3 py-1 rounded-full text-[10px] font-black text-slate-600 tracking-wide mt-1">
+                TEAM: <span class="font-mono text-slate-900 font-extrabold uppercase">${item.teamId ? item.teamId.toUpperCase() : 'STAFF'}</span>
+              </div>
+            </div>
+
+            <!-- Footer Badge -->
+            <div class="id-card-footer">
+              <div class="flex flex-col text-left">
+                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">VALIDATED ID CARD</span>
+                <span class="barcode-text uppercase mt-1">${item.chestNumber || item.id.slice(-5)}</span>
+              </div>
+              <div class="qr-placeholder">
+                <img src="${qrUrl}" alt="Card verification QR code" class="h-11 w-11 object-contain">
+              </div>
+            </div>
+          </div>
+        `;
+
+        div.querySelector('.card-checkbox').onchange = updateSelectedCount;
+        deck.appendChild(div);
+      });
+
+      updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+      const selected = document.querySelectorAll('.card-checkbox:checked').length;
+      document.getElementById('selected-count-label').textContent = `${selected} cards selected`;
+      
+      const allBox = document.getElementById('select-all-cards');
+      const totalChecks = document.querySelectorAll('.card-checkbox').length;
+      allBox.checked = totalChecks > 0 && selected === totalChecks;
+    }
+
+    function setupPrinting() {
+      const printBtn = document.getElementById('print-selected-btn');
+      printBtn.onclick = () => {
+        const checkedBoxes = document.querySelectorAll('.card-checkbox:checked');
+        if (checkedBoxes.length === 0) {
+          alert("Please select at least one ID card to print.");
+          return;
+        }
+
+        const printZone = document.getElementById('print-zone');
+        printZone.innerHTML = '';
+
+        const grid = document.createElement('div');
+        grid.className = "id-cards-grid";
+
+        checkedBoxes.forEach(cb => {
+          const cardId = cb.getAttribute('data-id');
+          const cardContainer = document.getElementById(`card-${cardId}`);
+          
+          if (cardContainer) {
+            const clone = cardContainer.cloneNode(true);
+            grid.appendChild(clone);
+          }
+        });
+
+        printZone.appendChild(grid);
+        
+        printZone.classList.remove('hidden');
+        window.print();
+        printZone.classList.add('hidden');
+        printZone.innerHTML = '';
+      };
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

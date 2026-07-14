@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scoreboard Recalculation Node - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Loading Calculation Panel...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Banner & Recalculate CTA -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display" id="page-title-recalc">Scoreboard Aggregation Terminal</h1>
+            <p class="text-xs text-slate-400 font-medium" id="page-subtitle-recalc">Compile overall point tallies, subdivision metrics, and Arts/Sports standings from published competition results.</p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button id="lang-toggle-btn" class="btn btn-secondary text-xs py-2.5 px-3 border border-slate-200 cursor-pointer">
+              <span>English / മലയാളം</span>
+            </button>
+            <button id="trigger-recalc-btn" class="btn btn-accent bg-slate-900 text-white hover:bg-slate-800 text-xs py-2.5 px-5 font-bold cursor-pointer flex items-center space-x-2 shadow-sm">
+              <svg class="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19v-3H18"/></svg>
+              <span id="btn-recalc-text">Trigger Scoreboard Recalculation</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Terminal Logs Panel -->
+        <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 text-slate-300 font-mono text-xs space-y-4 shadow-md">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="font-bold text-slate-200 text-xs uppercase tracking-wider" id="lbl-recalc-logs">Active Tabulator Stream Logs</span>
+            </div>
+            <button id="clear-terminal-btn" class="text-[10px] text-slate-500 hover:text-slate-350 cursor-pointer">Clear Terminal</button>
+          </div>
+          
+          <div id="terminal-content" class="h-44 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-slate-800 pr-1">
+            <div class="text-slate-500">&gt; Tabulation core standby. Click 'Trigger Scoreboard Recalculation' to begin...</div>
+          </div>
+        </div>
+
+        <!-- Tabulated Championship Scoreboard -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider" id="lbl-score-table">Tabulated Championship Scoreboard</h2>
+            <span id="last-update-time" class="text-[10px] text-slate-400 font-semibold font-mono">Last Recalculation: Never</span>
+          </div>
+
+          <div class="table-container overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[1000px]">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4" id="th-rank">Rank</th>
+                  <th class="px-6 py-4" id="th-team">Team</th>
+                  <th class="px-6 py-4" id="th-arts">Arts Standings (Stage | Non-Stage | Total)</th>
+                  <th class="px-6 py-4" id="th-sports">Sports Metrics (Track | Field | Team | In | Out | Total)</th>
+                  <th class="px-6 py-4" id="th-adj">Adjustments (Bonus | Deductions)</th>
+                  <th class="px-6 py-4 text-right" id="th-total">Overall Points</th>
+                </tr>
+              </thead>
+              <tbody id="scoreboard-table-body" class="divide-y divide-slate-100 text-xs text-slate-700">
+                <tr>
+                  <td colspan="6" class="px-6 py-12 text-center text-slate-400" id="lbl-scoreboard-empty">No calculated summary documents found. Run a recalculation above to populate.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { getTeamTotals, getActiveFestivalId } from "/assets/js/firestore-service.js";
+    import { recalculateChampionshipTotals } from "/assets/js/championship-engine.js";
+
+    let currentLang = localStorage.getItem('meeladpulse_lang') || 'en';
+
+    const trans = {
+      en: {
+        title: "Scoreboard Aggregation Terminal",
+        subtitle: "Compile overall point tallies, subdivision metrics, and Arts/Sports standings from published competition results.",
+        btnTrigger: "Trigger Scoreboard Recalculation",
+        btnRunning: "Running Tabulator...",
+        lblLogs: "Active Tabulator Stream Logs",
+        lblScore: "Tabulated Championship Scoreboard",
+        thRank: "Rank",
+        thTeam: "Team",
+        thArts: "Arts Standings (Stage | Non-Stage | Total)",
+        thSports: "Sports Metrics (Track | Field | Team | In | Out | Total)",
+        thAdj: "Adjustments (Bonus | Deductions)",
+        thTotal: "Overall Points",
+        empty: "No calculated summary documents found. Run a recalculation above to populate.",
+        cleared: "Terminal log session cleared.",
+        initLog: "Tabulation core standby. Click 'Trigger Scoreboard Recalculation' to begin..."
+      },
+      ml: {
+        title: "സ്കോർബോർഡ് പുനർമൂല്യനിർണ്ണയം",
+        subtitle: "പ്രസിദ്ധീകരിച്ച ഫലങ്ങളിൽ നിന്നും സബ് ഡിവിഷൻ പോയിന്റുകൾ, കലാ-കായിക മത്സര പോയിന്റുകൾ എന്നിവ കണക്കുകൂട്ടി അപ്ഡേറ്റ് ചെയ്യുക.",
+        btnTrigger: "സ്കോർബോർഡ് കണക്കുകൂട്ടുക",
+        btnRunning: "പോയിന്റുകൾ തിട്ടപ്പെടുത്തുന്നു...",
+        lblLogs: "ലൈവ് ടാബുലേഷൻ ലോഗുകൾ",
+        lblScore: "ചാമ്പ്യൻഷിപ്പ് സ്കോർബോർഡ്",
+        thRank: "റാങ്ക്",
+        thTeam: "ടീം",
+        thArts: "കലാമേള പോയിന്റുകൾ (സ്റ്റേജ് | ഓഫ്-സ്റ്റേജ് | ആകെ)",
+        thSports: "കായികമേള പോയിന്റുകൾ (ട്രാക്ക് | ഫീൽഡ് | ടീം | ഇൻ | ഔട്ട് | ആകെ)",
+        thAdj: "മാറ്റങ്ങൾ (ബോണസ് | പിഴകൾ)",
+        thTotal: "ആകെ പോയിന്റുകൾ",
+        empty: "സ്കോർബോർഡ് രേഖകളൊന്നും കണക്കാക്കിയിട്ടില്ല. മുകളിലെ ബട്ടൺ ഉപയോഗിച്ച് പോയിന്റുകൾ കണക്കുകൂട്ടുക.",
+        cleared: "ടെർമിനൽ ലോഗുകൾ മായ്ച്ചു.",
+        initLog: "ടാബുലേഷൻ സിസ്റ്റം തയ്യാറാണ്. സ്കോർബോർഡ് കണക്കുകൂട്ടാൻ ആരംഭിക്കുക..."
+      }
+    };
+
+    function applyTranslations() {
+      const t = trans[currentLang];
+      document.getElementById('page-title-recalc').textContent = t.title;
+      document.getElementById('page-subtitle-recalc').textContent = t.subtitle;
+      
+      const btn = document.getElementById('trigger-recalc-btn');
+      if (!btn.disabled) {
+        document.getElementById('btn-recalc-text').textContent = t.btnTrigger;
+      } else {
+        document.getElementById('btn-recalc-text').textContent = t.btnRunning;
+      }
+
+      document.getElementById('lbl-recalc-logs').textContent = t.lblLogs;
+      document.getElementById('lbl-score-table').textContent = t.lblScore;
+      
+      document.getElementById('th-rank').textContent = t.thRank;
+      document.getElementById('th-team').textContent = t.thTeam;
+      document.getElementById('th-arts').textContent = t.thArts;
+      document.getElementById('th-sports').textContent = t.thSports;
+      document.getElementById('th-adj').textContent = t.thAdj;
+      document.getElementById('th-total').textContent = t.thTotal;
+    }
+
+    const triggerBtn = document.getElementById('trigger-recalc-btn');
+    const clearBtn = document.getElementById('clear-terminal-btn');
+    const terminal = document.getElementById('terminal-content');
+    const tableBody = document.getElementById('scoreboard-table-body');
+    const timeLabel = document.getElementById('last-update-time');
+
+    function logToTerminal(message, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      const line = document.createElement('div');
+      
+      if (type === 'success') {
+        line.className = "text-emerald-400";
+        line.innerHTML = `[${time}] <span class="bg-emerald-950 px-1 py-0.5 rounded font-bold">SUCCESS</span> ${message}`;
+      } else if (type === 'error') {
+        line.className = "text-rose-400 font-bold";
+        line.innerHTML = `[${time}] <span class="bg-rose-950 px-1 py-0.5 rounded">ERROR</span> ${message}`;
+      } else if (type === 'header') {
+        line.className = "text-blue-400 font-bold border-b border-slate-800 pb-1 mt-2";
+        line.innerHTML = `&gt;&gt; ${message}`;
+      } else {
+        line.className = "text-slate-300";
+        line.innerHTML = `[${time}] [INFO] ${message}`;
+      }
+      
+      terminal.appendChild(line);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    async function initRecalculationDashboard() {
+      try {
+        await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+        applyTranslations();
+
+        // Language toggle
+        document.getElementById('lang-toggle-btn').addEventListener('click', () => {
+          currentLang = currentLang === 'en' ? 'ml' : 'en';
+          localStorage.setItem('meeladpulse_lang', currentLang);
+          applyTranslations();
+          loadScoreboard();
+        });
+
+        // Clear terminal
+        clearBtn.addEventListener('click', () => {
+          const t = trans[currentLang];
+          terminal.innerHTML = `<div class="text-slate-500">&gt; ${t.cleared}</div>`;
+        });
+
+        // Initial scoreboard load
+        await loadScoreboard();
+
+        // Trigger Recalculation
+        triggerBtn.addEventListener('click', async () => {
+          const t = trans[currentLang];
+          triggerBtn.disabled = true;
+          document.getElementById('btn-recalc-text').textContent = t.btnRunning;
+          
+          logToTerminal("Starting official championship recalculation flow...", "header");
+          logToTerminal(`Target cluster: festivals/${getActiveFestivalId()}/teamTotals/`);
+          
+          try {
+            logToTerminal("Fetching core datasets: Teams, Competitions, Results, Bonuses, Penalties...");
+            
+            // Execute the batch calculation service
+            const totals = await recalculateChampionshipTotals();
+            
+            logToTerminal(`Tabulation successful! Processed points for ${totals.length} teams.`);
+            logToTerminal("Recalculating stage and non-stage splits for Arts divisions...", "info");
+            logToTerminal("Compiling track, field, team event, and indoor/outdoor points for Sports divisions...", "info");
+            logToTerminal("Syncing approved team point deduction penalties and extra bonus points...", "info");
+            logToTerminal("Ranking teams dynamically and resolving joint rank tie contingencies...", "info");
+            logToTerminal("Saving tabulated summary documents to Cloud Firestore...", "info");
+            
+            logToTerminal("All teamTotals documents committed safely to DB cluster.", "success");
+            
+            await loadScoreboard();
+          } catch (err) {
+            logToTerminal(`Championship calculation process halted: ${err.message}`, "error");
+            alert("Tabulator process aborted: " + err.message);
+          } finally {
+            triggerBtn.disabled = false;
+            document.getElementById('btn-recalc-text').textContent = t.btnTrigger;
+          }
+        });
+
+      } catch (error) {
+        console.error("Initialization error:", error);
+      }
+    }
+
+    async function loadScoreboard() {
+      const t = trans[currentLang];
+      try {
+        const list = await getTeamTotals();
+        
+        if (list.length === 0) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="6" class="px-6 py-12 text-center text-slate-400" id="lbl-scoreboard-empty">${t.empty}</td>
+            </tr>`;
+          return;
+        }
+
+        // Sort by rank
+        list.sort((a, b) => a.rank - b.rank);
+
+        // Update timestamp
+        if (list[0].updatedAt) {
+          const date = list[0].updatedAt.toDate ? list[0].updatedAt.toDate() : new Date(list[0].updatedAt);
+          timeLabel.textContent = `Last Recalculation: ${date.toLocaleString()}`;
+        }
+
+        tableBody.innerHTML = "";
+        list.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+          // Rank styling
+          let rankHtml = `<span class="font-mono font-bold text-slate-500">${item.rank}</span>`;
+          if (item.rank === 1) rankHtml = `<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-100 text-amber-800 font-extrabold text-xs">🥇 1</span>`;
+          else if (item.rank === 2) rankHtml = `<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-200 text-slate-800 font-extrabold text-xs">🥈 2</span>`;
+          else if (item.rank === 3) rankHtml = `<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-50 text-amber-900 font-extrabold text-xs">🥉 3</span>`;
+
+          row.innerHTML = `
+            <td class="px-6 py-4">${rankHtml}</td>
+            <td class="px-6 py-4">
+              <div class="flex items-center space-x-2.5">
+                <span class="h-3.5 w-3.5 rounded-full border border-white shadow-xs" style="background-color: ${item.teamColour || '#10b981'}"></span>
+                <div>
+                  <div class="font-extrabold text-slate-850">${item.teamName}</div>
+                  <div class="text-[10px] text-slate-400 font-semibold font-mono">${item.teamCode}</div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold text-slate-800 font-mono">${item.artsTotal || 0}</span>
+                <span class="text-[10px] text-slate-400 font-medium">(${item.stagePoints || 0} Stage / ${item.nonStagePoints || 0} Non-Stage)</span>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold text-slate-800 font-mono">${item.sportsTotal || 0}</span>
+                <span class="text-[10px] text-slate-400 font-medium">(${item.trackPoints || 0} Trk / ${item.fieldPoints || 0} Fld / ${item.teamEventPoints || 0} Grp / ${item.indoorPoints || 0} In / ${item.outdoorPoints || 0} Out)</span>
+              </div>
+            </td>
+            <td class="px-6 py-4 font-mono font-bold text-[11px] space-x-2">
+              <span class="text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">+${item.bonusPoints || 0}</span>
+              <span class="text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">-${item.penaltyPoints || 0}</span>
+            </td>
+            <td class="px-6 py-4 text-right font-mono font-extrabold text-slate-900 text-sm">
+              ${item.overallPoints || 0} <span class="text-[10px] text-slate-400 font-normal">Pts</span>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+      } catch (err) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-rose-500">Error loading scoreboard: ${err.message}</td>
+          </tr>`;
+      }
+    }
+
+    initRecalculationDashboard();
+  </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with role-based permissions",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The Firebase Authentication UID of the user." },
+        "name": { "type": "string", "description": "The user's display name." },
+        "email": { "type": "string", "description": "The user's email address." },
+        "role": { "type": "string", "enum": ["admin", "judge", "teamLeader"] },
+        "teamId": { "type": "string", "description": "Associated team ID if team leader." },
+        "active": { "type": "boolean", "description": "Whether the user's account is active." },
+        "permissions": { "type": "array", "description": "List of explicit action strings." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "role", "active"]
+    },
+    "Invitation": {
+      "title": "Invitation",
+      "description": "User activation invite records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "teamId": { "type": "string" },
+        "tokenHash": { "type": "string" },
+        "used": { "type": "boolean" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "name", "role", "tokenHash", "used", "expiresAt"]
+    },
+    "Festival": {
+      "title": "Festival",
+      "description": "Event scope representing a single festival",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "code": { "type": "string" },
+        "description": { "type": "string" },
+        "venue": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "status": { "type": "string" },
+        "active": { "type": "boolean" },
+        "selectedAsCurrent": { "type": "boolean" }
+      },
+      "required": ["id", "title", "code", "status", "active"]
+    },
+    "MasterStudent": {
+      "title": "MasterStudent",
+      "description": "Master list student candidate before event specific registration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "admissionNumber": { "type": "string" },
+        "fullName": { "type": "string" },
+        "gender": { "type": "string", "enum": ["male", "female"] },
+        "currentClass": { "type": "string" },
+        "phone": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["id", "admissionNumber", "fullName", "gender", "active"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Primary user directory."
+    },
+    "/invitations/{invitationId}": {
+      "schema": "Invitation",
+      "description": "Activation tokens for inviting users."
+    },
+    "/students/{studentId}": {
+      "schema": "MasterStudent",
+      "description": "Master student candidate registry."
+    },
+    "/festivals/{festivalId}": {
+      "schema": "Festival",
+      "description": "Root festival profile."
+    },
+    "/festivals/{festivalId}/divisions/{divisionId}": {
+      "schema": "object",
+      "description": "Divisions within a festival."
+    },
+    "/festivals/{festivalId}/subdivisions/{subdivisionId}": {
+      "schema": "object",
+      "description": "Subdivisions within a division."
+    },
+    "/festivals/{festivalId}/categories/{categoryId}": {
+      "schema": "object",
+      "description": "Student categories (Junior, Senior, etc)."
+    },
+    "/festivals/{festivalId}/teams/{teamId}": {
+      "schema": "object",
+      "description": "Competing institutional teams."
+    },
+    "/festivals/{festivalId}/stages/{stageId}": {
+      "schema": "object",
+      "description": "Venues/Stages."
+    },
+    "/festivals/{festivalId}/festStudents/{festStudentId}": {
+      "schema": "object",
+      "description": "Registered students in this specific festival."
+    },
+    "/festivals/{festivalId}/competitions/{competitionId}": {
+      "schema": "object",
+      "description": "All events/competitions in this festival."
+    },
+    "/festivals/{festivalId}/entries/{entryId}": {
+      "schema": "object",
+      "description": "Entries/registrations for a competition."
+    },
+    "/festivals/{festivalId}/judgeMarks/{judgeMarkId}": {
+      "schema": "object",
+      "description": "Judges raw mark sheets."
+    },
+    "/festivals/{festivalId}/results/{resultId}": {
+      "schema": "object",
+      "description": "Official tabulated results of competitions."
+    },
+    "/festivals/{festivalId}/teamTotals/{teamTotalId}": {
+      "schema": "object",
+      "description": "Tabulated scoreboard and category totals."
+    },
+    "/festivals/{festivalId}/auditLogs/{logId}": {
+      "schema": "object",
+      "description": "Immutable security and audit trail logs."
+    },
+    "/festivals/{festivalId}/correctionRequests/{requestId}": {
+      "schema": "object",
+      "description": "Correction appeals raised by team leaders."
+    }
+  }
+}

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Published Results - Team Leader Desk</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen animate-fade-in">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Verifying team privileges...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Section -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Official Published Results</h1>
+            <p class="text-xs text-slate-400 font-medium">Review official scorecards and points earned by your team: <span id="auth-team-label" class="font-bold text-emerald-600 font-mono">Loading Team...</span></p>
+          </div>
+        </div>
+
+        <!-- Standings summary stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex items-center space-x-4">
+            <div class="h-12 w-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5a2 2 0 10-2 2h2zm0 0h4l-1.9 3.8a1 1 0 01-.8.5H12m0 0H8l1.9 3.8a1 1 0 00.8.5H12"/></svg>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Total Team Points</p>
+              <h3 id="stat-total-points" class="text-2xl font-black text-slate-900 font-mono">0</h3>
+            </div>
+          </div>
+          <div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex items-center space-x-4">
+            <div class="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Podium Placements</p>
+              <h3 id="stat-podiums" class="text-2xl font-black text-slate-900 font-mono">0</h3>
+            </div>
+          </div>
+          <div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex items-center space-x-4">
+            <div class="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">A-Grades Won</p>
+              <h3 id="stat-a-grades" class="text-2xl font-black text-slate-900 font-mono">0</h3>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden p-6 space-y-4">
+          <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-display pb-4 border-b border-slate-100">Performance Log</h2>
+
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4">Competition</th>
+                  <th class="px-6 py-4">Participant Name</th>
+                  <th class="px-6 py-4">Position</th>
+                  <th class="px-6 py-4">Grade</th>
+                  <th class="px-6 py-4 font-mono text-right">Points Earned</th>
+                </tr>
+              </thead>
+              <tbody id="results-table-body" class="divide-y divide-slate-100 text-xs">
+                <tr>
+                  <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">Scanning score records...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getCompetitions } from "/assets/js/firestore-service.js";
+
+    let leaderProfile = null;
+    let assignedTeamId = null;
+    let allComps = [];
+
+    async function initPage() {
+      try {
+        leaderProfile = await verifyUserRole(['teamLeader']);
+        assignedTeamId = leaderProfile.teamId;
+
+        if (!assignedTeamId) {
+          window.location.replace('/unauthorized.html?reason=no_team_id');
+          return;
+        }
+
+        document.getElementById('auth-team-label').textContent = assignedTeamId.toUpperCase();
+
+        await loadPortalLayout('team');
+        initializeNavigation();
+
+        await loadCompetitions();
+        await loadPublishedResults();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Results page loading failed:", err);
+      }
+    }
+
+    async function loadCompetitions() {
+      try {
+        allComps = await getCompetitions();
+      } catch (err) {
+        console.error("Competitions query failed:", err);
+      }
+    }
+
+    async function loadPublishedResults() {
+      const tbody = document.getElementById('results-table-body');
+      tbody.innerHTML = '';
+
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+      try {
+        // Query public results
+        const snap = await getDocs(collection(db, `festivals/${festId}/publicData/results`));
+        
+        let matchCount = 0;
+        let totalPoints = 0;
+        let podiums = 0;
+        let aGrades = 0;
+
+        snap.forEach(d => {
+          const res = d.data();
+          // Find our team participants in this published result
+          const teamParticipants = (res.participants || []).filter(p => p.teamId === assignedTeamId);
+
+          teamParticipants.forEach(p => {
+            matchCount++;
+            const comp = allComps.find(c => c.id === res.competitionId);
+            const compName = comp ? comp.name : "Unknown Competition";
+            const compCode = comp ? (comp.code || 'CODE') : 'CODE';
+
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+            let posBadge = '<span class="text-slate-400 font-semibold font-mono">None</span>';
+            if (p.position === '1st') {
+              posBadge = '<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">1st Place</span>';
+              podiums++;
+            } else if (p.position === '2nd') {
+              posBadge = '<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-slate-150 text-slate-700 border border-slate-200">2nd Place</span>';
+              podiums++;
+            } else if (p.position === '3rd') {
+              posBadge = '<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-800 border border-orange-200">3rd Place</span>';
+              podiums++;
+            } else if (p.position && p.position !== 'None') {
+              posBadge = `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 font-mono">${p.position}</span>`;
+            }
+
+            let gradeBadge = '<span class="text-slate-400 font-semibold font-mono">None</span>';
+            if (p.grade === 'A') {
+              gradeBadge = '<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 font-mono">Grade A</span>';
+              aGrades++;
+            } else if (p.grade === 'B') {
+              gradeBadge = '<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200 font-mono">Grade B</span>';
+            } else if (p.grade === 'C') {
+              gradeBadge = '<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 font-mono">Grade C</span>';
+            }
+
+            const pointsVal = Number(p.teamPoints) || 0;
+            totalPoints += pointsVal;
+
+            tr.innerHTML = `
+              <td class="px-6 py-4">
+                <div class="font-bold text-slate-900">${compName}</div>
+                <div class="text-[10px] font-mono font-bold text-emerald-600 uppercase mt-0.5">${compCode}</div>
+              </td>
+              <td class="px-6 py-4 font-bold text-slate-800">${p.displayName || 'Participant'}</td>
+              <td class="px-6 py-4">${posBadge}</td>
+              <td class="px-6 py-4">${gradeBadge}</td>
+              <td class="px-6 py-4 font-mono font-black text-right text-slate-800">${pointsVal}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        });
+
+        document.getElementById('stat-total-points').textContent = totalPoints;
+        document.getElementById('stat-podiums').textContent = podiums;
+        document.getElementById('stat-a-grades').textContent = aGrades;
+
+        if (matchCount === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No performance scorecards published for your team yet.</td>
+            </tr>
+          `;
+        }
+
+      } catch (err) {
+        console.error("Could not fetch published results for team:", err);
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-rose-600 font-bold">Failed to load result log.</td></tr>';
+      }
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

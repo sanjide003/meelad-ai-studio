@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Assignments - Judge Panel</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700 font-display">Loading assigned items...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Section -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="space-y-1">
+            <h1 id="title-main" class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">My Assignments</h1>
+            <p id="desc-main" class="text-xs text-slate-400 font-medium">Only active, verified assignments are accessible.</p>
+          </div>
+          <!-- Language Selector Switch -->
+          <div class="flex items-center space-x-2">
+            <button id="lang-btn-en" class="px-2.5 py-1 text-[10px] font-bold border rounded-lg hover:bg-slate-50 cursor-pointer">EN</button>
+            <button id="lang-btn-ml" class="px-2.5 py-1 text-[10px] font-bold border rounded-lg hover:bg-slate-50 cursor-pointer">മലയാളം</button>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div class="w-full md:max-w-xs relative">
+            <input type="text" id="search-input" placeholder="Search by name or code..." class="form-input text-xs pl-8">
+            <div class="absolute left-2.5 top-2.5 text-slate-400">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 w-full md:w-auto">
+            <select id="status-filter" class="form-input text-xs cursor-pointer">
+              <option value="all">All Assignments</option>
+              <option value="pending">Pending Scoring</option>
+              <option value="completed">Completed Sheets</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Assignments Table / Cards -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+          <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+            <h2 id="table-header-title" class="text-xs font-bold text-slate-400 uppercase tracking-widest">Assigned Competitions</h2>
+          </div>
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4">Code</th>
+                  <th class="px-6 py-4">Competition Name</th>
+                  <th class="px-6 py-4">Required Judges</th>
+                  <th class="px-6 py-4">Status</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="assignments-table-body" class="divide-y divide-slate-100 text-xs">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAssignmentsForJudge, getJudgeSafeCompetition } from "/assets/js/judge-service.js";
+    import { getJudgeMarksForCompetitionAndJudge } from "/assets/js/mark-service.js";
+    import { getEntries } from "/assets/js/firestore-service.js";
+    import { en } from "/assets/js/translations-en.js";
+    import { ml } from "/assets/js/translations-ml.js";
+
+    let judgeProfile = null;
+    let rawAssignments = [];
+    let currentLanguage = localStorage.getItem('meeladpulse_lang') || 'en';
+
+    function getTrans(key) {
+      const dict = currentLanguage === 'ml' ? ml : en;
+      return dict[key] || key;
+    }
+
+    async function initPage() {
+      try {
+        judgeProfile = await verifyUserRole(['judge']);
+        await loadPortalLayout('judge');
+        initializeNavigation();
+        setupLanguageControls();
+        applyTranslations();
+        
+        await loadAssignments();
+      } catch (err) {
+        console.error("Initialization failure:", err);
+      }
+    }
+
+    function setupLanguageControls() {
+      const btnEn = document.getElementById('lang-btn-en');
+      const btnMl = document.getElementById('lang-btn-ml');
+      
+      const updateButtons = () => {
+        if (currentLanguage === 'ml') {
+          btnMl.className = "px-2.5 py-1 text-[10px] font-bold border border-emerald-500 bg-emerald-50 text-emerald-700 rounded-lg cursor-pointer";
+          btnEn.className = "px-2.5 py-1 text-[10px] font-bold border rounded-lg hover:bg-slate-50 cursor-pointer text-slate-500";
+        } else {
+          btnEn.className = "px-2.5 py-1 text-[10px] font-bold border border-emerald-500 bg-emerald-50 text-emerald-700 rounded-lg cursor-pointer";
+          btnMl.className = "px-2.5 py-1 text-[10px] font-bold border rounded-lg hover:bg-slate-50 cursor-pointer text-slate-500";
+        }
+      };
+
+      btnEn.onclick = () => {
+        currentLanguage = 'en';
+        localStorage.setItem('meeladpulse_lang', 'en');
+        updateButtons();
+        applyTranslations();
+        renderAssignments();
+      };
+
+      btnMl.onclick = () => {
+        currentLanguage = 'ml';
+        localStorage.setItem('meeladpulse_lang', 'ml');
+        updateButtons();
+        applyTranslations();
+        renderAssignments();
+      };
+
+      updateButtons();
+    }
+
+    function applyTranslations() {
+      document.getElementById('title-main').textContent = getTrans('myAssignments');
+      document.getElementById('desc-main').textContent = getTrans('onlyActiveAssignments');
+      document.getElementById('table-header-title').textContent = getTrans('assignedComps');
+    }
+
+    async function loadAssignments() {
+      const tbody = document.getElementById('assignments-table-body');
+      tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">Loading assigned items...</td></tr>';
+
+      try {
+        const assigns = await getAssignmentsForJudge(judgeProfile.uid);
+        rawAssignments = [];
+
+        // Load entry count for each
+        const allEntries = await getEntries();
+
+        for (const a of assigns) {
+          try {
+            const comp = await getJudgeSafeCompetition(a.competitionId);
+            const judgeMarks = await getJudgeMarksForCompetitionAndJudge(a.competitionId, judgeProfile.uid);
+            const compEntries = allEntries.filter(e => e.competitionId === a.competitionId);
+            
+            // Check completed count
+            const completedCount = judgeMarks.filter(m => m.submissionStatus === 'final').length;
+            const totalCount = compEntries.length;
+            const isCompleted = totalCount > 0 && completedCount === totalCount;
+
+            rawAssignments.push({
+              assignment: a,
+              competition: comp,
+              totalEntries: totalCount,
+              completedCount,
+              isCompleted
+            });
+          } catch (e) {
+            console.error("Skipped loading competition assignment item:", a.competitionId, e);
+          }
+        }
+
+        renderAssignments();
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Load assignments error:", err);
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-rose-600 font-bold">Failed to load assignments.</td></tr>';
+        document.getElementById('global-page-loader').classList.add('hidden');
+      }
+    }
+
+    function renderAssignments() {
+      const tbody = document.getElementById('assignments-table-body');
+      tbody.innerHTML = '';
+
+      const querySearch = document.getElementById('search-input').value.toLowerCase();
+      const statusFilter = document.getElementById('status-filter').value;
+
+      const filtered = rawAssignments.filter(item => {
+        const matchSearch = item.competition.name.toLowerCase().includes(querySearch) || item.competition.code.toLowerCase().includes(querySearch);
+        const matchStatus = statusFilter === 'all' 
+          || (statusFilter === 'completed' && item.isCompleted)
+          || (statusFilter === 'pending' && !item.isCompleted);
+        return matchSearch && matchStatus;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">No matching assignments.</td></tr>';
+        return;
+      }
+
+      filtered.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+        const statusBadge = item.isCompleted 
+          ? `<span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700">${getTrans('finalSubmittedSheets')} (${item.completedCount}/${item.totalEntries})</span>`
+          : `<span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700">${getTrans('draftSheets')} (${item.completedCount}/${item.totalEntries})</span>`;
+
+        tr.innerHTML = `
+          <td class="px-6 py-4 font-mono font-bold text-emerald-600">${item.competition.code}</td>
+          <td class="px-6 py-4">
+            <div class="font-bold text-slate-900">${item.competition.name}</div>
+            <div class="text-[10px] text-slate-400 font-medium">${item.competition.performanceType || 'Oral'} • ${item.competition.competitionType || 'Individual'}</div>
+          </td>
+          <td class="px-6 py-4 font-bold text-slate-600">${item.competition.judgeCountRequired}</td>
+          <td class="px-6 py-4">${statusBadge}</td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex items-center justify-end space-x-2">
+              <a href="/judge/competition-details.html?compId=${item.competition.id}" class="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg text-[10px] font-bold hover:bg-slate-50 transition">
+                ${getTrans('rules')}
+              </a>
+              <a href="/judge/mark-entry.html?compId=${item.competition.id}" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[10px] font-bold transition">
+                ${getTrans('startEvaluation')}
+              </a>
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Bind searches
+    document.getElementById('search-input').oninput = renderAssignments;
+    document.getElementById('status-filter').onchange = renderAssignments;
+
+    initPage();
+  </script>
+</body>
+</html>

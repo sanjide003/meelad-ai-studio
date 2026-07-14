@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <!-- Global page loader -->
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Verifying administrator credentials...</p>
+    </div>
+  </div>
+
+  <!-- Main Portal Layout -->
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    
+    <!-- Sidebar Container -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Right Side Container (Header + Content) -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      
+      <!-- Header Container -->
+      <div id="portal-header"></div>
+
+      <!-- Main Action Content -->
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Welcome Banner -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">System Overview</h1>
+            <p class="text-xs text-slate-400 font-medium">Head Administrator Terminal • Connected Festival Workspace</p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <a href="/admin/user-invitations.html" class="btn btn-accent py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+              <span>Invite New User</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Quick Stats Bento Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="card-panel flex items-center space-x-4">
+            <div class="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Registered Users</p>
+              <p id="stat-users-count" class="text-xl font-extrabold text-slate-900 font-display mt-1">...</p>
+            </div>
+          </div>
+
+          <div class="card-panel flex items-center space-x-4">
+            <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 11-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Pending Invites</p>
+              <p id="stat-invitations-count" class="text-xl font-extrabold text-slate-900 font-display mt-1">...</p>
+            </div>
+          </div>
+
+          <div class="card-panel flex items-center space-x-4">
+            <div class="h-10 w-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Active Teams</p>
+              <p id="stat-teams-count" class="text-xl font-extrabold text-slate-900 font-display mt-1">...</p>
+            </div>
+          </div>
+
+          <div class="card-panel flex items-center space-x-4">
+            <div class="h-10 w-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Competitions</p>
+              <p id="stat-competitions-count" class="text-xl font-extrabold text-slate-900 font-display mt-1">...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Portal Info Panel -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
+          <h2 class="text-lg font-bold text-slate-900 font-display">Administrator Control Center</h2>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Welcome to the MeeladPulse system terminal. Use the left sidebar panel to browse active rosters, modify user activation keys, or issue fresh cryptographic invitations. Restrict access parameters strictly to authorized festival nodes.
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <a href="/admin/users.html" class="block p-4 border border-slate-100 hover:border-slate-300 rounded-xl transition-all">
+              <span class="text-xs font-bold text-slate-800 block">Manage Active Accounts</span>
+              <span class="text-[11px] text-slate-400 mt-1 block">Toggle activation keys, audit profile parameters, and modify user states.</span>
+            </a>
+            <a href="/admin/user-invitations.html" class="block p-4 border border-slate-100 hover:border-slate-300 rounded-xl transition-all">
+              <span class="text-xs font-bold text-slate-800 block">Cryptographic User Invitations</span>
+              <span class="text-[11px] text-slate-400 mt-1 block">Generate 32-byte secure activation tokens, hash them, and invite Judges or Team Leaders.</span>
+            </a>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    async function initDashboard() {
+      try {
+        // 1. Verify credentials and role
+        const profile = await verifyUserRole(['admin']);
+        
+        // 2. Load layout templates
+        await loadPortalLayout('admin');
+
+        // 3. Initialize responsive navigation engines
+        initializeNavigation();
+
+        // 4. Load basic quick statistics from Firestore
+        loadQuickStatistics();
+      } catch (err) {
+        console.error("Dashboard initialize failed:", err);
+      }
+    }
+
+    async function loadQuickStatistics() {
+      try {
+        const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+
+        // Fetch Users count
+        const usersSnap = await getDocs(collection(db, "users"));
+        document.getElementById('stat-users-count').textContent = usersSnap.size;
+
+        // Fetch Invitations count
+        const invitesSnap = await getDocs(collection(db, "userInvitations"));
+        document.getElementById('stat-invitations-count').textContent = invitesSnap.size;
+
+        // Fetch Teams count inside selected festival
+        if (festId) {
+          const teamsSnap = await getDocs(collection(db, `festivals/${festId}/teams`));
+          document.getElementById('stat-teams-count').textContent = teamsSnap.size;
+
+          const compsSnap = await getDocs(collection(db, `festivals/${festId}/competitions`));
+          document.getElementById('stat-competitions-count').textContent = compsSnap.size;
+        } else {
+          document.getElementById('stat-teams-count').textContent = 'N/A';
+          document.getElementById('stat-competitions-count').textContent = 'N/A';
+        }
+
+      } catch (err) {
+        console.warn("Could not retrieve statistics:", err);
+      }
+    }
+
+    // Run core boots sequence
+    initDashboard();
+  </script>
+</body>
+</html>

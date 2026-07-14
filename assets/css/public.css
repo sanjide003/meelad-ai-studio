@@ -1,0 +1,42 @@
+/* MeeladPulse Public CSS overrides & customized layout elements */
+
+.public-card {
+  @apply bg-white rounded-2xl border border-slate-100 p-6 shadow-xs hover:shadow-md transition-all duration-300;
+}
+
+.public-gradient-border {
+  position: relative;
+  border-radius: 1rem;
+  background: linear-gradient(to right, #6366f1, #4f46e5);
+  padding: 1px;
+}
+
+.public-gradient-bg {
+  @apply bg-slate-50 rounded-2xl p-6;
+}
+
+/* Touch targets optimization for mobile viewports */
+@media (max-width: 768px) {
+  .touch-target {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Custom fade animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

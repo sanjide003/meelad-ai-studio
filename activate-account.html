@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Activate Account - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 login-bg">
+  
+  <!-- Global loading overlay -->
+  <div id="global-page-loader" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden">
+    <div class="bg-white p-5 rounded-2xl flex flex-col items-center space-y-3 shadow-2xl">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Activating your registration...</p>
+    </div>
+  </div>
+
+  <div class="max-w-md w-full bg-white rounded-2xl login-card p-8 space-y-6">
+    <div class="text-center space-y-2">
+      <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500 text-white font-extrabold text-lg font-display mb-1">
+        MP
+      </div>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Account Activation</h1>
+      <p class="text-xs text-slate-400 font-medium">Configure credentials and set secure access keys</p>
+    </div>
+
+    <!-- Token Error Display Panel -->
+    <div id="token-error-panel" class="hidden bg-rose-50 border border-rose-100 rounded-xl p-5 text-center space-y-3">
+      <div class="text-rose-500 mx-auto inline-flex items-center justify-center h-10 w-10 rounded-full bg-rose-100">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      </div>
+      <p class="text-sm font-bold text-rose-800">Invalid or Expired Activation Token</p>
+      <p id="token-error-message" class="text-xs text-rose-600 leading-relaxed">This invitation link is invalid, has expired, or was already used.</p>
+      <div class="pt-2">
+        <a href="/login.html" class="inline-block btn btn-primary py-2 px-4 text-xs font-bold text-white rounded-lg">Return to Login Screen</a>
+      </div>
+    </div>
+
+    <!-- Main Form Panel -->
+    <div id="activation-form-panel" class="hidden space-y-4">
+      <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs space-y-1">
+        <p class="text-slate-400 font-medium">Invitee Name:</p>
+        <p id="invite-name" class="font-bold text-slate-800">...</p>
+        <p class="text-slate-400 font-medium mt-2">Assigned Portal Role:</p>
+        <p id="invite-role" class="font-mono font-bold text-emerald-600 uppercase">...</p>
+      </div>
+
+      <form id="activation-form" class="space-y-4">
+        <!-- Email field (prefilled & readonly) -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-700">Assigned Email</label>
+          <input type="email" id="email" readonly class="form-input bg-slate-100 text-slate-500 cursor-not-allowed">
+        </div>
+
+        <!-- Password field -->
+        <div class="space-y-1.5">
+          <label for="password" class="text-xs font-bold text-slate-700">Create Password</label>
+          <input type="password" id="password" required class="form-input" placeholder="••••••••">
+        </div>
+
+        <!-- Confirm Password field -->
+        <div class="space-y-1.5">
+          <label for="confirm-password" class="text-xs font-bold text-slate-700">Confirm Password</label>
+          <input type="password" id="confirm-password" required class="form-input" placeholder="••••••••">
+          <p id="password-match-error" class="hidden text-[10px] text-rose-600 font-bold">Passwords do not match.</p>
+        </div>
+
+        <!-- Live Password Checklist -->
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 text-[11px] space-y-1.5">
+          <p class="font-bold text-slate-500 uppercase tracking-wider text-[9px] mb-1">Security Checklist</p>
+          <div class="flex items-center space-x-2 text-slate-400" id="chk-length">
+            <span class="indicator-icon">○</span>
+            <span>At least 8 characters long</span>
+          </div>
+          <div class="flex items-center space-x-2 text-slate-400" id="chk-upper">
+            <span class="indicator-icon">○</span>
+            <span>At least one uppercase letter (A-Z)</span>
+          </div>
+          <div class="flex items-center space-x-2 text-slate-400" id="chk-lower">
+            <span class="indicator-icon">○</span>
+            <span>At least one lowercase letter (a-z)</span>
+          </div>
+          <div class="flex items-center space-x-2 text-slate-400" id="chk-number">
+            <span class="indicator-icon">○</span>
+            <span>At least one numeric digit (0-9)</span>
+          </div>
+          <div class="flex items-center space-x-2 text-slate-400" id="chk-special">
+            <span class="indicator-icon">○</span>
+            <span>At least one special symbol (@, $, !, %, *, #, ?, &)</span>
+          </div>
+        </div>
+
+        <!-- General form error -->
+        <div id="general-error" class="hidden bg-rose-50 border border-rose-100 text-rose-800 rounded-xl p-3 text-xs">
+          General activation error.
+        </div>
+
+        <button type="submit" id="submit-btn" disabled class="w-full btn btn-primary py-3 font-bold text-white transition-all disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed">
+          Activate & Log In
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyInvitation, activateInvitation } from "/assets/js/invitation-service.js";
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+
+    const errPanel = document.getElementById('token-error-panel');
+    const errText = document.getElementById('token-error-message');
+    const formPanel = document.getElementById('activation-form-panel');
+    const form = document.getElementById('activation-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const loader = document.getElementById('global-page-loader');
+
+    // Field refs
+    const emailField = document.getElementById('email');
+    const passwordField = document.getElementById('password');
+    const confirmPasswordField = document.getElementById('confirm-password');
+
+    // Checklist elements
+    const chkLength = document.getElementById('chk-length');
+    const chkUpper = document.getElementById('chk-upper');
+    const chkLower = document.getElementById('chk-lower');
+    const chkNumber = document.getElementById('chk-number');
+    const chkSpecial = document.getElementById('chk-special');
+
+    let isPasswordValid = false;
+
+    // Load & Verify Token
+    async function loadActivation() {
+      if (!token) {
+        showTokenError("No account activation token was detected in the URL query parameters.");
+        return;
+      }
+
+      try {
+        const invitation = await verifyInvitation(token);
+        
+        // Show panel
+        document.getElementById('invite-name').textContent = invitation.name;
+        document.getElementById('invite-role').textContent = invitation.role;
+        emailField.value = invitation.email;
+
+        formPanel.classList.remove('hidden');
+      } catch (err) {
+        showTokenError(err.message || "The invitation is invalid or has already been consumed.");
+      }
+    }
+
+    function showTokenError(msg) {
+      errText.textContent = msg;
+      errPanel.classList.remove('hidden');
+      formPanel.classList.add('hidden');
+    }
+
+    // Password validation engine
+    passwordField.addEventListener('input', () => {
+      const pass = passwordField.value;
+
+      const hasMinLength = pass.length >= 8;
+      const hasUppercase = /[A-Z]/.test(pass);
+      const hasLowercase = /[a-z]/.test(pass);
+      const hasDigit = /[0-9]/.test(pass);
+      const hasSpecSymbol = /[@$!%*#?&]/.test(pass);
+
+      updateChecklistItem(chkLength, hasMinLength);
+      updateChecklistItem(chkUpper, hasUppercase);
+      updateChecklistItem(chkLower, hasLowercase);
+      updateChecklistItem(chkNumber, hasDigit);
+      updateChecklistItem(chkSpecial, hasSpecSymbol);
+
+      isPasswordValid = hasMinLength && hasUppercase && hasLowercase && hasDigit && hasSpecSymbol;
+      checkFormCompletion();
+    });
+
+    confirmPasswordField.addEventListener('input', () => {
+      checkFormCompletion();
+    });
+
+    function updateChecklistItem(el, valid) {
+      if (valid) {
+        el.className = "flex items-center space-x-2 text-emerald-600 font-bold";
+        el.querySelector('.indicator-icon').textContent = "✓";
+      } else {
+        el.className = "flex items-center space-x-2 text-slate-400";
+        el.querySelector('.indicator-icon').textContent = "○";
+      }
+    }
+
+    function checkFormCompletion() {
+      const confirmMatch = passwordField.value === confirmPasswordField.value;
+      
+      const matchError = document.getElementById('password-match-error');
+      if (confirmPasswordField.value.length > 0 && !confirmMatch) {
+        matchError.classList.remove('hidden');
+      } else {
+        matchError.classList.add('hidden');
+      }
+
+      submitBtn.disabled = !(isPasswordValid && confirmMatch);
+    }
+
+    // Submit Action
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const generalErr = document.getElementById('general-error');
+      generalErr.classList.add('hidden');
+      
+      const password = passwordField.value;
+      const email = emailField.value;
+
+      loader.classList.remove('hidden');
+      submitBtn.disabled = true;
+
+      try {
+        const userProfile = await activateInvitation(token, email, password);
+
+        // Remove token from URL securely
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        // Redirect based on the returned role
+        let redirectPath = "/login.html";
+        if (userProfile.role === 'admin') redirectPath = "/admin/dashboard.html";
+        else if (userProfile.role === 'judge') redirectPath = "/judge/dashboard.html";
+        else if (userProfile.role === 'teamLeader') redirectPath = "/team/dashboard.html";
+
+        window.location.replace(redirectPath);
+      } catch (err) {
+        console.error("Activation transaction failed:", err);
+        generalErr.textContent = err.message || "An error occurred during account activation. Please contact system support.";
+        generalErr.classList.remove('hidden');
+        
+        loader.classList.add('hidden');
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Run verification immediately
+    loadActivation();
+  </script>
+</body>
+</html>

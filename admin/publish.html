@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Publishing Board - Admin Desk</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <!-- Loading overlay -->
+  <div id="global-page-loader" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl p-6 shadow-xl max-w-sm w-full flex flex-col items-center space-y-4">
+      <div class="h-12 w-12 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
+      <p id="loader-text" class="text-xs font-bold text-slate-700 font-display">Verifying credentials & fetching standings...</p>
+    </div>
+  </div>
+
+  <!-- Toast Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Retraction/Archive modal -->
+  <div id="action-prompt-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-2xl p-6 shadow-xl max-w-md w-full space-y-4 transform scale-95 transition-all duration-200">
+      <div class="space-y-2">
+        <h3 id="prompt-title" class="text-lg font-bold text-slate-900 font-display">Provide Reason</h3>
+        <p id="prompt-desc" class="text-xs text-slate-500">This action requires a justification for auditing.</p>
+      </div>
+      <textarea id="prompt-textarea" class="w-full h-24 p-3 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Reason details..."></textarea>
+      <div class="flex items-center justify-end space-x-2">
+        <button id="prompt-cancel-btn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">Cancel</button>
+        <button id="prompt-confirm-btn" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer">Confirm Action</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simulation Results Modal -->
+  <div id="simulation-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-2xl p-6 shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="space-y-0.5">
+          <h3 class="text-lg font-bold text-slate-950 font-display">Standings Projections (Sandbox)</h3>
+          <p class="text-xs text-slate-400 font-medium">Read-only preview of point distributions and overall ranks.</p>
+        </div>
+        <button id="close-sim-btn" class="h-8 w-8 text-slate-400 hover:text-slate-600 rounded-lg bg-slate-50 flex items-center justify-center text-lg font-bold cursor-pointer transition">✕</button>
+      </div>
+      <div class="flex-1 overflow-y-auto">
+        <div class="table-container border border-slate-100 rounded-xl overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50/70 border-b border-slate-100 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">
+                <th class="px-4 py-3">Team</th>
+                <th class="px-4 py-3 text-center">Rank</th>
+                <th class="px-4 py-3 text-right">Points</th>
+                <th class="px-4 py-3 text-right">Proj. Points</th>
+                <th class="px-4 py-3 text-center">Arts Diff</th>
+                <th class="px-4 py-3 text-center">Sports Diff</th>
+                <th class="px-4 py-3 text-center">Stage Diff</th>
+              </tr>
+            </thead>
+            <tbody id="simulation-table-body" class="divide-y divide-slate-100 text-xs">
+              <!-- Simulated rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+        <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+          * Group points counted exactly once
+        </div>
+        <button id="accept-sim-publish-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition cursor-pointer">
+          Confirm and Bulk Publish Selected
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <!-- Ticker banner -->
+      <div class="bg-slate-900 text-white overflow-hidden py-2 border-b border-slate-800">
+        <div id="ticker-wrap" class="flex items-center space-x-8 whitespace-nowrap animate-marquee px-4">
+          <span class="text-[10px] font-bold uppercase text-emerald-400 tracking-wider font-display">● Live Championship Standings Ticker</span>
+          <div id="ticker-content" class="flex items-center space-x-6 text-xs font-semibold">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-6">
+        
+        <!-- Welcome Board -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Result Publication Desk</h1>
+            <p class="text-xs text-slate-400 font-medium font-display">Manage the public-facing leaderboard with full simulation previews and audited workflows.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <a href="/public/live-scoreboard.html" target="_blank" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition font-display">
+              Open Public Live Board ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- Filters Block -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-4 shadow-xs grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Division</label>
+            <select id="filter-division" class="w-full p-2 text-xs border border-slate-100 bg-slate-50/50 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500">
+              <option value="">All Divisions</option>
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Category</label>
+            <select id="filter-category" class="w-full p-2 text-xs border border-slate-100 bg-slate-50/50 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500">
+              <option value="">All Categories</option>
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Type</label>
+            <select id="filter-type" class="w-full p-2 text-xs border border-slate-100 bg-slate-50/50 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500">
+              <option value="">All Performance Types</option>
+              <option value="stage">Stage</option>
+              <option value="non-stage">Non-Stage</option>
+            </select>
+          </div>
+          <div class="space-y-1 col-span-2 md:col-span-2">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Search</label>
+            <input id="filter-search" type="text" class="w-full p-2 text-xs border border-slate-100 bg-slate-50/50 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Search competition name or code...">
+          </div>
+        </div>
+
+        <!-- Tab Controls -->
+        <div class="flex border-b border-slate-200">
+          <button id="tab-ready" class="px-5 py-3 border-b-2 border-indigo-600 text-indigo-600 text-xs font-bold flex items-center space-x-2 transition cursor-pointer">
+            <span>പ്രസിദ്ധീകരിക്കാൻ തയ്യാറായത്</span>
+            <span id="badge-ready" class="bg-indigo-100 text-indigo-700 text-[10px] px-2 py-0.5 rounded-full">0</span>
+          </button>
+          <button id="tab-published" class="px-5 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-600 text-xs font-bold flex items-center space-x-2 transition cursor-pointer">
+            <span>പ്രസിദ്ധീകരിച്ചവ</span>
+            <span id="badge-published" class="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full">0</span>
+          </button>
+          <button id="tab-archived" class="px-5 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-600 text-xs font-bold flex items-center space-x-2 transition cursor-pointer">
+            <span>ആർക്കൈവ് / പിൻവലിച്ചത്</span>
+            <span id="badge-archived" class="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full">0</span>
+          </button>
+        </div>
+
+        <!-- Bulk publish & Simulation Panel -->
+        <div id="bulk-controls-panel" class="bg-white border border-indigo-100 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-4 hidden">
+          <div class="flex items-center space-x-3">
+            <span class="text-xs font-bold text-indigo-950 font-display"><span id="selected-count">0</span> items selected for action.</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button id="bulk-simulate-btn" class="px-4 py-2 border border-indigo-200 hover:bg-indigo-50 text-indigo-700 text-xs font-bold rounded-xl transition cursor-pointer">
+              📊 Run Standings Simulation
+            </button>
+            <button id="bulk-publish-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition cursor-pointer">
+              📢 Bulk Publish Selected
+            </button>
+          </div>
+        </div>
+
+        <!-- Results Table Card -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/40">
+                  <th class="px-6 py-4 w-12 text-center" id="checkbox-th">
+                    <input type="checkbox" id="select-all-checkbox" class="rounded border-slate-200 text-indigo-600 outline-none cursor-pointer">
+                  </th>
+                  <th class="px-6 py-4">Code</th>
+                  <th class="px-6 py-4">Competition / Subdivision</th>
+                  <th class="px-6 py-4">Winners Summary & Grade Counts</th>
+                  <th class="px-6 py-4">Points</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="queue-tbody" class="divide-y divide-slate-100 text-xs">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { doc, getDoc, collection, getDocs, updateDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    
+    import { getResultPublishingQueue, bulkPublishResults } from "/assets/js/publishing-service.js";
+    import { publishResult, unpublishResult, republishResult, archiveResult, simulatePublication, recalculateAndPublishTeamStandings } from "/assets/js/result-action-service.js";
+    import { subscribePublicRankings } from "/assets/js/public-result-service.js";
+
+    let adminProfile = null;
+    let festId = null;
+    let fullQueue = [];
+    let currentTab = 'ready'; // 'ready', 'published', 'archived'
+    let selectedCompIds = [];
+
+    // Filter values
+    let filterDiv = '';
+    let filterCat = '';
+    let filterType = '';
+    let filterSearch = '';
+
+    // Modals & Textareas
+    const actionModal = document.getElementById('action-prompt-modal');
+    const promptTitle = document.getElementById('prompt-title');
+    const promptDesc = document.getElementById('prompt-desc');
+    const promptText = document.getElementById('prompt-textarea');
+    const promptConfirmBtn = document.getElementById('prompt-confirm-btn');
+    const promptCancelBtn = document.getElementById('prompt-cancel-btn');
+
+    let activePromptResolve = null;
+
+    async function initPage() {
+      try {
+        adminProfile = await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+
+        festId = localStorage.getItem('meeladpulse_selected_fest_id');
+
+        // Setup live Standings Ticker
+        setupStandingsTicker();
+
+        // Load reference selectors
+        await loadFiltersDropdowns();
+
+        // Load publishing datasets
+        await fetchAndRenderQueue();
+
+        // Binders
+        setupEventListeners();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Failed to initialize Publishing Board:", err);
+        showToast("Initialization error: " + err.message, "error");
+        document.getElementById('global-page-loader').classList.add('hidden');
+      }
+    }
+
+    function setupStandingsTicker() {
+      const content = document.getElementById('ticker-content');
+      subscribePublicRankings(festId, (rankings) => {
+        if (!rankings || rankings.length === 0) {
+          content.innerHTML = '<span class="text-[10px] text-slate-500">Standings not computed. Please publish a result first.</span>';
+          return;
+        }
+        content.innerHTML = rankings.map(r => `
+          <span class="flex items-center space-x-1.5 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+            <span class="h-2 w-2 rounded-full" style="background-color: ${r.teamColour || '#10b981'}"></span>
+            <span class="font-bold text-[10px] text-white tracking-wider font-display">${r.teamName} (${r.teamCode})</span>
+            <span class="text-indigo-400 font-extrabold text-[10px] font-mono">${r.overallTotal} Pts</span>
+            <span class="text-[9px] text-slate-400">#${r.rank}</span>
+          </span>
+        `).join('');
+      });
+    }
+
+    async function loadFiltersDropdowns() {
+      const divSelect = document.getElementById('filter-division');
+      const catSelect = document.getElementById('filter-category');
+
+      try {
+        const [divsSnap, catsSnap] = await Promise.all([
+          getDocs(collection(db, `festivals/${festId}/divisions`)),
+          getDocs(collection(db, `festivals/${festId}/categories`))
+        ]);
+
+        divsSnap.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = d.data().name;
+          divSelect.appendChild(opt);
+        });
+
+        catsSnap.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = d.data().name;
+          catSelect.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Failed to load filter definitions:", err);
+      }
+    }
+
+    async function fetchAndRenderQueue() {
+      // Show page processing
+      const tbody = document.getElementById('queue-tbody');
+      tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">Querying stands queue...</td></tr>';
+
+      fullQueue = await getResultPublishingQueue(festId);
+      renderTabsAndBadges();
+      renderFilteredQueue();
+    }
+
+    function renderTabsAndBadges() {
+      // Count states
+      let readyCount = 0;
+      let publishedCount = 0;
+      let archivedCount = 0;
+
+      fullQueue.forEach(r => {
+        const status = (r.status || '').toLowerCase();
+        if (status === 'approved' || status === 'ready_to_publish' || status === 'calculated') {
+          readyCount++;
+        } else if (status === 'published') {
+          publishedCount++;
+        } else if (status === 'archived' || status === 'unpublished' || status === 'retracted') {
+          archivedCount++;
+        }
+      });
+
+      document.getElementById('badge-ready').textContent = readyCount;
+      document.getElementById('badge-published').textContent = publishedCount;
+      document.getElementById('badge-archived').textContent = archivedCount;
+    }
+
+    function renderFilteredQueue() {
+      const tbody = document.getElementById('queue-tbody');
+      tbody.innerHTML = '';
+      selectedCompIds = [];
+      updateBulkPanelVisibility();
+      document.getElementById('select-all-checkbox').checked = false;
+
+      // Filter based on tab
+      let list = fullQueue.filter(r => {
+        const stat = (r.status || '').toLowerCase();
+        if (currentTab === 'ready') {
+          return stat === 'approved' || stat === 'ready_to_publish' || stat === 'calculated';
+        } else if (currentTab === 'published') {
+          return stat === 'published';
+        } else if (currentTab === 'archived') {
+          return stat === 'archived' || stat === 'unpublished' || stat === 'retracted';
+        }
+        return false;
+      });
+
+      // Apply other filters (division, category, type, search)
+      if (filterDiv) list = list.filter(r => r.divisionId === filterDiv);
+      if (filterCat) list = list.filter(r => r.categoryId === filterCat);
+      if (filterType) list = list.filter(r => (r.performanceType || '').toLowerCase() === filterType.toLowerCase());
+      if (filterSearch) {
+        const q = filterSearch.toLowerCase().trim();
+        list = list.filter(r => 
+          (r.competitionName || '').toLowerCase().includes(q) || 
+          (r.competitionCode || '').toLowerCase().includes(q) ||
+          (r.id || '').toLowerCase().includes(q)
+        );
+      }
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No competition results match the filters.</td></tr>`;
+        return;
+      }
+
+      list.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+        // Winner summaries
+        let winnerHTML = '';
+        if (r.participants && r.participants.length > 0) {
+          const winners = r.participants.filter(p => p.position && p.position !== 'None');
+          if (winners.length > 0) {
+            winnerHTML = winners.map(w => `
+              <div class="flex items-center space-x-1.5">
+                <span class="inline-flex px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-indigo-50 text-indigo-700 border border-indigo-100 font-display">${w.position}</span>
+                <span class="font-bold text-slate-800">${w.displayName}</span>
+                <span class="text-slate-400">(${w.teamName || 'Team'})</span>
+                ${w.grade && w.grade !== 'None' ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-50 text-emerald-700">${w.grade}</span>` : ''}
+              </div>
+            `).join('');
+          } else {
+            winnerHTML = `<span class="text-slate-400 italic">No winners graded yet</span>`;
+          }
+        } else {
+          winnerHTML = `<span class="text-slate-400 italic font-medium">No standings structured</span>`;
+        }
+
+        // Action controls
+        let actionButtons = '';
+        let checkboxHTML = '';
+
+        if (currentTab === 'ready') {
+          checkboxHTML = `<input type="checkbox" data-comp-id="${r.id}" class="row-checkbox rounded border-slate-200 text-indigo-600 cursor-pointer">`;
+          actionButtons = `
+            <button class="action-btn-publish px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-bold cursor-pointer transition">
+              Publish
+            </button>
+            <button class="action-btn-hold px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-[10px] font-bold cursor-pointer transition">
+              Hold
+            </button>
+            <a href="/admin/result-review.html?compId=${r.id}" class="px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-[10px] font-bold transition">
+              Review
+            </a>
+          `;
+        } else if (currentTab === 'published') {
+          actionButtons = `
+            <button class="action-btn-unpublish px-3 py-1.5 border border-rose-200 text-rose-700 hover:bg-rose-50 rounded-xl text-[10px] font-bold cursor-pointer transition">
+              Unpublish
+            </button>
+            <button class="action-btn-republish px-3 py-1.5 border border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl text-[10px] font-bold cursor-pointer transition">
+              Correct & Republish
+            </button>
+            <button class="action-btn-archive px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-[10px] font-bold cursor-pointer transition">
+              Move to Archive
+            </button>
+          `;
+        } else if (currentTab === 'archived') {
+          actionButtons = `
+            <button class="action-btn-restore px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-bold cursor-pointer transition">
+              Restore Queue
+            </button>
+            <a href="/admin/result-review.html?compId=${r.id}" class="px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-[10px] font-bold transition">
+              Review
+            </a>
+          `;
+        }
+
+        // Aggregate points awarded to teams
+        const totalPoints = (r.participants || []).reduce((sum, p) => sum + (Number(p.teamPoints) || 0), 0);
+
+        tr.innerHTML = `
+          <td class="px-6 py-4 text-center">${checkboxHTML}</td>
+          <td class="px-6 py-4 font-mono font-bold text-indigo-600">${r.competitionCode || r.id || 'CODE'}</td>
+          <td class="px-6 py-4">
+            <div class="font-extrabold text-slate-900 text-xs">${r.competitionName || r.id}</div>
+            <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">${r.divisionName || 'Division'} • ${(r.performanceType || 'Oral').toUpperCase()}</div>
+          </td>
+          <td class="px-6 py-4 space-y-1.5">${winnerHTML}</td>
+          <td class="px-6 py-4 font-extrabold text-slate-700 font-mono">${totalPoints} Pts</td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex items-center justify-end space-x-1.5">
+              ${actionButtons}
+            </div>
+          </td>
+        `;
+
+        // Binders
+        const pubBtn = tr.querySelector('.action-btn-publish');
+        if (pubBtn) {
+          pubBtn.onclick = async () => {
+            if (!confirm(`Are you sure you want to make the results of ${r.competitionName} globally visible?`)) return;
+            showProcessing("Publishing standings...");
+            try {
+              await publishResult(festId, r.id, adminProfile);
+              showToast("Result published successfully!", "success");
+              await fetchAndRenderQueue();
+            } catch (err) {
+              showToast("Publishing failed: " + err.message, "error");
+            } finally {
+              hideProcessing();
+            }
+          };
+        }
+
+        const holdBtn = tr.querySelector('.action-btn-hold');
+        if (holdBtn) {
+          holdBtn.onclick = async () => {
+            if (!confirm(`Move ${r.competitionName} results to held status?`)) return;
+            showProcessing("Holding publication...");
+            try {
+              await updateDoc(doc(db, `festivals/${festId}/results`, r.id), { status: 'held' });
+              showToast("Result status updated to Held", "success");
+              await fetchAndRenderQueue();
+            } catch (err) {
+              showToast("Action failed: " + err.message, "error");
+            } finally {
+              hideProcessing();
+            }
+          };
+        }
+
+        const unpubBtn = tr.querySelector('.action-btn-unpublish');
+        if (unpubBtn) {
+          unpubBtn.onclick = async () => {
+            const reason = await promptUserModal("Retract Standings", "Specify why you are unpublishing and retracting these official standings.");
+            if (reason === null) return;
+            showProcessing("Unpublishing standings...");
+            try {
+              await unpublishResult(festId, r.id, adminProfile, reason);
+              showToast("Result retracted successfully!", "success");
+              await fetchAndRenderQueue();
+            } catch (err) {
+              showToast("Retraction failed: " + err.message, "error");
+            } finally {
+              hideProcessing();
+            }
+          };
+        }
+
+        const repubBtn = tr.querySelector('.action-btn-republish');
+        if (repubBtn) {
+          repubBtn.onclick = async () => {
+            const reason = await promptUserModal("Correct & Republish", "Specify what corrections were implemented for this republish version.");
+            if (reason === null) return;
+            showProcessing("Updating publication version and publishing...");
+            try {
+              await republishResult(festId, r.id, adminProfile, reason);
+              showToast("Republished successfully!", "success");
+              await fetchAndRenderQueue();
+            } catch (err) {
+              showToast("Republish failed: " + err.message, "error");
+            } finally {
+              hideProcessing();
+            }
+          };
+        }
+
+        const archBtn = tr.querySelector('.action-btn-archive');
+        if (archBtn) {
+          archBtn.onclick = async () => {
+            const reason = await promptUserModal("Move to Historical Archive", "State the archiving reason.");
+            if (reason === null) return;
+            showProcessing("Archiving standings...");
+            try {
+              await archiveResult(festId, r.id, adminProfile, reason);
+              showToast("Standings archived.", "success");
+              await fetchAndRenderQueue();
+            } catch (err) {
+              showToast("Archiving failed: " + err.message, "error");
+            } finally {
+              hideProcessing();
+            }
+          };
+        }
+
+        const restBtn = tr.querySelector('.action-btn-restore');
+        if (restBtn) {
+          restBtn.onclick = async () => {
+            if (!confirm(`Restore ${r.competitionName} to Ready to Publish state?`)) return;
+            showProcessing("Restoring to ready...");
+            try {
+              await updateDoc(doc(db, `festivals/${festId}/results`, r.id), { status: 'approved' });
+              showToast("Restored to ready to publish queue", "success");
+              await fetchAndRenderQueue();
+            } catch (err) {
+              showToast("Restore failed: " + err.message, "error");
+            } finally {
+              hideProcessing();
+            }
+          };
+        }
+
+        // Checkbox binder
+        const chk = tr.querySelector('.row-checkbox');
+        if (chk) {
+          chk.addEventListener('change', () => {
+            const id = chk.getAttribute('data-comp-id');
+            if (chk.checked) {
+              if (!selectedCompIds.includes(id)) selectedCompIds.push(id);
+            } else {
+              selectedCompIds = selectedCompIds.filter(x => x !== id);
+            }
+            updateBulkPanelVisibility();
+          });
+        }
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateBulkPanelVisibility() {
+      const panel = document.getElementById('bulk-controls-panel');
+      const countLabel = document.getElementById('selected-count');
+      if (selectedCompIds.length > 0) {
+        panel.classList.remove('hidden');
+        countLabel.textContent = selectedCompIds.length;
+      } else {
+        panel.classList.add('hidden');
+      }
+    }
+
+    function setupEventListeners() {
+      // Tab selection
+      const tabs = [
+        { id: 'tab-ready', tab: 'ready' },
+        { id: 'tab-published', tab: 'published' },
+        { id: 'tab-archived', tab: 'archived' }
+      ];
+
+      tabs.forEach(t => {
+        const el = document.getElementById(t.id);
+        el.onclick = () => {
+          tabs.forEach(x => {
+            document.getElementById(x.id).classList.remove('border-indigo-600', 'text-indigo-600');
+            document.getElementById(x.id).classList.add('border-transparent', 'text-slate-400');
+          });
+          el.classList.add('border-indigo-600', 'text-indigo-600');
+          el.classList.remove('border-transparent', 'text-slate-400');
+          
+          currentTab = t.tab;
+          
+          // Hide checkbox th if not ready tab
+          const checkboxTh = document.getElementById('checkbox-th');
+          if (currentTab === 'ready') {
+            checkboxTh.classList.remove('hidden');
+          } else {
+            checkboxTh.classList.add('hidden');
+          }
+
+          renderFilteredQueue();
+        };
+      });
+
+      // Filter binders
+      document.getElementById('filter-division').addEventListener('change', (e) => {
+        filterDiv = e.target.value;
+        renderFilteredQueue();
+      });
+      document.getElementById('filter-category').addEventListener('change', (e) => {
+        filterCat = e.target.value;
+        renderFilteredQueue();
+      });
+      document.getElementById('filter-type').addEventListener('change', (e) => {
+        filterType = e.target.value;
+        renderFilteredQueue();
+      });
+      document.getElementById('filter-search').addEventListener('input', (e) => {
+        filterSearch = e.target.value;
+        renderFilteredQueue();
+      });
+
+      // Select All Checkbox
+      document.getElementById('select-all-checkbox').addEventListener('change', (e) => {
+        const checkAll = e.target.checked;
+        const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+        selectedCompIds = [];
+        rowCheckboxes.forEach(chk => {
+          chk.checked = checkAll;
+          if (checkAll) {
+            selectedCompIds.push(chk.getAttribute('data-comp-id'));
+          }
+        });
+        updateBulkPanelVisibility();
+      });
+
+      // Bulk actions
+      document.getElementById('bulk-publish-btn').onclick = async () => {
+        if (!confirm(`Are you sure you want to bulk publish ${selectedCompIds.length} results? This will update standings and issue public announcements.`)) return;
+        showProcessing(`Bulk publishing ${selectedCompIds.length} items...`);
+        const report = await bulkPublishResults(festId, selectedCompIds, adminProfile);
+        
+        hideProcessing();
+        
+        let msg = `Bulk publication completed.\nSuccessful: ${report.successful.length}`;
+        if (report.failed.length > 0) {
+          msg += `\nFailed: ${report.failed.length}. Check console logs.`;
+          console.error("Bulk publication failures:", report.failed);
+        }
+        alert(msg);
+        await fetchAndRenderQueue();
+      };
+
+      // Bulk Simulation
+      document.getElementById('bulk-simulate-btn').onclick = async () => {
+        showProcessing("Running point distributions and rankings sandbox projections...");
+        try {
+          const report = await simulatePublication(festId, selectedCompIds);
+          renderSimulationReport(report);
+          document.getElementById('simulation-modal').classList.remove('hidden');
+        } catch (err) {
+          showToast("Simulation calculations failed: " + err.message, "error");
+        } finally {
+          hideProcessing();
+        }
+      };
+
+      document.getElementById('close-sim-btn').onclick = () => {
+        document.getElementById('simulation-modal').classList.add('hidden');
+      };
+
+      document.getElementById('accept-sim-publish-btn').onclick = async () => {
+        document.getElementById('simulation-modal').classList.add('hidden');
+        document.getElementById('bulk-publish-btn').click();
+      };
+    }
+
+    function renderSimulationReport(report) {
+      const body = document.getElementById('simulation-table-body');
+      body.innerHTML = '';
+
+      report.forEach(row => {
+        const rankDiff = row.currentRank - row.projectedRank;
+        let rankBadge = `<span class="text-slate-400 font-semibold font-mono">#${row.projectedRank}</span>`;
+        if (rankDiff > 0) {
+          rankBadge = `<span class="text-emerald-600 font-extrabold font-mono">#${row.projectedRank} (+${rankDiff})</span>`;
+        } else if (rankDiff < 0) {
+          rankBadge = `<span class="text-rose-600 font-extrabold font-mono">#${row.projectedRank} (${rankDiff})</span>`;
+        } else {
+          rankBadge = `<span class="text-slate-700 font-semibold font-mono">#${row.projectedRank} (=)</span>`;
+        }
+
+        const ptsDiffBadge = row.diff > 0 ? 
+          `<span class="text-emerald-600 font-extrabold font-mono">+${row.diff}</span>` : 
+          `<span class="text-slate-400 font-mono">--</span>`;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="px-4 py-3">
+            <div class="flex items-center space-x-2">
+              <span class="h-2 w-2 rounded-full" style="background-color: ${row.teamColour}"></span>
+              <span class="font-extrabold text-slate-900">${row.teamName}</span>
+            </div>
+          </td>
+          <td class="px-4 py-3 text-center">${rankBadge}</td>
+          <td class="px-4 py-3 text-right text-slate-500 font-mono">${row.currentTotal}</td>
+          <td class="px-4 py-3 text-right font-extrabold font-mono text-indigo-700">${row.projectedTotal}</td>
+          <td class="px-4 py-3 text-center font-bold text-slate-600 font-mono">${row.artsDiff > 0 ? '+' + row.artsDiff : '--'}</td>
+          <td class="px-4 py-3 text-center font-bold text-slate-600 font-mono">${row.sportsDiff > 0 ? '+' + row.sportsDiff : '--'}</td>
+          <td class="px-4 py-3 text-center font-bold text-indigo-600 font-mono">${ptsDiffBadge}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    // Modal Prompter wrapper
+    function promptUserModal(title, description) {
+      return new Promise((resolve) => {
+        promptTitle.textContent = title;
+        promptDesc.textContent = description;
+        promptText.value = '';
+        actionModal.classList.remove('hidden');
+
+        activePromptResolve = resolve;
+
+        promptConfirmBtn.onclick = () => {
+          const val = promptText.value.trim();
+          if (!val) {
+            alert("A valid reason description is required to commit this change.");
+            return;
+          }
+          actionModal.classList.add('hidden');
+          resolve(val);
+        };
+
+        promptCancelBtn.onclick = () => {
+          actionModal.classList.add('hidden');
+          resolve(null);
+        };
+      });
+    }
+
+    // Processing Helpers
+    function showProcessing(text) {
+      document.getElementById('loader-text').textContent = text;
+      document.getElementById('global-page-loader').classList.remove('hidden');
+    }
+
+    function hideProcessing() {
+      document.getElementById('global-page-loader').classList.add('hidden');
+    }
+
+    // Simple toast alerts
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `p-4 rounded-xl shadow-lg border text-xs font-bold font-display transition duration-300 transform translate-y-2 pointer-events-auto flex items-center space-x-2 ${
+        type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'
+      }`;
+      toast.innerHTML = `
+        <span>${type === 'success' ? '✓' : '⚠'}</span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Individual Champions - Public Portal</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+  <header id="public-header" class="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-100"></header>
+
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
+    
+    <!-- Title Card -->
+    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <h1 class="text-2xl font-extrabold text-slate-950 tracking-tight font-display" id="page-title">Individual Champions</h1>
+        <p class="text-xs text-slate-400 font-medium font-display" id="page-subtitle">Outstanding individual performers and title winners across all divisions. Malayalam: വിജയികൾ</p>
+      </div>
+      <div class="flex items-center space-x-3 shrink-0">
+        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono shrink-0" id="lbl-cat">Category:</label>
+        <select id="category-filter" class="w-40 p-2.5 text-xs border border-slate-200 rounded-xl bg-white outline-none focus:ring-1 focus:ring-indigo-500 font-bold text-indigo-700">
+          <option value="all">All Categories</option>
+        </select>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-100 space-x-1.5 font-mono">
+          <span>👑</span>
+          <span>HALL OF FAME</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Champions List Card -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+      <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-4">
+        <h2 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest font-display" id="table-heading">Top Individual Performers</h2>
+        <div class="flex items-center space-x-3">
+          <input type="text" id="champion-search" class="p-2.5 text-xs border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-indigo-500 w-60" placeholder="Search champion name...">
+        </div>
+      </div>
+      <div class="table-container">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+              <th class="px-6 py-4 w-16">Rank</th>
+              <th class="px-6 py-4">Chest / Competitor Name</th>
+              <th class="px-6 py-4">Team</th>
+              <th class="px-6 py-4">Category</th>
+              <th class="px-6 py-4 text-center">Firsts (1st)</th>
+              <th class="px-6 py-4 text-center">Seconds (2nd)</th>
+              <th class="px-6 py-4 text-center">Thirds (3rd)</th>
+              <th class="px-6 py-4 text-center">A Grades</th>
+              <th class="px-6 py-4 text-center">Avg %</th>
+              <th class="px-6 py-4 font-mono text-right">Individual Points</th>
+            </tr>
+          </thead>
+          <tbody id="champions-table-body" class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+            <tr>
+              <td colspan="10" class="px-6 py-12 text-center text-slate-400 font-medium font-display">Awaiting champions calculations...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <footer id="public-footer" class="bg-white border-t border-slate-100 py-8"></footer>
+
+  <script type="module">
+    import { getActiveFestivalId } from "/assets/js/public-config-service.js";
+    import { initializePublicNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const festId = getActiveFestivalId();
+    let allChampions = [];
+    let selectedCategory = 'all';
+    let currentSearch = '';
+
+    async function init() {
+      await initializePublicNavigation();
+
+      const lang = localStorage.getItem('meeladpulse_lang') || 'en';
+      translatePage(lang);
+
+      // Category and search hooks
+      document.getElementById('champion-search').oninput = (e) => {
+        currentSearch = e.target.value;
+        render();
+      };
+
+      document.getElementById('category-filter').onchange = (e) => {
+        selectedCategory = e.target.value;
+        render();
+      };
+
+      await fetchChampions();
+    }
+
+    function translatePage(lang) {
+      if (lang === 'ml') {
+        document.getElementById('page-title').textContent = "വ്യക്തിഗത വിജയികൾ (Individual Champions)";
+        document.getElementById('page-subtitle').textContent = "കൂടുതൽ പോയിന്റുകൾ നേടി മുന്നിലെത്തിയ മികച്ച വ്യക്തിഗത മത്സരാർത്ഥികൾ.";
+        document.getElementById('table-heading').textContent = "ഹോൾ ഓഫ് ഫെയിം";
+        document.getElementById('champion-search').placeholder = "പേര് തിരയുക...";
+        document.getElementById('lbl-cat').textContent = "വിഭാഗം:";
+      }
+    }
+
+    async function fetchChampions() {
+      const body = document.getElementById('champions-table-body');
+      try {
+        const path = `festivals/${festId}/publicData/champions`;
+        const snap = await getDocs(collection(db, path));
+        allChampions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Populate category dropdown
+        const categoriesMap = {};
+        allChampions.forEach(c => {
+          if (c.categoryId && c.categoryName) {
+            categoriesMap[c.categoryId] = c.categoryName;
+          }
+        });
+
+        const filterSel = document.getElementById('category-filter');
+        for (const [id, name] of Object.entries(categoriesMap)) {
+          const opt = document.createElement('option');
+          opt.value = id;
+          opt.textContent = name;
+          filterSel.appendChild(opt);
+        }
+
+        render();
+      } catch (e) {
+        console.error("Error loading champions:", e);
+        body.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-rose-500 font-medium font-display">Error loading pre-calculated champions data. Make sure recalculation was triggered in administrative panel.</td></tr>`;
+      }
+    }
+
+    function render() {
+      const body = document.getElementById('champions-table-body');
+      body.innerHTML = '';
+
+      let list = [...allChampions];
+
+      // Filter category
+      if (selectedCategory !== 'all') {
+        list = list.filter(c => c.categoryId === selectedCategory);
+      }
+
+      // Filter search
+      if (currentSearch.trim() !== '') {
+        const q = currentSearch.toLowerCase().trim();
+        list = list.filter(c => 
+          c.displayName?.toLowerCase().includes(q) || 
+          c.chestNumber?.toLowerCase().includes(q)
+        );
+      }
+
+      // Sort by rank, then totalPoints descending, firstCount descending
+      list.sort((a, b) => {
+        if (a.rank !== b.rank) return a.rank - b.rank;
+        return b.totalPoints - a.totalPoints;
+      });
+
+      if (allChampions.length === 0) {
+        const isMl = localStorage.getItem('meeladpulse_lang') === 'ml';
+        const msg = isMl ? "ചാമ്പ്യൻ ഫലം ഇതുവരെ പ്രസിദ്ധീകരിച്ചിട്ടില്ല" : "Champion not published yet";
+        body.innerHTML = `<tr><td colspan="10" class="px-6 py-16 text-center text-slate-400 font-medium font-display text-sm">${msg}</td></tr>`;
+        return;
+      }
+
+      if (list.length === 0) {
+        body.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-slate-400">No champions matched the filters.</td></tr>`;
+        return;
+      }
+
+      list.forEach((row) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+        let rankBadge = `<span class="font-bold text-slate-400 font-mono">#${row.rank}</span>`;
+        if (row.rank === 1) {
+          rankBadge = `<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-50 text-amber-700 text-[10px] border border-amber-200 font-extrabold font-mono">👑 1</span>`;
+        } else if (row.rank === 2) {
+          rankBadge = `<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-100 text-slate-700 text-[10px] border border-slate-200 font-extrabold font-mono">🥈 2</span>`;
+        } else if (row.rank === 3) {
+          rankBadge = `<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-500/10 text-amber-900 text-[10px] border border-amber-900/10 font-extrabold font-mono">🥉 3</span>`;
+        }
+
+        // Check for admin override tie breaker indicator
+        let nameHtml = `<div class="font-extrabold text-slate-900">${row.displayName || 'Unnamed Performer'}</div>`;
+        if (row.tieBrokenByAdmin) {
+          nameHtml = `
+            <div class="font-extrabold text-slate-900 flex items-center space-x-1.5">
+              <span>${row.displayName || 'Unnamed Performer'}</span>
+              <span class="inline-flex items-center px-1.5 py-0.2 rounded bg-indigo-50 text-[8px] font-black border border-indigo-200 text-indigo-700 font-mono tracking-wider">ADMIN OVERRIDE</span>
+            </div>`;
+        }
+
+        tr.innerHTML = `
+          <td class="px-6 py-4">${rankBadge}</td>
+          <td class="px-6 py-4">
+            ${nameHtml}
+            <div class="text-[9px] text-slate-400 font-mono font-bold uppercase tracking-widest mt-0.5">Chest: ${row.chestNumber || 'N/A'}</div>
+          </td>
+          <td class="px-6 py-4 text-slate-500 font-semibold">${row.teamName || 'Independent'}</td>
+          <td class="px-6 py-4 text-slate-400 font-bold uppercase tracking-wider text-[10px] font-display">${row.categoryName || 'General'}</td>
+          <td class="px-6 py-4 text-center font-bold text-slate-600 font-mono">${row.firstCount || 0}</td>
+          <td class="px-6 py-4 text-center font-bold text-slate-600 font-mono">${row.secondCount || 0}</td>
+          <td class="px-4 py-4 text-center font-bold text-slate-600 font-mono">${row.thirdCount || 0}</td>
+          <td class="px-4 py-4 text-center font-bold text-slate-600 font-mono">${row.aGradeCount || 0}</td>
+          <td class="px-4 py-4 text-center font-bold text-slate-400 font-mono">${row.averagePercentage || 0}%</td>
+          <td class="px-6 py-4 text-right font-extrabold text-indigo-700 font-mono text-sm">${row.totalPoints || 0} Pts</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

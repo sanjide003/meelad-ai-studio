@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Result Review & Approval - Admin Console</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700 font-display">Preparing result reviews...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Controls -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="space-y-1">
+            <a href="/admin/provisional-results.html" class="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-600 mb-1.5 transition">
+              ← Back to Provisional Results
+            </a>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Result Review & Approval</h1>
+            <p id="comp-code-subtitle" class="text-xs font-mono font-bold text-emerald-600 uppercase tracking-widest">CODE</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button id="recalculate-btn" class="btn border border-slate-200 hover:bg-slate-50 text-slate-700 py-2 px-4 text-xs font-bold rounded-xl cursor-pointer">
+              Recalculate
+            </button>
+            <button id="approve-btn" disabled class="btn btn-accent bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 text-xs font-bold rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
+              Approve Result
+            </button>
+          </div>
+        </div>
+
+        <!-- Approval Blockages Alerts -->
+        <div id="blockages-container" class="space-y-3 hidden">
+          <h3 class="text-xs font-bold text-rose-700 uppercase tracking-widest">⚠️ Approval Blockages Detected</h3>
+          <div id="blockages-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Dynamically populated blocking warnings -->
+          </div>
+        </div>
+
+        <!-- Tabulated Standings list and manual modifiers -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+          <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-display">Standings & Manual Overrides</h2>
+            <span id="current-status-badge" class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600">Calculated</span>
+          </div>
+          
+          <div class="table-container">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                  <th class="px-6 py-4">Participant</th>
+                  <th class="px-6 py-4 font-mono">Calculated Score</th>
+                  <th class="px-6 py-4">Calculated Grade</th>
+                  <th class="px-6 py-4">Position Tie-Breaker</th>
+                  <th class="px-6 py-4 font-mono">Penalty Override</th>
+                  <th class="px-6 py-4 font-mono text-right">Team Points Override</th>
+                </tr>
+              </thead>
+              <tbody id="standings-review-body" class="divide-y divide-slate-100 text-xs">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Manual Override Confirmation Modal -->
+        <div id="override-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4 select-none">
+          <div class="bg-white rounded-2xl shadow-2xl border border-slate-150 max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+              <div>
+                <p class="text-[10px] font-mono font-extrabold text-rose-600 uppercase tracking-wider">Security Control</p>
+                <h3 class="text-base font-bold text-slate-900 font-display">Confirm Manual Overrides & Approval</h3>
+              </div>
+              <button id="override-modal-close-btn" class="text-slate-400 hover:text-slate-600 font-bold cursor-pointer text-sm">✕</button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6">
+              <div class="bg-rose-50 border border-rose-100 p-4 rounded-xl text-xs text-rose-800 leading-normal">
+                You are about to save manual overrides to the compiled results. To proceed, you must specify a valid reason for each modification, verify your administrator identity, and accept the confirmation checkbox.
+              </div>
+
+              <div class="space-y-4">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Detected Modifications</h4>
+                <div class="border border-slate-100 rounded-xl overflow-hidden">
+                  <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr class="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <th class="px-4 py-3">Participant</th>
+                        <th class="px-4 py-3">Type</th>
+                        <th class="px-4 py-3">Old Value</th>
+                        <th class="px-4 py-3">New Value</th>
+                        <th class="px-4 py-3">Difference</th>
+                      </tr>
+                    </thead>
+                    <tbody id="override-modal-table-body" class="divide-y divide-slate-100">
+                      <!-- Overrides populated here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label for="override-reason" class="text-xs font-bold text-slate-700">Audit Written Reason (Mandatory)</label>
+                <textarea id="override-reason" required rows="3" class="form-input" placeholder="Please explain why this manual override is necessary..."></textarea>
+                <p id="override-reason-error" class="text-[10px] text-rose-600 hidden font-bold">You must enter a written reason to continue.</p>
+              </div>
+
+              <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 flex items-center justify-between text-xs text-slate-600">
+                <span class="font-semibold">Administrator Identity:</span>
+                <span id="override-admin-identity" class="font-mono font-bold text-slate-900">...</span>
+              </div>
+
+              <div class="flex items-start">
+                <input type="checkbox" id="override-confirm-check" class="h-4 w-4 text-emerald-500 border-slate-200 rounded focus:ring-emerald-400 focus:ring-offset-0 mt-0.5 cursor-pointer">
+                <label for="override-confirm-check" class="ml-2.5 text-xs text-slate-600 font-medium cursor-pointer select-none leading-normal">
+                  I hereby confirm that I am authorized to override these official scores, and that this change will be permanently written to the audit log.
+                </label>
+              </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end space-x-3">
+              <button type="button" id="override-cancel-btn" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold cursor-pointer">
+                Cancel
+              </button>
+              <button type="button" id="override-confirm-submit-btn" disabled class="btn btn-accent bg-rose-600 hover:bg-rose-700 text-white py-2 px-4 text-xs font-bold shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                Confirm & Apply Overrides
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { db } from "/assets/js/firebase-init.js";
+    import { doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getJudgeSafeCompetition } from "/assets/js/judge-service.js";
+    import { tabulateCompetitionResult, approveCompetitionResult } from "/assets/js/result-engine.js";
+
+    let adminProfile = null;
+    let selectedComp = null;
+    let currentResult = null;
+
+    // Local override storage
+    let manualOverrides = {};
+    let resolvedTies = {};
+    let appliedPenalties = {};
+
+    async function initPage() {
+      try {
+        adminProfile = await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const compId = urlParams.get('compId');
+
+        if (!compId) {
+          window.location.replace("/admin/provisional-results.html");
+          return;
+        }
+
+        selectedComp = await getJudgeSafeCompetition(compId);
+        document.getElementById('comp-code-subtitle').textContent = selectedComp.code || 'CODE';
+
+        await loadResultRecord();
+        setupActionEvents();
+
+        document.getElementById('global-page-loader').classList.add('hidden');
+      } catch (err) {
+        console.error("Result review page error:", err);
+        document.getElementById('global-page-loader').classList.add('hidden');
+      }
+    }
+
+    async function loadResultRecord() {
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+      const docRef = doc(db, `festivals/${festId}/results`, selectedComp.id);
+      const snap = await docRef.get ? await docRef.get() : await getDoc(docRef);
+
+      if (snap.exists()) {
+        currentResult = snap.data();
+      } else {
+        // Tabulate first
+        currentResult = await tabulateCompetitionResult(selectedComp.id);
+      }
+
+      // Initialise manual overrides with current values
+      currentResult.participants.forEach(p => {
+        manualOverrides[p.entryId] = p.teamPoints || 0;
+        resolvedTies[p.entryId] = p.position || 'None';
+        appliedPenalties[p.entryId] = p.penalty || 0;
+      });
+
+      renderStandings();
+      renderBlockages();
+    }
+
+    function renderStandings() {
+      const tbody = document.getElementById('standings-review-body');
+      tbody.innerHTML = '';
+
+      const badge = document.getElementById('current-status-badge');
+      badge.textContent = currentResult.status || 'Calculated';
+      if (currentResult.status === 'Approved' || currentResult.status === 'Published') {
+        badge.className = "inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800";
+      } else {
+        badge.className = "inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800";
+      }
+
+      currentResult.participants.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+
+        // Score display
+        const scoreDisplay = p.status === 'absent' ? '<span class="text-rose-500 font-bold font-mono">ABSENT</span>' : p.finalScore;
+
+        // Position dropdown to resolve ties
+        const positions = ['None', '1st', '2nd', '3rd', '4th', '5th'];
+        let positionOptions = '';
+        positions.forEach(pos => {
+          positionOptions += `<option value="${pos}" ${resolvedTies[p.entryId] === pos ? 'selected' : ''}>${pos}</option>`;
+        });
+
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="font-bold text-slate-900">${p.displayName}</div>
+            <div class="text-[10px] text-slate-400 font-mono font-medium">${p.teamName}</div>
+          </td>
+          <td class="px-6 py-4 font-mono font-bold text-slate-800">${scoreDisplay}</td>
+          <td class="px-6 py-4">
+            <span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 font-mono border border-emerald-100">Grade ${p.grade || 'None'}</span>
+          </td>
+          <td class="px-6 py-4">
+            <select class="form-input text-xs font-bold cursor-pointer tie-pos-select" data-entry-id="${p.entryId}">
+              ${positionOptions}
+            </select>
+          </td>
+          <td class="px-6 py-4">
+            <input type="number" class="form-input text-xs font-mono font-bold penalty-input" min="0" value="${appliedPenalties[p.entryId]}" data-entry-id="${p.entryId}">
+          </td>
+          <td class="px-6 py-4 text-right">
+            <input type="number" class="form-input text-xs font-mono font-bold text-right override-input max-w-[80px]" min="0" value="${manualOverrides[p.entryId]}" data-entry-id="${p.entryId}">
+          </td>
+        `;
+
+        // Override events triggers
+        tr.querySelector('.tie-pos-select').onchange = (e) => {
+          resolvedTies[p.entryId] = e.target.value;
+          renderBlockages();
+        };
+
+        tr.querySelector('.penalty-input').oninput = (e) => {
+          appliedPenalties[p.entryId] = parseFloat(e.target.value || 0);
+        };
+
+        tr.querySelector('.override-input').oninput = (e) => {
+          manualOverrides[p.entryId] = parseFloat(e.target.value || 0);
+        };
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderBlockages() {
+      const container = document.getElementById('blockages-container');
+      const list = document.getElementById('blockages-list');
+      const approveBtn = document.getElementById('approve-btn');
+
+      list.innerHTML = '';
+      const errors = [];
+
+      // 1. Diagnostics blockages check
+      if (currentResult.diagnostics?.missingJudges) {
+        errors.push("Missing Judge Submissions: Awaiting completed mark sheets from required judge panels.");
+      }
+      if (currentResult.diagnostics?.incompleteCriteria) {
+        errors.push("Missing Criteria Values: Some judge marks sheets lack criteria evaluations.");
+      }
+
+      // 2. Tie checks inside current override settings
+      const posCounts = {};
+      Object.entries(resolvedTies).forEach(([entryId, pos]) => {
+        if (pos !== 'None') {
+          posCounts[pos] = (posCounts[pos] || 0) + 1;
+        }
+      });
+      if (posCounts['1st'] > 1 || posCounts['2nd'] > 1 || posCounts['3rd'] > 1) {
+        errors.push("Unresolved Podium Ties: Overriding position inputs still contain duplicate podium ranks. Resolve ties to enable approval.");
+      }
+
+      if (errors.length > 0) {
+        container.classList.remove('hidden');
+        approveBtn.disabled = true;
+
+        errors.forEach(e => {
+          const div = document.createElement('div');
+          div.className = "p-4 bg-rose-50 border border-rose-100 text-rose-800 rounded-xl text-xs font-medium leading-relaxed shadow-xs";
+          div.innerHTML = `<span class="font-extrabold uppercase mr-1">Blocking:</span> ${e}`;
+          list.appendChild(div);
+        });
+      } else {
+        container.classList.add('hidden');
+        approveBtn.disabled = false;
+      }
+    }
+
+    function setupActionEvents() {
+      const recalcBtn = document.getElementById('recalculate-btn');
+      const approveBtn = document.getElementById('approve-btn');
+
+      // Manual override modal controls
+      const modal = document.getElementById('override-modal');
+      const closeBtn = document.getElementById('override-modal-close-btn');
+      const cancelBtn = document.getElementById('override-cancel-btn');
+      const submitBtn = document.getElementById('override-confirm-submit-btn');
+      const reasonInput = document.getElementById('override-reason');
+      const confirmCheck = document.getElementById('override-confirm-check');
+      const adminIdentity = document.getElementById('override-admin-identity');
+      const reasonError = document.getElementById('override-reason-error');
+
+      if (adminProfile) {
+        adminIdentity.textContent = `${adminProfile.name || 'Admin'} (${adminProfile.email || 'no-email'})`;
+      }
+
+      const detectModifications = () => {
+        const changes = [];
+        currentResult.participants.forEach(p => {
+          // Original values computed by tabulation
+          const origPoints = p.isOverridden ? 0 : (p.teamPoints || 0); // reference calculated baseline
+          const propPoints = manualOverrides[p.entryId] || 0;
+          if (origPoints !== propPoints) {
+            changes.push({
+              displayName: p.displayName,
+              chestNumber: p.chestNumber || '',
+              type: "Team Points",
+              field: "teamPoints",
+              oldValue: origPoints,
+              newValue: propPoints,
+              difference: propPoints - origPoints,
+              entryId: p.entryId
+            });
+          }
+
+          const origPos = p.isTieResolved ? 'None' : (p.position || 'None');
+          const propPos = resolvedTies[p.entryId] || 'None';
+          if (origPos !== propPos) {
+            changes.push({
+              displayName: p.displayName,
+              chestNumber: p.chestNumber || '',
+              type: "Position",
+              field: "position",
+              oldValue: origPos,
+              newValue: propPos,
+              difference: `${origPos} → ${propPos}`,
+              entryId: p.entryId
+            });
+          }
+
+          const propPen = appliedPenalties[p.entryId] || 0;
+          const origPen = 0; // standard penalty baseline is 0 unless applied
+          if (origPen !== propPen) {
+            changes.push({
+              displayName: p.displayName,
+              chestNumber: p.chestNumber || '',
+              type: "Penalty Override",
+              field: "penalty",
+              oldValue: origPen,
+              newValue: propPen,
+              difference: propPen - origPen,
+              entryId: p.entryId
+            });
+          }
+        });
+        return changes;
+      };
+
+      const updateSubmitState = () => {
+        const hasReason = reasonInput.value.trim().length >= 10;
+        const isChecked = confirmCheck.checked;
+        submitBtn.disabled = !(hasReason && isChecked);
+        if (reasonInput.value.trim().length > 0 && !hasReason) {
+          reasonError.textContent = "Please provide a more detailed reason (minimum 10 characters).";
+          reasonError.classList.remove('hidden');
+        } else {
+          reasonError.classList.add('hidden');
+        }
+      };
+
+      reasonInput.oninput = updateSubmitState;
+      confirmCheck.onchange = updateSubmitState;
+
+      closeBtn.onclick = () => modal.classList.add('hidden');
+      cancelBtn.onclick = () => modal.classList.add('hidden');
+
+      recalcBtn.onclick = async () => {
+        recalcBtn.disabled = true;
+        recalcBtn.textContent = "Compiling...";
+        try {
+          currentResult = await tabulateCompetitionResult(selectedComp.id);
+          // Refresh overrides
+          currentResult.participants.forEach(p => {
+            manualOverrides[p.entryId] = p.teamPoints || 0;
+            resolvedTies[p.entryId] = p.position || 'None';
+            appliedPenalties[p.entryId] = p.penalty || 0;
+          });
+          renderStandings();
+          renderBlockages();
+          alert("Tabulated result compiled and refreshed!");
+        } catch (e) {
+          alert("Recalculation failed: " + e.message);
+        } finally {
+          recalcBtn.disabled = false;
+          recalcBtn.textContent = "Recalculate";
+        }
+      };
+
+      approveBtn.onclick = async () => {
+        const modifications = detectModifications();
+        if (modifications.length > 0) {
+          modal.classList.remove('hidden');
+          reasonInput.value = '';
+          confirmCheck.checked = false;
+          submitBtn.disabled = true;
+          reasonError.classList.add('hidden');
+
+          const tableBody = document.getElementById('override-modal-table-body');
+          tableBody.innerHTML = '';
+          modifications.forEach(c => {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+            tr.innerHTML = `
+              <td class="px-4 py-3 font-semibold text-slate-800">${c.displayName} (${c.chestNumber})</td>
+              <td class="px-4 py-3 font-medium text-slate-600">${c.type}</td>
+              <td class="px-4 py-3 font-mono text-slate-500">${c.oldValue}</td>
+              <td class="px-4 py-3 font-mono font-bold text-slate-900">${c.newValue}</td>
+              <td class="px-4 py-3 font-mono font-bold ${typeof c.difference === 'number' && c.difference > 0 ? 'text-emerald-600' : (typeof c.difference === 'number' && c.difference < 0 ? 'text-rose-600' : 'text-slate-600')}">
+                ${typeof c.difference === 'number' && c.difference > 0 ? '+' + c.difference : c.difference}
+              </td>
+            `;
+            tableBody.appendChild(tr);
+          });
+        } else {
+          if (!confirm("Confirm approval of these compiled results with zero manual overrides? This will commit team totals!")) return;
+          await executeApproval();
+        }
+      };
+
+      submitBtn.onclick = async () => {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Recording Overrides...";
+        try {
+          const modifications = detectModifications();
+          const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+          const reason = reasonInput.value.trim();
+          const changedBy = adminProfile?.email || 'admin';
+
+          for (const mod of modifications) {
+            const overridePayload = {
+              festId,
+              entityType: "participant",
+              entityId: mod.entryId,
+              fieldChanged: mod.field,
+              oldValue: mod.oldValue,
+              newValue: mod.newValue,
+              reason: reason,
+              changedBy: changedBy,
+              changedAt: serverTimestamp()
+            };
+            await addDoc(collection(db, `festivals/${festId}/overrideLogs`), overridePayload);
+          }
+
+          await executeApproval();
+          modal.classList.add('hidden');
+        } catch (err) {
+          alert("Override Submission failed: " + err.message);
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Confirm & Apply Overrides";
+        }
+      };
+
+      async function executeApproval() {
+        approveBtn.disabled = true;
+        approveBtn.textContent = "Approving...";
+        try {
+          await approveCompetitionResult(selectedComp.id, manualOverrides, resolvedTies, appliedPenalties);
+          alert("Results approved successfully!");
+          window.location.href = "/admin/provisional-results.html?compId=" + selectedComp.id;
+        } catch (err) {
+          alert("Approval failed: " + err.message);
+          approveBtn.disabled = false;
+          approveBtn.textContent = "Approve Result";
+        }
+      }
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

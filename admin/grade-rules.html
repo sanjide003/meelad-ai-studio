@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grade Rules Management - MeeladPulse</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Loading Grade Engine rules...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar -->
+    <div id="portal-sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <!-- Header -->
+      <div id="portal-header"></div>
+
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        
+        <!-- Header Banner & Translation Toggle -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+          <div class="space-y-1">
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display" id="page-title-grd">Grade & Performance Schemes</h1>
+            <p class="text-xs text-slate-400 font-medium" id="page-subtitle-grd">Define grade boundaries, individual points, and team contributions based on participant percentages.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button id="lang-toggle-btn" class="btn btn-secondary text-xs py-2 px-3 flex items-center space-x-1 border border-slate-200 cursor-pointer">
+              <span>English / മലയാളം</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
+          
+          <!-- Add/Edit Form Card -->
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-5 xl:col-span-1">
+            <h2 class="text-sm font-bold text-slate-800 font-display" id="form-header-grd">Create Grade Rule Profile</h2>
+            
+            <form id="grade-rule-form" class="space-y-4">
+              <input type="hidden" id="rule-id">
+              
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 block" id="lbl-grd-name">Scheme Profile Name</label>
+                <input type="text" id="rule-name-input" required class="form-input" placeholder="e.g. Standard 100-mark (ജനറൽ ഗ്രേഡിംഗ്)">
+              </div>
+
+              <!-- Ranges Grid Header -->
+              <div class="pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider" id="lbl-grd-ranges">Grade Scale Ranges</h3>
+                  <button type="button" id="add-range-row-btn" class="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer">+ Add Range</button>
+                </div>
+
+                <!-- Dynamic Ranges Rows Container -->
+                <div id="ranges-rows-container" class="space-y-3 max-h-[250px] overflow-y-auto pr-1">
+                  <!-- Row templates injected here -->
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-2 pt-4">
+                <button type="submit" id="submit-btn" class="flex-1 btn btn-accent py-2.5 text-xs font-bold text-white cursor-pointer shadow-sm">
+                  Save Profile
+                </button>
+                <button type="button" id="cancel-btn" class="hidden btn btn-secondary py-2.5 text-xs font-bold text-slate-700 cursor-pointer">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Rules List Panel -->
+          <div class="bg-white rounded-2xl border border-slate-100 shadow-xs xl:col-span-2 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider" id="list-header-grd">Configured Scales</h2>
+              <span id="rules-count" class="text-xs font-bold bg-slate-100 text-slate-600 py-1 px-2.5 rounded-full">0</span>
+            </div>
+
+            <div class="table-container">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
+                    <th class="px-6 py-4" id="th-name">Profile Scheme</th>
+                    <th class="px-6 py-4" id="th-scales">Active Ranges (Grade: % Range | Student Points | Team Points)</th>
+                    <th class="px-6 py-4 text-right" id="th-actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="rules-table-body" class="divide-y divide-slate-100 text-xs text-slate-700">
+                  <tr>
+                    <td colspan="3" class="px-6 py-12 text-center text-slate-400">Loading grade schemas...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "/assets/js/role-guard.js";
+    import { loadPortalLayout } from "/assets/js/component-loader.js";
+    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { getGradeRules, saveGradeRule, deleteGradeRule } from "/assets/js/firestore-service.js";
+
+    let currentLang = localStorage.getItem('meeladpulse_lang') || 'en';
+
+    const trans = {
+      en: {
+        title: "Grade & Performance Schemes",
+        subtitle: "Define grade boundaries, individual points, and team contributions based on participant percentages.",
+        createHeader: "Create Grade Rule Profile",
+        editHeader: "Edit Grade Rule Profile",
+        nameLabel: "Scheme Profile Name",
+        rangesLabel: "Grade Scale Ranges",
+        saveBtn: "Save Profile",
+        cancelBtn: "Cancel",
+        listHeader: "Configured Scales",
+        thName: "Profile Scheme",
+        thScales: "Active Ranges (Grade: % Range | Student Pts | Team Pts)",
+        thActions: "Actions",
+        loading: "Loading grade schemas...",
+        noData: "No grade rules configured for this festival.",
+        confirmDelete: "Are you sure you want to delete this grade scheme?",
+        saving: "Saving...",
+        deleting: "Deleting..."
+      },
+      ml: {
+        title: "ഗ്രേഡ് മാനദണ്ഡങ്ങൾ",
+        subtitle: "ശതമാനത്തിനനുസരിച്ച് കുട്ടികൾക്കും ഗ്രൂപ്പുകൾക്കും ലഭിക്കുന്ന ഗ്രേഡുകൾ, പോയിന്റുകൾ എന്നിവ ക്രമീകരിക്കുക.",
+        createHeader: "പുതിയ ഗ്രേഡ് ക്രമീകരണം സൃഷ്ടിക്കുക",
+        editHeader: "ഗ്രേഡ് ക്രമീകരണം ഭേദഗതി ചെയ്യുക",
+        nameLabel: "ഗ്രേഡ് പ്രൊഫൈൽ പേര്",
+        rangesLabel: "ഗ്രേഡ് പരിധികൾ (സ്കെയിൽ)",
+        saveBtn: "സേവ് ചെയ്യുക",
+        cancelBtn: "റദ്ദാക്കുക",
+        listHeader: "നിലവിലുള്ള ഗ്രേഡ് മാനദണ്ഡങ്ങൾ",
+        thName: "നിയമ പ്രൊഫൈൽ",
+        thScales: "ഗ്രേഡ് പരിധികൾ (ഗ്രേഡ്: % പരിധി | സ്റ്റുഡന്റ് പോയിന്റ് | ടീം പോയിന്റ്)",
+        thActions: "നടപടികൾ",
+        loading: "ഗ്രേഡുകൾ ശേഖരിക്കുന്നു...",
+        noData: "ഗ്രേഡ് നിയമങ്ങളൊന്നും ക്രമീകരിച്ചിട്ടില്ല.",
+        confirmDelete: "ഈ ഗ്രേഡ് ക്രമീകരണം ഇല്ലാതാക്കാൻ നിങ്ങൾക്ക് ഉറപ്പാണോ?",
+        saving: "സേവ് ചെയ്യുന്നു...",
+        deleting: "ഡിലീറ്റ് ചെയ്യുന്നു..."
+      }
+    };
+
+    function applyTranslations() {
+      const t = trans[currentLang];
+      document.getElementById('page-title-grd').textContent = t.title;
+      document.getElementById('page-subtitle-grd').textContent = t.subtitle;
+      document.getElementById('form-header-grd').textContent = document.getElementById('rule-id').value ? t.editHeader : t.createHeader;
+      document.getElementById('lbl-grd-name').textContent = t.nameLabel;
+      document.getElementById('lbl-grd-ranges').textContent = t.rangesLabel;
+      document.getElementById('submit-btn').textContent = t.saveBtn;
+      document.getElementById('cancel-btn').textContent = t.cancelBtn;
+      document.getElementById('list-header-grd').textContent = t.listHeader;
+      
+      document.getElementById('th-name').textContent = t.thName;
+      document.getElementById('th-scales').textContent = t.thScales;
+      document.getElementById('th-actions').textContent = t.thActions;
+    }
+
+    const form = document.getElementById('grade-rule-form');
+    const tableBody = document.getElementById('rules-table-body');
+    const countBadge = document.getElementById('rules-count');
+    const rowsContainer = document.getElementById('ranges-rows-container');
+    const addRowBtn = document.getElementById('add-range-row-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+
+    async function initGradeRulesDashboard() {
+      try {
+        await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+        applyTranslations();
+
+        // Language toggle
+        document.getElementById('lang-toggle-btn').addEventListener('click', () => {
+          currentLang = currentLang === 'en' ? 'ml' : 'en';
+          localStorage.setItem('meeladpulse_lang', currentLang);
+          applyTranslations();
+          renderGradeRules();
+        });
+
+        // Initialize with default rows
+        addRangeRow('A+', 80, 100, 5, 5, true);
+        addRangeRow('A', 70, 79.99, 4, 5, true);
+        addRangeRow('B', 50, 69.99, 3, 3, true);
+        addRangeRow('C', 35, 49.99, 2, 1, true);
+
+        addRowBtn.addEventListener('click', () => {
+          addRangeRow('', 0, 100, 0, 0, true);
+        });
+
+        await renderGradeRules();
+
+        // Submit form
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const t = trans[currentLang];
+          const submitBtn = document.getElementById('submit-btn');
+          submitBtn.disabled = true;
+          submitBtn.textContent = t.saving;
+
+          // Gather ranges
+          const ranges = [];
+          const rows = rowsContainer.querySelectorAll('.range-row');
+          rows.forEach(row => {
+            const grade = row.querySelector('.row-grade').value.toUpperCase().trim();
+            if (!grade) return;
+            ranges.push({
+              grade,
+              minPercentage: parseFloat(row.querySelector('.row-min').value) || 0,
+              maxPercentage: parseFloat(row.querySelector('.row-max').value) || 0,
+              gradePoint: parseInt(row.querySelector('.row-std-pt').value) || 0,
+              teamPoint: parseInt(row.querySelector('.row-team-pt').value) || 0,
+              certificateEligible: row.querySelector('.row-cert').checked,
+              displayClass: 'bg-emerald-50 text-emerald-800'
+            });
+          });
+
+          // Sort descending by minPercentage
+          ranges.sort((a, b) => b.minPercentage - a.minPercentage);
+
+          const payload = {
+            id: document.getElementById('rule-id').value || null,
+            name: document.getElementById('rule-name-input').value,
+            ranges
+          };
+
+          try {
+            await saveGradeRule(payload);
+            resetForm();
+            await renderGradeRules();
+          } catch (err) {
+            alert("Error saving grade rule: " + err.message);
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = t.saveBtn;
+          }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+          resetForm();
+        });
+
+      } catch (error) {
+        console.error("Initialization error:", error);
+      }
+    }
+
+    function addRangeRow(grade = '', min = 0, max = 100, stdPt = 0, teamPt = 0, cert = true) {
+      const div = document.createElement('div');
+      div.className = "range-row grid grid-cols-12 gap-2 items-center bg-slate-50 p-2.5 rounded-xl border border-slate-100";
+      
+      div.innerHTML = `
+        <div class="col-span-3">
+          <input type="text" class="row-grade form-input font-bold text-center uppercase" required placeholder="Grade" value="${grade}">
+        </div>
+        <div class="col-span-2">
+          <input type="number" step="0.01" class="row-min form-input text-center" required placeholder="Min %" value="${min}">
+        </div>
+        <div class="col-span-2">
+          <input type="number" step="0.01" class="row-max form-input text-center" required placeholder="Max %" value="${max}">
+        </div>
+        <div class="col-span-1.5 px-1">
+          <input type="number" class="row-std-pt form-input text-center" required placeholder="Std" value="${stdPt}">
+        </div>
+        <div class="col-span-1.5 px-1">
+          <input type="number" class="row-team-pt form-input text-center" required placeholder="Team" value="${teamPt}">
+        </div>
+        <div class="col-span-1 flex items-center justify-center">
+          <input type="checkbox" class="row-cert rounded border-slate-300 text-emerald-500 h-4 w-4 cursor-pointer" ${cert ? 'checked' : ''} title="Certificate Eligible">
+        </div>
+        <div class="col-span-1 flex items-center justify-center">
+          <button type="button" class="remove-row-btn text-rose-500 hover:text-rose-600 font-bold text-sm cursor-pointer" title="Remove range">×</button>
+        </div>
+      `;
+
+      div.querySelector('.remove-row-btn').addEventListener('click', () => {
+        div.remove();
+      });
+
+      rowsContainer.appendChild(div);
+    }
+
+    async function renderGradeRules() {
+      const t = trans[currentLang];
+      tableBody.innerHTML = `<tr><td colspan="3" class="px-6 py-12 text-center text-slate-400">${t.loading}</td></tr>`;
+      
+      try {
+        const rules = await getGradeRules();
+        countBadge.textContent = rules.length;
+
+        if (rules.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="3" class="px-6 py-12 text-center text-slate-400">${t.noData}</td></tr>`;
+          return;
+        }
+
+        tableBody.innerHTML = "";
+        rules.forEach(r => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-50/50 transition animate-fade-in";
+
+          let rangesHtml = `<div class="flex flex-wrap gap-1.5">`;
+          r.ranges.forEach(range => {
+            rangesHtml += `
+              <span class="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-700 font-medium font-mono text-[11px] border border-slate-200/50">
+                <strong class="text-emerald-700 mr-1">${range.grade}</strong>: 
+                ${range.minPercentage}%-${range.maxPercentage}% 
+                <span class="mx-1 text-slate-400">|</span> 
+                S: ${range.gradePoint} Pts 
+                <span class="mx-1 text-slate-400">|</span> 
+                T: ${range.teamPoint} Pts
+              </span>`;
+          });
+          rangesHtml += `</div>`;
+
+          row.innerHTML = `
+            <td class="px-6 py-4 font-bold text-slate-850 shrink-0">${r.name}</td>
+            <td class="px-6 py-4">${rangesHtml}</td>
+            <td class="px-6 py-4 text-right space-x-2 shrink-0">
+              <button class="edit-btn text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer" data-id="${r.id}">Edit</button>
+              <button class="delete-btn text-xs font-bold text-rose-600 hover:text-rose-700 cursor-pointer" data-id="${r.id}">Delete</button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+        // Edit listener
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const r = rules.find(item => item.id === id);
+            if (r) {
+              document.getElementById('rule-id').value = r.id;
+              document.getElementById('rule-name-input').value = r.name;
+              
+              // Clear current rows
+              rowsContainer.innerHTML = "";
+              r.ranges.forEach(range => {
+                addRangeRow(range.grade, range.minPercentage, range.maxPercentage, range.gradePoint, range.teamPoint, range.certificateEligible !== false);
+              });
+
+              document.getElementById('form-header-grd').textContent = t.editHeader;
+              cancelBtn.classList.remove('hidden');
+            }
+          });
+        });
+
+        // Delete listener
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            if (confirm(t.confirmDelete)) {
+              btn.disabled = true;
+              btn.textContent = t.deleting;
+              try {
+                await deleteGradeRule(id);
+                await renderGradeRules();
+              } catch (err) {
+                alert("Error deleting grade rule: " + err.message);
+              }
+            }
+          });
+        });
+
+      } catch (err) {
+        tableBody.innerHTML = `<tr><td colspan="3" class="px-6 py-12 text-center text-rose-500">Error loading grade schemas: ${err.message}</td></tr>`;
+      }
+    }
+
+    function resetForm() {
+      const t = trans[currentLang];
+      document.getElementById('rule-id').value = "";
+      form.reset();
+      
+      // Reset with defaults
+      rowsContainer.innerHTML = "";
+      addRangeRow('A+', 80, 100, 5, 5, true);
+      addRangeRow('A', 70, 79.99, 4, 5, true);
+      addRangeRow('B', 50, 69.99, 3, 3, true);
+      addRangeRow('C', 35, 49.99, 2, 1, true);
+
+      document.getElementById('form-header-grd').textContent = t.createHeader;
+      cancelBtn.classList.add('hidden');
+    }
+
+    initGradeRulesDashboard();
+  </script>
+</body>
+</html>
