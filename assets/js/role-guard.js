@@ -33,12 +33,21 @@ async function isSelectedFestivalAvailable(festId, role) {
   }
 }
 
+function isRoleAllowed(role, allowedRoles) {
+  return allowedRoles.includes(role) || (role === 'institutionAdmin' && allowedRoles.includes('admin'));
+}
+
 export async function verifyUserRole(allowedRoles) {
   const manualProfileRaw = sessionStorage.getItem('meeladpulse_manual_user');
   if (manualProfileRaw) {
+    let manualProfile = null;
     try {
-      const manualProfile = JSON.parse(manualProfileRaw);
-      if (manualProfile.active === true && allowedRoles.includes(manualProfile.role)) {
+      manualProfile = JSON.parse(manualProfileRaw);
+    } catch (err) {
+      sessionStorage.removeItem('meeladpulse_manual_user');
+    }
+    if (manualProfile) {
+      if (manualProfile.active === true && isRoleAllowed(manualProfile.role, allowedRoles)) {
         window.currentUserProfile = manualProfile;
         const currentPath = window.location.pathname;
         if (!currentPath.includes('select-fest.html') && !currentPath.includes('unauthorized.html')) {
@@ -57,8 +66,12 @@ export async function verifyUserRole(allowedRoles) {
         if (loader) loader.classList.add('hidden');
         return manualProfile;
       }
-    } catch (err) {
-      sessionStorage.removeItem('meeladpulse_manual_user');
+      if (manualProfile.active !== true) {
+        window.location.replace(appUrl('unauthorized.html?reason=manual_inactive'));
+        throw new Error('Manual account is inactive');
+      }
+      window.location.replace(appUrl('unauthorized.html?reason=manual_role_denied'));
+      throw new Error('Manual role unauthorized');
     }
   }
   return new Promise((resolve, reject) => {
@@ -89,7 +102,7 @@ export async function verifyUserRole(allowedRoles) {
           return reject('Inactive account');
         }
 
-        if (!allowedRoles.includes(userData.role)) {
+        if (!isRoleAllowed(userData.role, allowedRoles)) {
           window.location.replace(appUrl('unauthorized.html?reason=access_denied'));
           return reject('Role unauthorized');
         }
