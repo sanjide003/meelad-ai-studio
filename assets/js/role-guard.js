@@ -22,11 +22,11 @@ async function isSelectedFestivalAvailable(festId, role) {
     const snap = await getDoc(doc(db, window.meeladPulseScopedFestivalPath()));
     if (!snap.exists()) return false;
     const data = snap.data();
-    const blockedStatuses = ['inactive', 'expired', 'payment_due', 'suspended'];
-    const expiryDate = data.plan === 'trial' ? data.trialEndsAt : data.subscriptionEndsAt;
+    const subscriptionStatus = ['trial', 'active', 'suspended'].includes(data.subscriptionStatus) ? data.subscriptionStatus : (data.plan === 'purchased' ? 'active' : 'trial');
+    const expiryDate = subscriptionStatus === 'trial' ? data.trialEndsAt : data.subscriptionEndsAt;
     const isUnlimited = data.billingCycle === 'unlimited';
     const expiredByDate = expiryDate && !isUnlimited && new Date(`${expiryDate}T23:59:59`) < new Date();
-    return data.active !== false && !blockedStatuses.includes(data.subscriptionStatus) && !expiredByDate;
+    return data.active !== false && subscriptionStatus !== 'suspended' && !expiredByDate;
   } catch (err) {
     console.warn('Could not verify selected festival subscription:', err);
     return false;

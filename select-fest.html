@@ -107,52 +107,57 @@
               <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-sky-100 text-lg">💳</span>
               <div>
                 <h3 class="text-sm font-extrabold text-slate-900">Payment & Subscription Control</h3>
-                <p class="text-[11px] text-slate-500">Manage trial expiry, purchased validity, payment due status, and receipt notes.</p>
+                <p class="text-[11px] text-slate-500">Choose Trial, Active/Paid, or Suspended. The visible fields change based on this status.</p>
               </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label class="space-y-1 text-xs font-bold text-slate-600">Plan
-                <select id="institution-plan" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
-                  <option value="trial">Trial</option>
-                  <option value="purchased">Purchased</option>
-                </select>
-              </label>
-              <label class="space-y-1 text-xs font-bold text-slate-600">Subscription Status
+              <label class="space-y-1 text-xs font-bold text-slate-600 md:col-span-2">Subscription Status
                 <select id="institution-subscription" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
                   <option value="trial">Trial</option>
                   <option value="active">Active / Paid</option>
-                  <option value="payment_due">Payment Due</option>
-                  <option value="expired">Expired</option>
                   <option value="suspended">Suspended</option>
                 </select>
               </label>
-              <label class="space-y-1 text-xs font-bold text-slate-600">Trial Ends On
-                <input id="institution-trial-ends" type="date" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
-              </label>
-              <label class="space-y-1 text-xs font-bold text-slate-600">Purchase Duration
-                <select id="institution-billing-cycle" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                  <option value="custom">Custom Date</option>
-                  <option value="unlimited">Unlimited</option>
-                </select>
-              </label>
-              <label class="space-y-1 text-xs font-bold text-slate-600">Subscription Ends On
-                <input id="institution-subscription-ends" type="date" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
-              </label>
-              <label class="space-y-1 text-xs font-bold text-slate-600">Amount Received
-                <input id="institution-payment-amount" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="0.00">
-              </label>
-              <label class="space-y-1 text-xs font-bold text-slate-600">Payment Reference
-                <input id="institution-payment-reference" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="receipt / UPI / bank ref">
-              </label>
-              <label class="space-y-1 text-xs font-bold text-slate-600">Payment Received Date
-                <input id="institution-purchase-date" type="date" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
-              </label>
-              <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600">
-                <input id="institution-active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-emerald-600" checked>
-                Institution active / allow login
-              </label>
+
+              <div id="trial-controls" class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 rounded-2xl border border-amber-100 bg-amber-50/80 p-4">
+                <label class="space-y-1 text-xs font-bold text-amber-800">Trial Starts On
+                  <input id="institution-trial-starts" type="date" class="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm font-semibold text-slate-800">
+                </label>
+                <label class="space-y-1 text-xs font-bold text-amber-800">Trial Days
+                  <input id="institution-trial-days" type="number" min="1" step="1" class="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="e.g. 14">
+                </label>
+                <label class="space-y-1 text-xs font-bold text-amber-800">Trial Ends On
+                  <input id="institution-trial-ends" type="date" class="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm font-semibold text-slate-800">
+                </label>
+              </div>
+
+              <div id="paid-controls" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 hidden">
+                <label class="space-y-1 text-xs font-bold text-emerald-800">Purchase Duration
+                  <select id="institution-billing-cycle" class="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm font-semibold text-slate-800">
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="custom">Custom Date</option>
+                    <option value="unlimited">Unlimited</option>
+                  </select>
+                </label>
+                <label class="space-y-1 text-xs font-bold text-emerald-800">Subscription Starts On
+                  <input id="institution-purchase-date" type="date" class="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm font-semibold text-slate-800">
+                </label>
+                <label class="space-y-1 text-xs font-bold text-emerald-800">Subscription Ends On
+                  <input id="institution-subscription-ends" type="date" class="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm font-semibold text-slate-800">
+                </label>
+                <label class="space-y-1 text-xs font-bold text-emerald-800">Amount Received
+                  <input id="institution-payment-amount" type="number" min="0" step="0.01" class="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="0.00">
+                </label>
+                <label class="space-y-1 text-xs font-bold text-emerald-800 md:col-span-2">Payment Reference
+                  <input id="institution-payment-reference" class="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="receipt / UPI / bank ref">
+                </label>
+              </div>
+
+              <div id="suspended-controls" class="hidden md:col-span-2 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-xs font-bold text-rose-700">
+                🚫 Suspended selected: this institution admin login and application access will be blocked immediately after save.
+              </div>
+
               <label class="space-y-1 text-xs font-bold text-slate-600 md:col-span-2">Payment / Subscription Notes
                 <textarea id="institution-purchase-notes" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800" rows="2" placeholder="Payment details, validity, reminders, remarks"></textarea>
               </label>
@@ -284,15 +289,17 @@
     }
 
     function getEffectiveSubscription(festival) {
-      const plan = festival.plan || 'trial';
+      const status = ['trial', 'active', 'suspended'].includes(festival.subscriptionStatus) ? festival.subscriptionStatus : (festival.plan === 'purchased' ? 'active' : 'trial');
+      const plan = status === 'active' ? 'purchased' : 'trial';
       const trialEndsAt = toDateOnly(festival.trialEndsAt);
       const subscriptionEndsAt = toDateOnly(festival.subscriptionEndsAt);
-      const endDate = plan === 'trial' ? trialEndsAt : subscriptionEndsAt;
+      const endDate = status === 'trial' ? trialEndsAt : subscriptionEndsAt;
       const remainingDays = daysUntil(endDate);
-      const expiredByDate = remainingDays !== null && remainingDays < 0 && festival.billingCycle !== 'unlimited';
-      const blockedStatus = ['expired', 'payment_due', 'suspended'].includes(festival.subscriptionStatus);
+      const hasExpiry = Boolean(endDate);
+      const expiredByDate = hasExpiry && remainingDays < 0 && festival.billingCycle !== 'unlimited';
+      const blockedStatus = status === 'suspended';
       const effectiveActive = festival.active !== false && !expiredByDate && !blockedStatus;
-      return { plan, endDate, remainingDays, effectiveActive, expiredByDate };
+      return { plan, status, endDate, remainingDays, effectiveActive, expiredByDate };
     }
 
     async function renderSuperAdminPortal() {
@@ -303,8 +310,8 @@
       let festivals = snap.docs.map(item => ({ id: item.id, institutionId: item.id, ...item.data() })).sort((a, b) => (a.title || a.name || '').localeCompare(b.title || b.name || ''));
       festivals = festivals.filter(festival => {
         const info = getEffectiveSubscription(festival);
-        if (superAdminFilter === 'trial') return info.plan === 'trial';
-        if (superAdminFilter === 'purchased') return info.plan === 'purchased';
+        if (superAdminFilter === 'trial') return info.status === 'trial';
+        if (superAdminFilter === 'purchased') return info.status === 'active';
         if (superAdminFilter === 'deactivated') return !info.effectiveActive;
         return true;
       });
@@ -356,7 +363,7 @@
           </td>
           <td class="px-4 py-4">
             <div class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${info.plan === 'purchased' ? 'bg-sky-50 text-sky-700' : 'bg-amber-50 text-amber-700'}">${info.plan.toUpperCase()}</div>
-            <div class="mt-2 text-slate-500">${festival.subscriptionStatus || 'trial'}</div>
+            <div class="mt-2 text-slate-500">${info.status}</div>
           </td>
           <td class="px-4 py-4">
             <div class="text-slate-600">Ends: <span class="font-bold">${info.endDate || (festival.billingCycle === 'unlimited' ? 'Unlimited' : 'Not set')}</span></div>
@@ -384,7 +391,7 @@ ${loginUrl.href}`);
         };
         row.querySelector('.toggle-workspace').onclick = async () => {
           const nextActive = !info.effectiveActive;
-          const nextStatus = nextActive ? (festival.plan === 'purchased' ? 'active' : 'trial') : 'suspended';
+          const nextStatus = nextActive ? (info.status === 'active' ? 'active' : 'trial') : 'suspended';
           await updateDoc(doc(db, 'institutions', festival.id), { active: nextActive, subscriptionStatus: nextStatus, updatedAt: serverTimestamp() });
           await setDoc(doc(db, `institutions/${festival.id}/festivals`, festival.defaultFestivalId || festival.id), { active: nextActive, subscriptionStatus: nextStatus, updatedAt: serverTimestamp() }, { merge: true });
           if (festival.ownerUsername || festival.ownerEmail) {
@@ -414,6 +421,24 @@ ${loginUrl.href}`);
       return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `workspace-${Date.now()}`;
     }
 
+
+    function addDays(dateString, days) {
+      if (!dateString || !days) return '';
+      const date = new Date(`${dateString}T00:00:00`);
+      date.setDate(date.getDate() + Number(days));
+      return date.toISOString().slice(0, 10);
+    }
+
+    function updateSubscriptionControls() {
+      const status = document.getElementById('institution-subscription').value;
+      const trialControls = document.getElementById('trial-controls');
+      const paidControls = document.getElementById('paid-controls');
+      const suspendedControls = document.getElementById('suspended-controls');
+      trialControls.classList.toggle('hidden', status !== 'trial');
+      paidControls.classList.toggle('hidden', status !== 'active');
+      suspendedControls.classList.toggle('hidden', status !== 'suspended');
+    }
+
     function setModalOpen(open) {
       modal.classList.toggle('hidden', !open);
       modal.classList.toggle('flex', open);
@@ -431,16 +456,18 @@ ${loginUrl.href}`);
       document.getElementById('institution-admin-login').value = festival?.ownerUsername || festival?.ownerEmail || '';
       document.getElementById('institution-admin-password').value = festival?.ownerPassword || '';
       document.getElementById('institution-admin-password').placeholder = 'admin login password';
-      document.getElementById('institution-plan').value = festival?.plan || 'trial';
-      document.getElementById('institution-subscription').value = festival?.subscriptionStatus || 'trial';
+      const modalStatus = ['trial', 'active', 'suspended'].includes(festival?.subscriptionStatus) ? festival.subscriptionStatus : (festival?.plan === 'purchased' ? 'active' : 'trial');
+      document.getElementById('institution-subscription').value = modalStatus;
+      document.getElementById('institution-trial-starts').value = toDateOnly(festival?.trialStartsAt);
+      document.getElementById('institution-trial-days').value = festival?.trialDays || '';
       document.getElementById('institution-trial-ends').value = toDateOnly(festival?.trialEndsAt);
       document.getElementById('institution-billing-cycle').value = festival?.billingCycle || 'monthly';
       document.getElementById('institution-subscription-ends').value = toDateOnly(festival?.subscriptionEndsAt);
       document.getElementById('institution-payment-amount').value = festival?.paymentAmount || '';
       document.getElementById('institution-payment-reference').value = festival?.paymentReference || '';
       document.getElementById('institution-purchase-date').value = toDateOnly(festival?.purchaseDate);
-      document.getElementById('institution-active').checked = festival?.active !== false;
       document.getElementById('institution-purchase-notes').value = festival?.purchaseNotes || '';
+      updateSubscriptionControls();
       setModalOpen(true);
     }
 
@@ -448,6 +475,26 @@ ${loginUrl.href}`);
     document.getElementById('institution-modal-cancel').onclick = () => setModalOpen(false);
     modal.addEventListener('click', (event) => {
       if (event.target === modal) setModalOpen(false);
+    });
+
+    document.getElementById('institution-subscription').addEventListener('change', updateSubscriptionControls);
+    document.getElementById('institution-trial-days').addEventListener('input', () => {
+      const start = document.getElementById('institution-trial-starts').value;
+      const days = document.getElementById('institution-trial-days').value;
+      const computedEnd = addDays(start, days);
+      if (computedEnd) document.getElementById('institution-trial-ends').value = computedEnd;
+    });
+    document.getElementById('institution-trial-starts').addEventListener('change', () => {
+      const days = document.getElementById('institution-trial-days').value;
+      const computedEnd = addDays(document.getElementById('institution-trial-starts').value, days);
+      if (computedEnd) document.getElementById('institution-trial-ends').value = computedEnd;
+    });
+    document.getElementById('institution-billing-cycle').addEventListener('change', () => {
+      const cycle = document.getElementById('institution-billing-cycle').value;
+      const start = document.getElementById('institution-purchase-date').value;
+      if (cycle === 'monthly' && start) document.getElementById('institution-subscription-ends').value = addDays(start, 30);
+      if (cycle === 'yearly' && start) document.getElementById('institution-subscription-ends').value = addDays(start, 365);
+      if (cycle === 'unlimited') document.getElementById('institution-subscription-ends').value = '';
     });
 
     institutionForm.addEventListener('submit', async (event) => {
@@ -458,15 +505,17 @@ ${loginUrl.href}`);
       const ownerName = document.getElementById('institution-admin-name').value.trim();
       const ownerLogin = document.getElementById('institution-admin-login').value.trim().toLowerCase();
       const ownerPassword = document.getElementById('institution-admin-password').value.trim();
-      const plan = document.getElementById('institution-plan').value;
       const subscriptionStatus = document.getElementById('institution-subscription').value;
+      const plan = subscriptionStatus === 'active' ? 'purchased' : 'trial';
+      const trialStartsAt = document.getElementById('institution-trial-starts').value;
+      const trialDays = document.getElementById('institution-trial-days').value;
       const trialEndsAt = document.getElementById('institution-trial-ends').value;
       const billingCycle = document.getElementById('institution-billing-cycle').value;
       const subscriptionEndsAt = document.getElementById('institution-subscription-ends').value;
       const paymentAmount = document.getElementById('institution-payment-amount').value;
       const paymentReference = document.getElementById('institution-payment-reference').value.trim();
       const purchaseDate = document.getElementById('institution-purchase-date').value;
-      const active = document.getElementById('institution-active').checked;
+      const active = subscriptionStatus !== 'suspended';
       const purchaseNotes = document.getElementById('institution-purchase-notes').value.trim();
 
       if (!title || !ownerName || !ownerLogin || !ownerPassword) {
@@ -482,6 +531,8 @@ ${loginUrl.href}`);
         ownerPassword,
         plan,
         subscriptionStatus,
+        trialStartsAt,
+        trialDays,
         trialEndsAt,
         billingCycle,
         subscriptionEndsAt,
@@ -496,7 +547,7 @@ ${loginUrl.href}`);
       await renderSuperAdminPortal();
     });
 
-    async function saveInstitutionWorkspace({ id, title, ownerName, ownerLogin, ownerPassword, plan, subscriptionStatus, trialEndsAt, billingCycle, subscriptionEndsAt, paymentAmount, paymentReference, purchaseDate, active, purchaseNotes, oldLogin }) {
+    async function saveInstitutionWorkspace({ id, title, ownerName, ownerLogin, ownerPassword, plan, subscriptionStatus, trialStartsAt, trialDays, trialEndsAt, billingCycle, subscriptionEndsAt, paymentAmount, paymentReference, purchaseDate, active, purchaseNotes, oldLogin }) {
       await setDoc(doc(db, 'institutions', id), {
         id,
         title,
@@ -505,6 +556,8 @@ ${loginUrl.href}`);
         active,
         plan,
         subscriptionStatus,
+        trialStartsAt,
+        trialDays,
         trialEndsAt,
         billingCycle,
         subscriptionEndsAt,
@@ -529,6 +582,8 @@ ${loginUrl.href}`);
         active,
         plan,
         subscriptionStatus,
+        trialStartsAt,
+        trialDays,
         trialEndsAt,
         billingCycle,
         subscriptionEndsAt,
@@ -545,10 +600,10 @@ ${loginUrl.href}`);
         await deleteDoc(doc(db, 'institutionLogins', oldLogin));
         await deleteDoc(doc(db, `institutions/${id}/festivals/${id}/manualUsers`, oldLogin));
       }
-      await saveInstitutionAdminLogin({ id, defaultFestivalId: id, name: title, title }, ownerName, ownerLogin, ownerPassword, active, plan, subscriptionStatus, trialEndsAt, billingCycle, subscriptionEndsAt);
+      await saveInstitutionAdminLogin({ id, defaultFestivalId: id, name: title, title }, ownerName, ownerLogin, ownerPassword, active, plan, subscriptionStatus, trialStartsAt, trialDays, trialEndsAt, billingCycle, subscriptionEndsAt);
     }
 
-    async function saveInstitutionAdminLogin(festival, ownerName, ownerLogin, ownerPassword, active, plan = 'trial', subscriptionStatus = 'trial', trialEndsAt = '', billingCycle = 'monthly', subscriptionEndsAt = '') {
+    async function saveInstitutionAdminLogin(festival, ownerName, ownerLogin, ownerPassword, active, plan = 'trial', subscriptionStatus = 'trial', trialStartsAt = '', trialDays = '', trialEndsAt = '', billingCycle = 'monthly', subscriptionEndsAt = '') {
       const institutionId = festival.id;
       const festivalId = festival.defaultFestivalId || festival.id;
       const loginKey = ownerLogin.toLowerCase();
@@ -565,6 +620,8 @@ ${loginUrl.href}`);
         password: ownerPassword,
         plan,
         subscriptionStatus,
+        trialStartsAt,
+        trialDays,
         trialEndsAt,
         billingCycle,
         subscriptionEndsAt,
