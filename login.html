@@ -230,8 +230,19 @@
         window.location.replace(redirectPath);
       } catch (err) {
         console.error("Auth transaction failed:", err);
-        errorText.textContent = err.message || "An authentication error occurred. Please verify your email and password.";
+        const friendlyMessage = err.message || "An authentication error occurred. Please verify your email and password.";
+        errorText.textContent = friendlyMessage;
         errorBox.classList.remove('hidden');
+        if (err.code === 'auth/manual-user-not-found') {
+          const errEmail = document.getElementById('err-email');
+          errEmail.textContent = friendlyMessage;
+          errEmail.classList.remove('hidden');
+        }
+        if (err.code === 'auth/manual-wrong-password' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+          const errPass = document.getElementById('err-password');
+          errPass.textContent = err.code === 'auth/invalid-credential' ? 'Password is incorrect, or this Firebase account is not configured for this portal.' : friendlyMessage;
+          errPass.classList.remove('hidden');
+        }
         
         // Recover state
         loader.classList.add('hidden');

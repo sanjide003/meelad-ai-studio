@@ -82,9 +82,12 @@ export async function loginWithUsernamePassword(username, password) {
   let profile = null;
   let usernameFound = false;
 
-  try {
-    // Scoped login links are the primary institution/team/judge login path.
-    if (institutionId && festivalId) {
+  let permissionDenied = false;
+
+  // Scoped login links are the primary institution/team/judge login path. If production rules are
+  // stale, continue to the top-level institution login index before showing a permission message.
+  if (institutionId && festivalId) {
+    try {
       const scopedQuery = query(collection(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`), where('usernameLower', '==', usernameLower));
       const snap = await getDocs(scopedQuery);
       if (!snap.empty) {
@@ -97,10 +100,16 @@ export async function loginWithUsernamePassword(username, password) {
         }
         profile = candidate;
       }
+    } catch (err) {
+      if (err.code !== 'permission-denied') throw err;
+      permissionDenied = true;
+      console.warn('Scoped manual login path is blocked by Firestore rules; trying institution login index.', err);
     }
+  }
 
-    // Institution admins can also log in without a selected scope through the Super Admin login index.
-    if (!profile) {
+  // Institution admins can also log in without a selected scope through the Super Admin login index.
+  if (!profile) {
+    try {
       const indexSnap = await getDoc(doc(db, 'institutionLogins', usernameLower));
       if (indexSnap.exists()) {
         usernameFound = true;
@@ -114,14 +123,16 @@ export async function loginWithUsernamePassword(username, password) {
         festivalId = indexedProfile.festivalId || indexedProfile.institutionId;
         profile = { id: indexSnap.id, ...indexedProfile, institutionId, festivalId, manualAuth: true };
       }
+    } catch (err) {
+      if (err.code !== 'permission-denied') throw err;
+      permissionDenied = true;
     }
-  } catch (err) {
-    if (err.code === 'permission-denied') {
-      const permissionErr = new Error('Firebase permission denied. Deploy the latest Firestore rules, then try this institution admin login again.');
-      permissionErr.code = 'auth/manual-permission-denied';
-      throw permissionErr;
-    }
-    throw err;
+  }
+
+  if (!profile && permissionDenied) {
+    const permissionErr = new Error('Firebase permission denied. Deploy the latest Firestore rules and hosting files, then try this institution admin login again.');
+    permissionErr.code = 'auth/manual-permission-denied';
+    throw permissionErr;
   }
 
   if (!profile) {
