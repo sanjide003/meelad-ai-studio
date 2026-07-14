@@ -77,14 +77,26 @@ export async function loginWithEmailAndPassword(email, password, rememberMe) {
 
 export async function loginWithUsernamePassword(username, password) {
   const usernameLower = username.trim().toLowerCase();
-  const q = query(collection(db, 'manualUsers'), where('usernameLower', '==', usernameLower), where('password', '==', password));
-  const snap = await getDocs(q);
+  const institutionId = localStorage.getItem('meeladpulse_selected_institution_id');
+  const festivalId = localStorage.getItem('meeladpulse_selected_fest_id');
+  let snap = null;
+
+  if (institutionId && festivalId) {
+    const scopedQuery = query(collection(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`), where('usernameLower', '==', usernameLower), where('password', '==', password));
+    snap = await getDocs(scopedQuery);
+  }
+
+  if (!snap || snap.empty) {
+    const legacyQuery = query(collection(db, 'manualUsers'), where('usernameLower', '==', usernameLower), where('password', '==', password));
+    snap = await getDocs(legacyQuery);
+  }
+
   if (snap.empty) {
     const err = new Error('Invalid username or password.');
     err.code = 'auth/manual-invalid';
     throw err;
   }
-  const profile = { id: snap.docs[0].id, ...snap.docs[0].data(), manualAuth: true };
+  const profile = { id: snap.docs[0].id, institutionId, festivalId, ...snap.docs[0].data(), manualAuth: true };
   if (profile.active !== true) {
     const err = new Error('Account Inactive: Your account access has been suspended by the administrator.');
     err.code = 'auth/user-disabled';

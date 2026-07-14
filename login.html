@@ -103,6 +103,10 @@
   <script type="module">
     import { loginWithEmailAndPassword, loginWithUsernamePassword } from "./assets/js/auth.js";
 
+    const loginScopeParams = new URLSearchParams(window.location.search);
+    if (loginScopeParams.get('institution')) localStorage.setItem('meeladpulse_selected_institution_id', loginScopeParams.get('institution'));
+    if (loginScopeParams.get('festival')) localStorage.setItem('meeladpulse_selected_fest_id', loginScopeParams.get('festival'));
+
     // Simple dual translation database
     const t = {
       en: {

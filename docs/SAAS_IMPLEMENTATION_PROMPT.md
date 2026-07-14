@@ -8,6 +8,9 @@
 - The dashboard has a setup roadmap and scoped share-link generator.
 - Firestore rules now include a first `/institutions/{institutionId}/festivals/{festivalId}` scoped rules block.
 - Client helpers now expose `getActiveScope()` and `getScopedFestivalPath()` while keeping legacy `getActiveFestivalId()` during migration.
+- Team leader credentials are now written to both legacy `manualUsers` and scoped `institutions/{institutionId}/festivals/{festivalId}/manualUsers`.
+- Username/password login checks scoped manual users first when a scoped login link provides institution/festival context.
+- A conservative migration script exists at `scripts/migrate-festivals-to-institutions.mjs`.
 
 ## Remaining production migration prompt
 
@@ -17,7 +20,7 @@ Implement the remaining premium SaaS architecture in phases:
 2. Add `institutionId` and `allowedFestivalIds` to every Firebase admin profile and backfill old admin documents.
 3. Move manual judge/team leader credentials from global `manualUsers` to `institutions/{institutionId}/festivals/{festivalId}/manualUsers`.
 4. Update team and judge login so username/password lookups read only from the selected institution/festival scoped `manualUsers` collection.
-5. Add a migration script that copies existing `festivals/*` documents and subcollections into `institutions/{institutionId}/festivals/*`.
+5. Run and verify `scripts/migrate-festivals-to-institutions.mjs` against production data after configuring Firebase Admin credentials.
 6. Replace plaintext manual passwords with salted password hashes or a Firebase Function-based credential check before production.
 7. Update Firestore Security Rules to remove broad legacy `/festivals/{festId}` writes after migration is complete.
 8. Add subscription dates and payment states: `trialEndsAt`, `subscriptionEndsAt`, `paymentStatus`, `suspendedReason`.

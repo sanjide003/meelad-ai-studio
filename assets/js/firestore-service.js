@@ -384,11 +384,15 @@ export async function saveTeam(teamData) {
       updatedAt: serverTimestamp()
     };
     await setDoc(doc(db, `festivals/${festId}/teams`, id), payload, { merge: true });
+    const scopedTeamPath = getScopedFestivalPath(`teams/${id}`);
+    await setDoc(doc(db, scopedTeamPath), payload, { merge: true });
 
     if (leaderUsername && teamData.leaderPassword) {
-      await setDoc(doc(db, 'manualUsers', leaderUsername), {
+      const manualUserPayload = {
         uid: `manual_team_${id}_${leaderUsername}`,
         role: 'teamLeader',
+        institutionId: getActiveScope().institutionId,
+        festivalId: festId,
         teamId: id,
         name: teamData.leaderName || teamData.name || leaderUsername,
         username: teamData.leaderUsername,
@@ -397,7 +401,9 @@ export async function saveTeam(teamData) {
         photoUrl: teamData.leaderPhotoUrl || '',
         active: teamData.leaderActive !== false,
         updatedAt: serverTimestamp()
-      }, { merge: true });
+      };
+      await setDoc(doc(db, 'manualUsers', leaderUsername), manualUserPayload, { merge: true });
+      await setDoc(doc(db, getScopedFestivalPath(`manualUsers/${leaderUsername}`)), manualUserPayload, { merge: true });
     }
     return id;
   } catch (error) {
