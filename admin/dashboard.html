@@ -241,10 +241,10 @@
         // Fetch Teams count inside selected festival
         if (festId) {
           document.getElementById('festival-setup-panel')?.classList.add('hidden');
-          const teamsSnap = await getDocs(collection(db, `festivals/${festId}/teams`));
+          const teamsSnap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('teams')));
           document.getElementById('stat-teams-count').textContent = teamsSnap.size;
 
-          const compsSnap = await getDocs(collection(db, `festivals/${festId}/competitions`));
+          const compsSnap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('competitions')));
           document.getElementById('stat-competitions-count').textContent = compsSnap.size;
         } else {
           document.getElementById('festival-setup-panel')?.classList.remove('hidden');
@@ -262,7 +262,7 @@
     async function createInitialFestival() {
       const festId = 'main-festival';
       const festivalTitle = 'Meelad Fest';
-      await setDoc(doc(db, 'festivals', festId), {
+      await setDoc(doc(db, window.meeladPulseScopedFestivalPath()), {
         title: festivalTitle,
         name: festivalTitle,
         code: 'MEELAD',

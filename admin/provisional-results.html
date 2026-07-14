@@ -391,7 +391,7 @@
         holdBtn.disabled = true;
         try {
           const festId = localStorage.getItem('meeladpulse_selected_fest_id');
-          const resRef = doc(db, `festivals/${festId}/results`, compId);
+          const resRef = doc(db, window.meeladPulseScopedFestivalPath('results'), compId);
           await updateDoc(resRef, { status: nextStatus });
           showToast(`Result status toggled to ${nextStatus}.`);
           results = await getResults();

@@ -62,10 +62,9 @@
           return;
         }
 
-        // 2. Query Firestore festivals
-        const festivalsCol = collection(db, 'festivals');
-        // Institution admins and staff see only active scopes until tenant ownership is migrated.
-        const q = query(festivalsCol, where('active', '==', true));
+        // 2. Query active institution workspaces. Runtime data is now institution-scoped.
+        const institutionsCol = collection(db, 'institutions');
+        const q = query(institutionsCol, where('active', '==', true));
         const querySnapshot = await getDocs(q);
 
         festivalsGrid.innerHTML = '';
@@ -143,8 +142,8 @@
     async function renderSuperAdminPortal() {
       document.querySelector('h1').textContent = 'Super Admin Institution Portal';
       document.getElementById('portal-subtitle').textContent = 'Application-owner control for institutions, premium subscriptions, activation status, and festival workspaces.';
-      const snap = await getDocs(collection(db, 'festivals'));
-      const festivals = snap.docs.map(item => ({ id: item.id, ...item.data() })).sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      const snap = await getDocs(collection(db, 'institutions'));
+      const festivals = snap.docs.map(item => ({ id: item.id, institutionId: item.id, ...item.data() })).sort((a, b) => (a.title || a.name || '').localeCompare(b.title || b.name || ''));
       festivalsGrid.innerHTML = `
         <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-4">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -181,12 +180,13 @@
         `;
         row.querySelector('.open-workspace').onclick = () => enterFestivalScope(festival.id, festival, 'admin/app.html');
         row.querySelector('.toggle-workspace').onclick = async () => {
-          await updateDoc(doc(db, 'festivals', festival.id), { active: festival.active === false, updatedAt: serverTimestamp() });
+          await updateDoc(doc(db, 'institutions', festival.id), { active: festival.active === false, updatedAt: serverTimestamp() });
+          await setDoc(doc(db, `institutions/${festival.id}/festivals`, festival.defaultFestivalId || festival.id), { active: festival.active === false, updatedAt: serverTimestamp() }, { merge: true });
           await renderSuperAdminPortal();
         };
         row.querySelector('.delete-workspace').onclick = async () => {
           if (!confirm(`Delete ${festival.title || festival.id}? This removes the workspace document only.`)) return;
-          await deleteDoc(doc(db, 'festivals', festival.id));
+          await deleteDoc(doc(db, 'institutions', festival.id));
           await renderSuperAdminPortal();
         };
         list.appendChild(row);
@@ -197,22 +197,6 @@
       const title = prompt('Institution / festival workspace name');
       if (!title) return;
       const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `workspace-${Date.now()}`;
-      const ref = doc(db, 'festivals', slug);
-      await setDoc(ref, {
-        title,
-        name: title,
-        code: slug.toUpperCase().slice(0, 12),
-        institutionId: slug,
-        institutionName: title,
-        active: true,
-        plan: 'trial',
-        subscriptionStatus: 'trial',
-        ownerEmail: '',
-        studentRegistrationMode: 'adminOnly',
-        studentRegistrationOpen: true,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      }, { merge: true });
       await setDoc(doc(db, 'institutions', slug), {
         id: slug,
         name: title,
@@ -220,6 +204,7 @@
         active: true,
         plan: 'trial',
         subscriptionStatus: 'trial',
+        defaultFestivalId: slug,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       }, { merge: true });
@@ -247,7 +232,20 @@
     async function createInitialFestivalAndEnter() {
       const festId = 'main-festival';
       const festivalTitle = 'Meelad Fest';
-      await setDoc(doc(db, 'festivals', festId), {
+      await setDoc(doc(db, 'institutions', festId), {
+        title: festivalTitle,
+        name: festivalTitle,
+        code: 'MEELAD',
+        venue: 'Main Campus',
+        active: true,
+        studentRegistrationMode: 'adminOnly',
+        studentRegistrationOpen: true,
+        defaultFestivalId: festId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      await setDoc(doc(db, `institutions/${festId}/festivals`, festId), {
+        id: festId,
         title: festivalTitle,
         name: festivalTitle,
         code: 'MEELAD',

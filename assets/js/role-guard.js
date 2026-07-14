@@ -19,7 +19,7 @@ if (loaderEl) {
 async function isSelectedFestivalAvailable(festId, role) {
   if (role === 'superAdmin') return true;
   try {
-    const snap = await getDoc(doc(db, 'festivals', festId));
+    const snap = await getDoc(doc(db, window.meeladPulseScopedFestivalPath()));
     if (!snap.exists()) return false;
     const data = snap.data();
     const blockedStatuses = ['inactive', 'expired', 'payment_due', 'suspended'];

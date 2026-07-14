@@ -113,7 +113,7 @@
     async function loadTeams() {
       const select = document.getElementById('team-selector');
       try {
-        const snap = await getDocs(collection(db, `festivals/${festId}/teams`));
+        const snap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('teams')));
         teams = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
         teams.sort((a, b) => a.name.localeCompare(b.name));

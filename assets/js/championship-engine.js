@@ -247,7 +247,7 @@ export async function recalculateChampionshipTotals() {
     // 8. Load existing champions to check for admin overrides
     let existingChamps = [];
     try {
-      const snap = await getDocs(collection(db, `festivals/${festId}/publicData/champions`));
+      const snap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('publicData/champions')));
       existingChamps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.log("Existing champions snapshot could not be loaded:", e);
@@ -256,7 +256,7 @@ export async function recalculateChampionshipTotals() {
     // Load active festival student profiles to retrieve DOB details for age-based tie-breakers
     let studentsMap = {};
     try {
-      const studSnap = await getDocs(collection(db, `festivals/${festId}/festStudents`));
+      const studSnap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('festStudents')));
       studSnap.forEach(d => {
         studentsMap[d.id] = d.data();
       });

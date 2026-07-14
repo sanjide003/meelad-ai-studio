@@ -126,7 +126,7 @@
     async function loadTeamStudents() {
       const festId = localStorage.getItem('meeladpulse_selected_fest_id');
       try {
-        const snap = await getDocs(query(collection(db, `festivals/${festId}/festStudents`), where('teamId', '==', assignedTeamId)));
+        const snap = await getDocs(query(collection(db, window.meeladPulseScopedFestivalPath('festStudents')), where('teamId', '==', assignedTeamId)));
         teamStudents = [];
         snap.forEach(d => {
           teamStudents.push({ id: d.id, ...d.data() });
@@ -139,7 +139,7 @@
     async function loadTeamEntries() {
       const festId = localStorage.getItem('meeladpulse_selected_fest_id');
       try {
-        const snap = await getDocs(query(collection(db, `festivals/${festId}/entries`), where('teamId', '==', assignedTeamId)));
+        const snap = await getDocs(query(collection(db, window.meeladPulseScopedFestivalPath('entries')), where('teamId', '==', assignedTeamId)));
         teamEntries = [];
         snap.forEach(d => {
           teamEntries.push({ id: d.id, ...d.data() });
@@ -215,7 +215,7 @@
             loader.classList.remove('hidden');
 
             const festId = localStorage.getItem('meeladpulse_selected_fest_id');
-            await deleteDoc(doc(db, `festivals/${festId}/entries`, ent.id));
+            await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('entries'), ent.id));
 
             loader.classList.add('hidden');
             alert("Entry removed successfully!");

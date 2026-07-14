@@ -163,7 +163,7 @@
     }
 
     async function loadStudentDetails() {
-      const docRef = doc(db, `festivals/${activeFestId}/festStudents`, studentId);
+      const docRef = doc(db, window.meeladPulseScopedFestivalPath('festStudents'), studentId);
       const snap = await getDoc(docRef);
       if (!snap.exists()) {
         alert("Student record not found.");

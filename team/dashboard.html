@@ -244,7 +244,7 @@
 
       try {
         // Query Students belonging strictly to this assigned team ID
-        const studentCol = collection(db, `festivals/${festId}/festStudents`);
+        const studentCol = collection(db, window.meeladPulseScopedFestivalPath('festStudents'));
         const q = query(studentCol, where('teamId', '==', assignedTeamId));
         const querySnapshot = await getDocs(q);
 
@@ -302,7 +302,7 @@
       const festId = localStorage.getItem('meeladpulse_selected_fest_id');
 
       try {
-        const correctCol = collection(db, `festivals/${festId}/correctionRequests`);
+        const correctCol = collection(db, window.meeladPulseScopedFestivalPath('correctionRequests'));
         const q = query(correctCol, where('teamId', '==', assignedTeamId));
         const querySnapshot = await getDocs(q);
 
@@ -378,7 +378,7 @@
           const loader = document.getElementById('global-page-loader');
           loader.classList.remove('hidden');
 
-          const docRef = doc(db, `festivals/${festId}/festStudents`, studentId);
+          const docRef = doc(db, window.meeladPulseScopedFestivalPath('festStudents'), studentId);
           await setDoc(docRef, studentProfile);
 
           modal.classList.add('hidden');
@@ -413,7 +413,7 @@
           const loader = document.getElementById('global-page-loader');
           loader.classList.remove('hidden');
 
-          const docRef = doc(db, `festivals/${festId}/correctionRequests`, requestId);
+          const docRef = doc(db, window.meeladPulseScopedFestivalPath('correctionRequests'), requestId);
           await setDoc(docRef, requestData);
 
           correctionForm.reset();

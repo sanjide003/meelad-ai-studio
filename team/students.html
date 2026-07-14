@@ -221,7 +221,7 @@
     async function loadStudents() {
       const festId = localStorage.getItem('meeladpulse_selected_fest_id');
       try {
-        const studentCol = collection(db, `festivals/${festId}/festStudents`);
+        const studentCol = collection(db, window.meeladPulseScopedFestivalPath('festStudents'));
         const q = query(studentCol, where('teamId', '==', assignedTeamId));
         const snap = await getDocs(q);
 

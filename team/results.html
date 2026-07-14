@@ -145,7 +145,7 @@
       const festId = localStorage.getItem('meeladpulse_selected_fest_id');
       try {
         // Query public results
-        const snap = await getDocs(collection(db, `festivals/${festId}/publicData/results`));
+        const snap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('publicData/results')));
         
         let matchCount = 0;
         let totalPoints = 0;

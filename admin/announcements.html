@@ -207,7 +207,7 @@
           card.querySelector('.delete-btn').onclick = async () => {
             if (confirm("Are you sure you want to retract and delete this bulletin permanently?")) {
               try {
-                await deleteDoc(doc(db, `festivals/${activeFestId}/announcements`, item.id));
+                await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('announcements'), item.id));
                 loadBulletins();
               } catch (err) {
                 console.error("Retraction error:", err);

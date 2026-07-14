@@ -293,8 +293,8 @@
 
       try {
         const [divsSnap, catsSnap] = await Promise.all([
-          getDocs(collection(db, `festivals/${festId}/divisions`)),
-          getDocs(collection(db, `festivals/${festId}/categories`))
+          getDocs(collection(db, window.meeladPulseScopedFestivalPath('divisions'))),
+          getDocs(collection(db, window.meeladPulseScopedFestivalPath('categories')))
         ]);
 
         divsSnap.forEach(d => {
@@ -492,7 +492,7 @@
             if (!confirm(`Move ${r.competitionName} results to held status?`)) return;
             showProcessing("Holding publication...");
             try {
-              await updateDoc(doc(db, `festivals/${festId}/results`, r.id), { status: 'held' });
+              await updateDoc(doc(db, window.meeladPulseScopedFestivalPath('results'), r.id), { status: 'held' });
               showToast("Result status updated to Held", "success");
               await fetchAndRenderQueue();
             } catch (err) {
@@ -563,7 +563,7 @@
             if (!confirm(`Restore ${r.competitionName} to Ready to Publish state?`)) return;
             showProcessing("Restoring to ready...");
             try {
-              await updateDoc(doc(db, `festivals/${festId}/results`, r.id), { status: 'approved' });
+              await updateDoc(doc(db, window.meeladPulseScopedFestivalPath('results'), r.id), { status: 'approved' });
               showToast("Restored to ready to publish queue", "success");
               await fetchAndRenderQueue();
             } catch (err) {

@@ -7,7 +7,7 @@ import { collection, addDoc, getDocs, query, where, serverTimestamp } from "http
  */
 export async function createAuditLog(festId, action, targetId, details, userUid, userEmail) {
   try {
-    const colRef = collection(db, `festivals/${festId}/auditLogs`);
+    const colRef = collection(db, window.meeladPulseScopedFestivalPath('auditLogs'));
     const logDoc = {
       action,
       targetId,
@@ -45,7 +45,7 @@ export async function getAuditLogsForTarget(targetId, action = null) {
     constraints.push(where('action', '==', action));
   }
 
-  const snapshot = await getDocs(query(collection(db, `festivals/${festId}/auditLogs`), ...constraints));
+  const snapshot = await getDocs(query(collection(db, window.meeladPulseScopedFestivalPath('auditLogs')), ...constraints));
   return snapshot.docs.map(docSnap => ({
     id: docSnap.id,
     ...docSnap.data()

@@ -24,7 +24,7 @@ export async function publishResult(festId, compId, adminProfile) {
   assertOnline('Result Publication');
   try {
     // 1. Fetch private result
-    const resRef = doc(db, `festivals/${festId}/results`, compId);
+    const resRef = doc(db, window.meeladPulseScopedFestivalPath('results'), compId);
     const resSnap = await getDoc(resRef);
     if (!resSnap.exists()) {
       throw new Error(`Result for competition ${compId} does not exist.`);
@@ -38,7 +38,7 @@ export async function publishResult(festId, compId, adminProfile) {
     }
 
     // 2. Fetch competition details
-    const compRef = doc(db, `festivals/${festId}/competitions`, compId);
+    const compRef = doc(db, window.meeladPulseScopedFestivalPath('competitions'), compId);
     const compSnap = await getDoc(compRef);
     if (!compSnap.exists()) {
       throw new Error(`Competition details for ${compId} not found.`);
@@ -46,7 +46,7 @@ export async function publishResult(festId, compId, adminProfile) {
     const compData = compSnap.data();
 
     // Fetch festival config to check showFinalMarks
-    const festRef = doc(db, 'festivals', festId);
+    const festRef = doc(db, window.meeladPulseScopedFestivalPath());
     const festSnap = await getDoc(festRef);
     const festData = festSnap.exists() ? festSnap.data() : {};
     const showFinalMarks = festData.showFinalMarks !== false;
@@ -76,7 +76,7 @@ export async function publishResult(festId, compId, adminProfile) {
 
     // 4. Create public-safe result document
     const pubResultId = compId;
-    const pubResultRef = doc(db, `festivals/${festId}/publicData/results`, pubResultId);
+    const pubResultRef = doc(db, window.meeladPulseScopedFestivalPath('publicData/results'), pubResultId);
 
     const normPerformanceType = normalizeMachineValue(compData.performanceType || 'stage');
     const performanceTypeCanonical = (normPerformanceType === 'onstage' || normPerformanceType === 'stage') ? 'stage' : 'nonStage';
@@ -116,7 +116,7 @@ export async function publishResult(festId, compId, adminProfile) {
     // Create search index documents for winners
     publicWinners.forEach(w => {
       const sId = `${pubResultId}_${w.chestNumberNormalized || w.displayNameNormalized}`;
-      const searchIndexRef = doc(db, `festivals/${festId}/publicData/searchIndex`, sId);
+      const searchIndexRef = doc(db, window.meeladPulseScopedFestivalPath('publicData/searchIndex'), sId);
       batch.set(searchIndexRef, {
         resultId: pubResultId,
         competitionId: compId,
@@ -145,7 +145,7 @@ export async function publishResult(festId, compId, adminProfile) {
     await recalculateAndPublishTeamStandings(festId);
 
     // 7. Create Public Notification / Announcement
-    const notRef = collection(db, `festivals/${festId}/announcements`);
+    const notRef = collection(db, window.meeladPulseScopedFestivalPath('announcements'));
     const winnersSummaryText = publicWinners.map(w => `${w.position}: ${w.displayName} (${w.teamName})`).join(', ') || 'Standings officialised.';
     await setDoc(doc(notRef), {
       title: `Result Declared: ${compData.name} (${compData.code || 'CODE'})`,
@@ -179,15 +179,15 @@ export async function publishResult(festId, compId, adminProfile) {
 export async function unpublishResult(festId, compId, adminProfile, reason = '') {
   assertOnline('Result Unpublication');
   try {
-    const resRef = doc(db, `festivals/${festId}/results`, compId);
-    const pubResultRef = doc(db, `festivals/${festId}/publicData/results`, compId);
-    const compRef = doc(db, `festivals/${festId}/competitions`, compId);
+    const resRef = doc(db, window.meeladPulseScopedFestivalPath('results'), compId);
+    const pubResultRef = doc(db, window.meeladPulseScopedFestivalPath('publicData/results'), compId);
+    const compRef = doc(db, window.meeladPulseScopedFestivalPath('competitions'), compId);
 
     const compSnap = await getDoc(compRef);
     const compName = compSnap.exists() ? compSnap.data().name : compId;
 
     // Fetch and delete search index documents
-    const searchIndexCol = collection(db, `festivals/${festId}/publicData/searchIndex`);
+    const searchIndexCol = collection(db, window.meeladPulseScopedFestivalPath('publicData/searchIndex'));
     const searchSnap = await getDocs(query(searchIndexCol, where("resultId", "==", compId)));
 
     // Batch retraction
@@ -209,7 +209,7 @@ export async function unpublishResult(festId, compId, adminProfile, reason = '')
     await recalculateAndPublishTeamStandings(festId);
 
     // Create public announcement for retraction
-    const notRef = collection(db, `festivals/${festId}/announcements`);
+    const notRef = collection(db, window.meeladPulseScopedFestivalPath('announcements'));
     await setDoc(doc(notRef), {
       title: `Result Standings Retracted: ${compName}`,
       content: `Official standings for ${compName} have been retracted for verification or correction. New standings will be published soon.`,
@@ -242,7 +242,7 @@ export async function unpublishResult(festId, compId, adminProfile, reason = '')
 export async function republishResult(festId, compId, adminProfile, reason = '') {
   assertOnline('Result Publication');
   try {
-    const resRef = doc(db, `festivals/${festId}/results`, compId);
+    const resRef = doc(db, window.meeladPulseScopedFestivalPath('results'), compId);
     const resSnap = await getDoc(resRef);
     if (!resSnap.exists()) {
       throw new Error("Private result record does not exist.");
@@ -280,11 +280,11 @@ export async function republishResult(festId, compId, adminProfile, reason = '')
  */
 export async function archiveResult(festId, compId, adminProfile, reason = '') {
   try {
-    const resRef = doc(db, `festivals/${festId}/results`, compId);
-    const pubResultRef = doc(db, `festivals/${festId}/publicData/results`, compId);
+    const resRef = doc(db, window.meeladPulseScopedFestivalPath('results'), compId);
+    const pubResultRef = doc(db, window.meeladPulseScopedFestivalPath('publicData/results'), compId);
 
     // Fetch and delete search index documents
-    const searchIndexCol = collection(db, `festivals/${festId}/publicData/searchIndex`);
+    const searchIndexCol = collection(db, window.meeladPulseScopedFestivalPath('publicData/searchIndex'));
     const searchSnap = await getDocs(query(searchIndexCol, where("resultId", "==", compId)));
 
     const batch = writeBatch(db);
@@ -327,12 +327,12 @@ export async function recalculateAndPublishTeamStandings(festId) {
   try {
     // 1. Fetch raw datasets
     const [teamsSnap, resultsSnap, compsSnap, divSnap, bonusSnap, penaltySnap] = await Promise.all([
-      getDocs(collection(db, `festivals/${festId}/teams`)),
-      getDocs(collection(db, `festivals/${festId}/results`)),
-      getDocs(collection(db, `festivals/${festId}/competitions`)),
-      getDocs(collection(db, `festivals/${festId}/divisions`)),
-      getDocs(collection(db, `festivals/${festId}/bonusPoints`)),
-      getDocs(collection(db, `festivals/${festId}/penalties`))
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('teams'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('results'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('competitions'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('divisions'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('bonusPoints'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('penalties')))
     ]);
 
     const teams = teamsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -350,7 +350,7 @@ export async function recalculateAndPublishTeamStandings(festId) {
 
     for (const tt of totalsList) {
       // Private Totals
-      const ttRef = doc(db, `festivals/${festId}/teamTotals`, tt.teamId);
+      const ttRef = doc(db, window.meeladPulseScopedFestivalPath('teamTotals'), tt.teamId);
       batch.set(ttRef, {
         ...tt,
         festId,
@@ -358,7 +358,7 @@ export async function recalculateAndPublishTeamStandings(festId) {
       }, { merge: true });
 
       // Public Safe Standings Summary
-      const pubRankRef = doc(db, `festivals/${festId}/publicData/rankings/teams`, tt.teamId);
+      const pubRankRef = doc(db, window.meeladPulseScopedFestivalPath('publicData/rankings/teams'), tt.teamId);
       const pubSummary = {
         teamId: tt.teamId,
         teamName: tt.teamName,
@@ -418,11 +418,11 @@ export async function recalculateAndPublishIndividualChampions(festId) {
       festStudentsSnap,
       studentsSnap
     ] = await Promise.all([
-      getDocs(collection(db, `festivals/${festId}/publicData/results`)),
-      getDocs(collection(db, `festivals/${festId}/competitions`)),
-      getDocs(collection(db, `festivals/${festId}/pointRules`)),
-      getDocs(collection(db, `festivals/${festId}/gradeRules`)),
-      getDocs(collection(db, `festivals/${festId}/festStudents`)),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('publicData/results'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('competitions'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('pointRules'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('gradeRules'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('festStudents'))),
       getDocs(collection(db, `students`))
     ]);
 
@@ -585,7 +585,7 @@ export async function recalculateAndPublishIndividualChampions(festId) {
         averageMark: Number(c.averageMark.toFixed(2))
       }));
 
-      batch.set(doc(db, `festivals/${festId}/publicData/champions`, id), {
+      batch.set(doc(db, window.meeladPulseScopedFestivalPath('publicData/champions'), id), {
         id,
         type,
         title,
@@ -634,7 +634,7 @@ export async function recalculateAndPublishIndividualChampions(festId) {
 
     // 6. Most First Places
     const sortedFirsts = [...list].sort((a, b) => b.firstCount - a.firstCount || b.totalPoints - a.totalPoints);
-    batch.set(doc(db, `festivals/${festId}/publicData/champions`, 'most_firsts'), {
+    batch.set(doc(db, window.meeladPulseScopedFestivalPath('publicData/champions'), 'most_firsts'), {
       id: 'most_firsts',
       type: 'metric_firsts',
       title: 'Most First Places',
@@ -660,7 +660,7 @@ export async function recalculateAndPublishIndividualChampions(festId) {
       const gB = (b.gradeCounts['A+'] || 0) + (b.gradeCounts['A'] || 0);
       return gB - gA || b.totalPoints - a.totalPoints;
     });
-    batch.set(doc(db, `festivals/${festId}/publicData/champions`, 'most_a_grades'), {
+    batch.set(doc(db, window.meeladPulseScopedFestivalPath('publicData/champions'), 'most_a_grades'), {
       id: 'most_a_grades',
       type: 'metric_a_grades',
       title: 'Most A Grades',
@@ -694,12 +694,12 @@ export async function simulatePublication(festId, selectedCompIds) {
   try {
     // 1. Fetch datasets
     const [teamsSnap, resultsSnap, compsSnap, divSnap, bonusSnap, penaltySnap] = await Promise.all([
-      getDocs(collection(db, `festivals/${festId}/teams`)),
-      getDocs(collection(db, `festivals/${festId}/results`)),
-      getDocs(collection(db, `festivals/${festId}/competitions`)),
-      getDocs(collection(db, `festivals/${festId}/divisions`)),
-      getDocs(collection(db, `festivals/${festId}/bonusPoints`)),
-      getDocs(collection(db, `festivals/${festId}/penalties`))
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('teams'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('results'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('competitions'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('divisions'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('bonusPoints'))),
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('penalties')))
     ]);
 
     const teams = teamsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -785,7 +785,7 @@ export async function simulatePublication(festId, selectedCompIds) {
 export async function migratePublicData(festId, adminProfile) {
   assertOnline('Public Data Migration');
   try {
-    const resultsSnap = await getDocs(collection(db, `festivals/${festId}/results`));
+    const resultsSnap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('results')));
     let count = 0;
     for (const d of resultsSnap.docs) {
       const res = d.data();

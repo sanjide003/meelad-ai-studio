@@ -120,7 +120,7 @@
     async function loadPublicDownloads() {
       const grid = document.getElementById('downloads-grid');
       try {
-        const path = `festivals/${festId}/publicData/downloads`;
+        const path = window.meeladPulseScopedFestivalPath('publicData/downloads');
         const snap = await getDocs(collection(db, path));
         const docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 

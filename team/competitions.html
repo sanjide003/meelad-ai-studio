@@ -195,7 +195,7 @@
     async function loadTeamStudents() {
       const festId = localStorage.getItem('meeladpulse_selected_fest_id');
       try {
-        const snap = await getDocs(query(collection(db, `festivals/${festId}/festStudents`), where('teamId', '==', assignedTeamId)));
+        const snap = await getDocs(query(collection(db, window.meeladPulseScopedFestivalPath('festStudents')), where('teamId', '==', assignedTeamId)));
         teamStudents = [];
         snap.forEach(d => {
           teamStudents.push({ id: d.id, ...d.data() });
@@ -208,7 +208,7 @@
     async function loadTeamEntries() {
       const festId = localStorage.getItem('meeladpulse_selected_fest_id');
       try {
-        const snap = await getDocs(query(collection(db, `festivals/${festId}/entries`), where('teamId', '==', assignedTeamId)));
+        const snap = await getDocs(query(collection(db, window.meeladPulseScopedFestivalPath('entries')), where('teamId', '==', assignedTeamId)));
         teamEntries = [];
         snap.forEach(d => {
           teamEntries.push({ id: d.id, ...d.data() });
@@ -452,7 +452,7 @@
           const loader = document.getElementById('global-page-loader');
           loader.classList.remove('hidden');
 
-          await setDoc(doc(db, `festivals/${festId}/entries`, entryId), entryPayload, { merge: true });
+          await setDoc(doc(db, window.meeladPulseScopedFestivalPath('entries'), entryId), entryPayload, { merge: true });
 
           modal.classList.add('hidden');
           registerForm.reset();

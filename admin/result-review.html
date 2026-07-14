@@ -198,7 +198,7 @@
 
     async function loadResultRecord() {
       const festId = localStorage.getItem('meeladpulse_selected_fest_id');
-      const docRef = doc(db, `festivals/${festId}/results`, selectedComp.id);
+      const docRef = doc(db, window.meeladPulseScopedFestivalPath('results'), selectedComp.id);
       const snap = await docRef.get ? await docRef.get() : await getDoc(docRef);
 
       if (snap.exists()) {
@@ -490,7 +490,7 @@
               changedBy: changedBy,
               changedAt: serverTimestamp()
             };
-            await addDoc(collection(db, `festivals/${festId}/overrideLogs`), overridePayload);
+            await addDoc(collection(db, window.meeladPulseScopedFestivalPath('overrideLogs')), overridePayload);
           }
 
           await executeApproval();

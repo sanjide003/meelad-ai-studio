@@ -79,17 +79,14 @@ export async function loginWithUsernamePassword(username, password) {
   const usernameLower = username.trim().toLowerCase();
   const institutionId = localStorage.getItem('meeladpulse_selected_institution_id');
   const festivalId = localStorage.getItem('meeladpulse_selected_fest_id');
-  let snap = null;
-
-  if (institutionId && festivalId) {
-    const scopedQuery = query(collection(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`), where('usernameLower', '==', usernameLower), where('password', '==', password));
-    snap = await getDocs(scopedQuery);
+  if (!institutionId || !festivalId) {
+    const err = new Error('Select an institution/festival scope before manual login.');
+    err.code = 'auth/manual-scope-required';
+    throw err;
   }
 
-  if (!snap || snap.empty) {
-    const legacyQuery = query(collection(db, 'manualUsers'), where('usernameLower', '==', usernameLower), where('password', '==', password));
-    snap = await getDocs(legacyQuery);
-  }
+  const scopedQuery = query(collection(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`), where('usernameLower', '==', usernameLower), where('password', '==', password));
+  const snap = await getDocs(scopedQuery);
 
   if (snap.empty) {
     const err = new Error('Invalid username or password.');

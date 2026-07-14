@@ -120,7 +120,7 @@
 
     async function loadTeams() {
       try {
-        const snap = await getDocs(collection(db, `festivals/${festId}/teams`));
+        const snap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('teams')));
         teams = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       } catch (e) {
         console.error("Failed to load teams for category stand:", e);
@@ -130,7 +130,7 @@
     async function loadCategories() {
       const select = document.getElementById('category-selector');
       try {
-        const snap = await getDocs(collection(db, `festivals/${festId}/categories`));
+        const snap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('categories')));
         categories = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
         categories.forEach(cat => {

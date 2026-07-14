@@ -124,7 +124,7 @@
     async function fetchChampions() {
       const body = document.getElementById('champions-table-body');
       try {
-        const path = `festivals/${festId}/publicData/champions`;
+        const path = window.meeladPulseScopedFestivalPath('publicData/champions');
         const snap = await getDocs(collection(db, path));
         allChampions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 

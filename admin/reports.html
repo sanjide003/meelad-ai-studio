@@ -220,7 +220,7 @@
         cachedComps = await getCompetitions() || [];
         cachedTeams = await getTeams() || [];
 
-        const studentsSnap = await getDocs(collection(db, `festivals/${activeFestId}/festStudents`));
+        const studentsSnap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('festStudents')));
         const studentsCount = studentsSnap.size;
 
         // Render Quick Metrics

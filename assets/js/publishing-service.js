@@ -9,7 +9,7 @@ import { assertOnline } from "./network-status.js";
  */
 export async function getResultPublishingQueue(festId) {
   try {
-    const qSnap = await getDocs(collection(db, `festivals/${festId}/results`));
+    const qSnap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('results')));
     const results = [];
     qSnap.forEach(d => {
       results.push({ id: d.id, ...d.data() });

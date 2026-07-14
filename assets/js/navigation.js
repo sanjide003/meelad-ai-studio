@@ -236,7 +236,7 @@ export async function initializePublicNavigation() {
   
   if (!festTitle && db) {
     try {
-      const docSnap = await getDoc(doc(db, 'festivals', festId));
+      const docSnap = await getDoc(doc(db, window.meeladPulseScopedFestivalPath()));
       if (docSnap.exists()) {
         const data = docSnap.data();
         festTitle = data.title || data.name || 'MeeladPulse';

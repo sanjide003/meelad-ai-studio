@@ -19,7 +19,7 @@ import { getActiveFestivalId, handleFirestoreError, OperationType, assertAdminRo
 export async function createAnnouncement(title, content, targetRole = 'all') {
   assertAdminRole();
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/announcements`;
+  const path = window.meeladPulseScopedFestivalPath('announcements');
   try {
     const payload = {
       title,
@@ -41,7 +41,7 @@ export async function createAnnouncement(title, content, targetRole = 'all') {
  */
 export async function getAnnouncementsForRole(role) {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/announcements`;
+  const path = window.meeladPulseScopedFestivalPath('announcements');
   try {
     // We get announcements that target 'all' or the user's role, ordered by timestamp
     const snap = await getDocs(collection(db, path));

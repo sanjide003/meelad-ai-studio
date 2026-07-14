@@ -219,7 +219,7 @@
           document.getElementById('btn-recalc-text').textContent = t.btnRunning;
           
           logToTerminal("Starting official championship recalculation flow...", "header");
-          logToTerminal(`Target cluster: festivals/${getActiveFestivalId()}/teamTotals/`);
+          logToTerminal(`Target cluster: ${window.meeladPulseScopedFestivalPath('teamTotals')}/`);
           
           try {
             logToTerminal("Fetching core datasets: Teams, Competitions, Results, Bonuses, Penalties...");

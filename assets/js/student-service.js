@@ -21,9 +21,9 @@ import { assertOnline } from "./network-status.js";
  */
 export async function getFestivalSettings(festId) {
   const fId = festId || getActiveFestivalId();
-  const path = `festivals/${fId}`;
+  const path = window.meeladPulseScopedFestivalPath();
   try {
-    const docRef = doc(db, 'festivals', fId);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath());
     const snap = await getDoc(docRef);
     if (snap.exists()) {
       const data = snap.data();
@@ -56,9 +56,9 @@ export async function getFestivalSettings(festId) {
 export async function updateFestivalSettings(settings) {
   assertOnline('Registration Mode / Settings Change');
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}`;
+  const path = window.meeladPulseScopedFestivalPath();
   try {
-    const docRef = doc(db, 'festivals', festId);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath());
     const oldSettings = await getFestivalSettings(festId);
     
     const payload = {
@@ -189,7 +189,7 @@ export async function createFestivalStudent(studentData) {
 
   let chestNumber = (studentData.chestNumber || '').toString().trim();
   if (!chestNumber) {
-    const teamRef = doc(db, `festivals/${festId}/teams`, studentData.teamId);
+    const teamRef = doc(db, window.meeladPulseScopedFestivalPath('teams'), studentData.teamId);
     const teamSnap = await getDoc(teamRef);
     if (!teamSnap.exists()) {
       throw new Error("Selected team group was not found.");
@@ -201,7 +201,7 @@ export async function createFestivalStudent(studentData) {
   }
 
   // Check if chest number is unique in this festival
-  const festStudentsCol = collection(db, `festivals/${festId}/festStudents`);
+  const festStudentsCol = collection(db, window.meeladPulseScopedFestivalPath('festStudents'));
   const qChest = query(festStudentsCol, where('chestNumber', '==', chestNumber));
   const snapChest = await getDocs(qChest);
   if (!snapChest.empty) {
@@ -209,7 +209,7 @@ export async function createFestivalStudent(studentData) {
   }
 
   const studentId = `stud_${studentData.teamId}_${chestNumber}`;
-  const path = `festivals/${festId}/festStudents/${studentId}`;
+  const path = window.meeladPulseScopedFestivalPath(`festStudents/${studentId}`);
 
   // Determine initial status based on role and settings
   let status = 'active';
@@ -235,7 +235,7 @@ export async function createFestivalStudent(studentData) {
   };
 
   try {
-    await setDoc(doc(db, `festivals/${festId}/festStudents`, studentId), payload);
+    await setDoc(doc(db, window.meeladPulseScopedFestivalPath('festStudents'), studentId), payload);
     
     await logAuditEvent(
       'student_created', 
@@ -267,10 +267,10 @@ export async function updateFestivalStudent(studentId, studentData) {
     throw new Error("Student registration is currently closed.");
   }
 
-  const path = `festivals/${festId}/festStudents/${studentId}`;
+  const path = window.meeladPulseScopedFestivalPath(`festStudents/${studentId}`);
   
   try {
-    const docRef = doc(db, `festivals/${festId}/festStudents`, studentId);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('festStudents'), studentId);
     const snap = await getDoc(docRef);
     if (!snap.exists()) {
       throw new Error("Student not found.");
@@ -286,7 +286,7 @@ export async function updateFestivalStudent(studentId, studentData) {
     // Verify chest number uniqueness if it is being changed
     const newChest = studentData.chestNumber.trim();
     if (newChest !== currentStudent.chestNumber) {
-      const qChest = query(collection(db, `festivals/${festId}/festStudents`), where('chestNumber', '==', newChest));
+      const qChest = query(collection(db, window.meeladPulseScopedFestivalPath('festStudents')), where('chestNumber', '==', newChest));
       const snapChest = await getDocs(qChest);
       if (!snapChest.empty) {
         throw new Error(`Chest number ${newChest} is already assigned to another student.`);
@@ -325,7 +325,7 @@ export async function updateFestivalStudent(studentId, studentData) {
 export async function approveStudent(studentId) {
   assertOnline('Student Approval');
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/festStudents/${studentId}`;
+  const path = window.meeladPulseScopedFestivalPath(`festStudents/${studentId}`);
   const profile = window.currentUserProfile;
 
   if (!profile || profile.role !== 'admin') {
@@ -333,7 +333,7 @@ export async function approveStudent(studentId) {
   }
 
   try {
-    const docRef = doc(db, `festivals/${festId}/festStudents`, studentId);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('festStudents'), studentId);
     const snap = await getDoc(docRef);
     if (!snap.exists()) {
       throw new Error("Student not found.");
@@ -363,7 +363,7 @@ export async function approveStudent(studentId) {
 export async function rejectStudent(studentId, reason) {
   assertOnline('Student Rejection');
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/festStudents/${studentId}`;
+  const path = window.meeladPulseScopedFestivalPath(`festStudents/${studentId}`);
   const profile = window.currentUserProfile;
 
   if (!profile || profile.role !== 'admin') {
@@ -375,7 +375,7 @@ export async function rejectStudent(studentId, reason) {
   }
 
   try {
-    const docRef = doc(db, `festivals/${festId}/festStudents`, studentId);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('festStudents'), studentId);
     const snap = await getDoc(docRef);
     if (!snap.exists()) {
       throw new Error("Student not found.");
@@ -405,7 +405,7 @@ export async function rejectStudent(studentId, reason) {
  */
 export async function performEmergencyStudentOverride(studentId, studentData, reason) {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/festStudents/${studentId}`;
+  const path = window.meeladPulseScopedFestivalPath(`festStudents/${studentId}`);
   const profile = window.currentUserProfile;
 
   if (!profile || profile.role !== 'admin') {
@@ -417,7 +417,7 @@ export async function performEmergencyStudentOverride(studentId, studentData, re
   }
 
   try {
-    const docRef = doc(db, `festivals/${festId}/festStudents`, studentId);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('festStudents'), studentId);
     const snap = await getDoc(docRef);
     if (!snap.exists()) {
       throw new Error("Student not found.");
@@ -427,7 +427,7 @@ export async function performEmergencyStudentOverride(studentId, studentData, re
     // Check chest number uniqueness if changed
     const newChest = studentData.chestNumber.trim();
     if (newChest !== currentStudent.chestNumber) {
-      const qChest = query(collection(db, `festivals/${festId}/festStudents`), where('chestNumber', '==', newChest));
+      const qChest = query(collection(db, window.meeladPulseScopedFestivalPath('festStudents')), where('chestNumber', '==', newChest));
       const snapChest = await getDocs(qChest);
       if (!snapChest.empty) {
         throw new Error(`Chest number ${newChest} is already assigned to another student.`);
@@ -463,7 +463,7 @@ export async function performEmergencyStudentOverride(studentId, studentData, re
  */
 export async function getAllFestivalStudents() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/festStudents`;
+  const path = window.meeladPulseScopedFestivalPath('festStudents');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));

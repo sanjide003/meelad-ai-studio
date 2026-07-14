@@ -18,7 +18,7 @@ import {
  * @returns {function} Unsubscribe function
  */
 export function subscribeLatestPublicResults(festId, limitCount, callback) {
-  const path = `festivals/${festId}/publicData/results`;
+  const path = window.meeladPulseScopedFestivalPath('publicData/results');
   const colRef = collection(db, path);
   const q = query(
     colRef, 
@@ -46,7 +46,7 @@ export function subscribeLatestPublicResults(festId, limitCount, callback) {
  * @returns {function} Unsubscribe function
  */
 export function subscribePublicRankings(festId, callback) {
-  const path = `festivals/${festId}/publicData/teamTotals`;
+  const path = window.meeladPulseScopedFestivalPath('publicData/teamTotals');
   const colRef = collection(db, path);
   
   return onSnapshot(colRef, (snapshot) => {
@@ -99,7 +99,7 @@ export function subscribePublicRankings(festId, callback) {
 export async function getPublicRankingsOneTime(festId) {
   try {
     if (!festId) throw new Error("Festival ID is required");
-    const path = `festivals/${festId}/publicData/teamTotals`;
+    const path = window.meeladPulseScopedFestivalPath('publicData/teamTotals');
     const q = query(collection(db, path), limit(100));
     const snap = await getDocs(q);
     const rankings = snap.docs.map(docSnap => {
@@ -145,7 +145,7 @@ export async function getPublicRankingsOneTime(festId) {
 export async function getPublicResultsOneTime(festId) {
   try {
     if (!festId) throw new Error("Festival ID is required");
-    const path = `festivals/${festId}/publicData/results`;
+    const path = window.meeladPulseScopedFestivalPath('publicData/results');
     const q = query(
       collection(db, path), 
       where("status", "==", "published"),
@@ -172,7 +172,7 @@ export async function getPublicResultsOneTime(festId) {
  */
 export async function searchPublicResults(festId, searchTerm) {
   try {
-    const path = `festivals/${festId}/publicData/results`;
+    const path = window.meeladPulseScopedFestivalPath('publicData/results');
     const snap = await getDocs(collection(db, path));
     
     const allResults = [];

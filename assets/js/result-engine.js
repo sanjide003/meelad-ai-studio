@@ -56,7 +56,7 @@ export async function tabulateCompetitionResult(competitionId) {
 
     // Load judge assignments to check required judge count
     const festId = getActiveFestivalId();
-    const assignSnap = await getDocs(collection(db, `festivals/${festId}/judgeAssignments`));
+    const assignSnap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('judgeAssignments')));
     const compAssigns = assignSnap.docs
       .map(d => d.data())
       .filter(a => a.competitionId === competitionId && a.active === true);
@@ -213,10 +213,10 @@ export async function approveCompetitionResult(competitionId, manualOverrides = 
   }
 
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/results/${competitionId}`;
+  const path = window.meeladPulseScopedFestivalPath(`results/${competitionId}`);
   try {
     // 1. Fetch current calculated result
-    const docRef = doc(db, `festivals/${festId}/results`, competitionId);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('results'), competitionId);
     const snap = await getDoc(docRef);
     if (!snap.exists()) {
       throw new Error("No calculated result found. Tabulate the marks first.");
@@ -263,7 +263,7 @@ export async function approveCompetitionResult(competitionId, manualOverrides = 
     await saveResult(result);
 
     // 3. Update related competition status
-    const compRef = doc(db, `festivals/${festId}/competitions`, competitionId);
+    const compRef = doc(db, window.meeladPulseScopedFestivalPath('competitions'), competitionId);
     await updateDoc(compRef, { status: 'approved' });
 
     // 4. Recalculate Championship scoreboard live
@@ -291,7 +291,7 @@ export async function publishCompetitionResult(competitionId, options = {}) {
   const festId = getActiveFestivalId();
   try {
     // 1. Fetch approved result
-    const resDocRef = doc(db, `festivals/${festId}/results`, competitionId);
+    const resDocRef = doc(db, window.meeladPulseScopedFestivalPath('results'), competitionId);
     const snap = await getDoc(resDocRef);
     if (!snap.exists()) {
       throw new Error("Result document not found.");
@@ -311,10 +311,10 @@ export async function publishCompetitionResult(competitionId, options = {}) {
     await saveResult(result);
 
     // 3. Update competition status
-    const compRef = doc(db, `festivals/${festId}/competitions`, competitionId);
+    const compRef = doc(db, window.meeladPulseScopedFestivalPath('competitions'), competitionId);
     await updateDoc(compRef, { status: 'Published' });
 
-    // 4. Create public-safe result documents under festivals/{festId}/publicData/results/{resultId}
+    // 4. Create public-safe result documents under institutions/{institutionId}/festivals/{festivalId}/publicData/results/{resultId}
     const publicSafeParticipants = result.participants.map(p => {
       // Build a strictly public safe participant card
       return {
@@ -341,7 +341,7 @@ export async function publishCompetitionResult(competitionId, options = {}) {
       showTeamPoints: options.showTeamPoints !== false
     };
 
-    const publicDocRef = doc(db, `festivals/${festId}/publicData/results`, competitionId);
+    const publicDocRef = doc(db, window.meeladPulseScopedFestivalPath('publicData/results'), competitionId);
     await setDoc(publicDocRef, publicPayload);
 
     // 5. Sync live scoreboard totals
@@ -368,15 +368,15 @@ export async function unpublishCompetitionResult(competitionId) {
   const festId = getActiveFestivalId();
   try {
     // 1. Revert result status to approved
-    const resRef = doc(db, `festivals/${festId}/results`, competitionId);
+    const resRef = doc(db, window.meeladPulseScopedFestivalPath('results'), competitionId);
     await updateDoc(resRef, { status: 'approved', unpublishedAt: new Date().toISOString() });
 
     // 2. Revert competition status
-    const compRef = doc(db, `festivals/${festId}/competitions`, competitionId);
+    const compRef = doc(db, window.meeladPulseScopedFestivalPath('competitions'), competitionId);
     await updateDoc(compRef, { status: 'approved' });
 
     // 3. Delete the public-safe result document
-    const publicDocRef = doc(db, `festivals/${festId}/publicData/results`, competitionId);
+    const publicDocRef = doc(db, window.meeladPulseScopedFestivalPath('publicData/results'), competitionId);
     await deleteDoc(publicDocRef);
 
     // 4. Sync live scoreboard totals
