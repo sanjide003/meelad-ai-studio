@@ -18,6 +18,7 @@ export default defineConfig(() => {
           activateAccount: path.resolve(__dirname, 'activate-account.html'),
           selectFest: path.resolve(__dirname, 'select-fest.html'),
           unauthorized: path.resolve(__dirname, 'unauthorized.html'),
+          adminApp: path.resolve(__dirname, 'admin/app.html'),
           adminDashboard: path.resolve(__dirname, 'admin/dashboard.html'),
           adminCertificates: path.resolve(__dirname, 'admin/certificates.html'),
           adminAnnouncements: path.resolve(__dirname, 'admin/announcements.html'),

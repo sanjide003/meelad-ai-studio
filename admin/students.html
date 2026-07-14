@@ -48,10 +48,16 @@
         <div id="bulk-import-panel" class="hidden bg-white rounded-2xl border border-emerald-100 p-6 shadow-xs space-y-4">
           <div class="space-y-1">
             <h2 class="text-sm font-bold text-slate-900 font-display">Bulk add students to groups</h2>
-            <p class="text-[11px] text-slate-500">Paste one student per line as: <strong>name, chestNumber, teamCode, categoryCode</strong>. Team and category codes must already exist in Team Groups and Categories.</p>
+            <p class="text-[11px] text-slate-500">First select the target group and category. Then paste one student name per line. Chest numbers are assigned automatically from the selected team group series.</p>
           </div>
-          <textarea id="bulk-import-text" class="form-input min-h-[140px] text-xs font-mono" placeholder="Ali, 101, GREEN, JUNIOR
-Amina, 102, BLUE, SENIOR"></textarea>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <select id="bulk-team-select" class="form-input" required><option value="">Select team group</option></select>
+            <select id="bulk-category-select" class="form-input" required><option value="">Select category</option></select>
+            <select id="bulk-subdivision-select" class="form-input"><option value="">Sub category / subdivision (optional)</option></select>
+          </div>
+          <textarea id="bulk-import-text" class="form-input min-h-[140px] text-xs font-mono" placeholder="Ali
+Amina
+Muhammad"></textarea>
           <div class="flex items-center justify-end gap-2">
             <button type="button" id="bulk-import-cancel" class="btn btn-secondary text-xs font-bold px-4 py-2 border border-slate-200">Cancel</button>
             <button type="button" id="bulk-import-submit" class="btn btn-primary text-xs font-bold text-white px-4 py-2">Import Students</button>
@@ -158,7 +164,7 @@ Amina, 102, BLUE, SENIOR"></textarea>
     import { loadPortalLayout } from "../assets/js/component-loader.js";
     import { initializeNavigation } from "../assets/js/navigation.js";
     import { getFestivalSettings, getAllFestivalStudents, approveStudent, rejectStudent, createFestivalStudent } from "../assets/js/student-service.js";
-    import { getCategories } from "../assets/js/firestore-service.js";
+    import { getCategories, getTeams, getSubdivisions } from "../assets/js/firestore-service.js";
 
     let activeFestId = null;
     let festivalSettings = null;
@@ -182,6 +188,7 @@ Amina, 102, BLUE, SENIOR"></textarea>
         applyModeVisualState();
         
         await populateCategoryFilter();
+        await populateBulkScopeSelectors();
         await loadRoster();
         setupFilters();
         setupRejectHandler();
@@ -222,6 +229,34 @@ Amina, 102, BLUE, SENIOR"></textarea>
         opt.value = cat.id;
         opt.textContent = cat.name || cat.code || cat.id;
         dropdown.appendChild(opt);
+      });
+    }
+
+    async function populateBulkScopeSelectors() {
+      const [teams, categories, subdivisions] = await Promise.all([getTeams(), getCategories(), getSubdivisions()]);
+      const teamSelect = document.getElementById('bulk-team-select');
+      const categorySelect = document.getElementById('bulk-category-select');
+      const subdivisionSelect = document.getElementById('bulk-subdivision-select');
+      teamSelect.innerHTML = '<option value="">Select team group</option>';
+      categorySelect.innerHTML = '<option value="">Select category</option>';
+      subdivisionSelect.innerHTML = '<option value="">Sub category / subdivision (optional)</option>';
+      (teams || []).filter(item => item.active !== false).forEach(team => {
+        const opt = document.createElement('option');
+        opt.value = team.id;
+        opt.textContent = `${team.name || team.code || team.id} — next chest ${team.nextChestNumber || team.chestStartNumber || 1}`;
+        teamSelect.appendChild(opt);
+      });
+      (categories || []).filter(item => item.active !== false).forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.name || cat.code || cat.id;
+        categorySelect.appendChild(opt);
+      });
+      (subdivisions || []).filter(item => item.active !== false).forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub.id;
+        opt.textContent = sub.name || sub.code || sub.id;
+        subdivisionSelect.appendChild(opt);
       });
     }
 
@@ -359,7 +394,13 @@ const catNames = categoryMap;
       document.getElementById('bulk-import-cancel').onclick = () => panel.classList.add('hidden');
       document.getElementById('bulk-import-submit').onclick = async () => {
         const lines = document.getElementById('bulk-import-text').value.split('\n').map(line => line.trim()).filter(Boolean);
-        if (lines.length === 0) return;
+        const teamId = document.getElementById('bulk-team-select').value;
+        const categoryId = document.getElementById('bulk-category-select').value;
+        const subdivisionId = document.getElementById('bulk-subdivision-select').value;
+        if (lines.length === 0 || !teamId || !categoryId) {
+          alert('Select team group and category, then paste at least one student name.');
+          return;
+        }
 
         const loader = document.getElementById('global-page-loader');
         loader.classList.remove('hidden');
@@ -367,13 +408,13 @@ const catNames = categoryMap;
         const failures = [];
 
         for (const [index, line] of lines.entries()) {
-          const [name, chestNumber, teamId, categoryId] = line.split(',').map(part => part?.trim());
-          if (!name || !chestNumber || !teamId || !categoryId) {
-            failures.push(`Line ${index + 1}: invalid format`);
+          const name = line.trim();
+          if (!name) {
+            failures.push(`Line ${index + 1}: invalid student name`);
             continue;
           }
           try {
-            await createFestivalStudent({ name, chestNumber, teamId: teamId.toLowerCase(), categoryId: categoryId.toLowerCase() });
+            await createFestivalStudent({ name, teamId, categoryId, subdivisionId });
             successCount += 1;
           } catch (err) {
             failures.push(`Line ${index + 1}: ${err.message}`);
@@ -384,6 +425,7 @@ const catNames = categoryMap;
         status.classList.remove('hidden', 'text-rose-600', 'text-emerald-700');
         status.classList.add(failures.length ? 'text-rose-600' : 'text-emerald-700');
         status.textContent = failures.length ? `${successCount} imported. ${failures.join(' | ')}` : `${successCount} students imported successfully.`;
+        await populateBulkScopeSelectors();
         await loadRoster();
       };
     }

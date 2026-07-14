@@ -349,15 +349,44 @@ export async function saveTeam(teamData) {
   const festId = getActiveFestivalId();
   const id = (teamData.id || teamData.code || doc(collection(db, 'dummy')).id).toString().trim().toLowerCase();
   const path = `festivals/${festId}/teams/${id}`;
+  const chestStartNumber = Math.max(1, Number(teamData.chestStartNumber) || 1);
+  const nextChestNumber = Math.max(chestStartNumber, Number(teamData.nextChestNumber) || chestStartNumber);
+  const leaderUsername = (teamData.leaderUsername || '').trim().toLowerCase();
   try {
-    await setDoc(doc(db, `festivals/${festId}/teams`, id), {
+    const payload = {
       id,
       name: teamData.name,
       code: teamData.code || id.toUpperCase(),
       colour: teamData.colour || '#10b981',
+      chestStartNumber,
+      nextChestNumber,
+      leader: {
+        role: teamData.leaderRole || 'teamLeader',
+        name: teamData.leaderName || '',
+        username: teamData.leaderUsername || '',
+        usernameLower: leaderUsername,
+        photoUrl: teamData.leaderPhotoUrl || '',
+        active: teamData.leaderActive !== false
+      },
       active: teamData.active !== false,
       updatedAt: serverTimestamp()
-    }, { merge: true });
+    };
+    await setDoc(doc(db, `festivals/${festId}/teams`, id), payload, { merge: true });
+
+    if (leaderUsername && teamData.leaderPassword) {
+      await setDoc(doc(db, 'manualUsers', leaderUsername), {
+        uid: `manual_team_${id}_${leaderUsername}`,
+        role: 'teamLeader',
+        teamId: id,
+        name: teamData.leaderName || teamData.name || leaderUsername,
+        username: teamData.leaderUsername,
+        usernameLower: leaderUsername,
+        password: teamData.leaderPassword,
+        photoUrl: teamData.leaderPhotoUrl || '',
+        active: teamData.leaderActive !== false,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }
     return id;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);

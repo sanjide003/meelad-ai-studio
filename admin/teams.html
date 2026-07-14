@@ -54,6 +54,26 @@
                   <input id="team-colour" type="color" class="form-input h-10 p-1" value="#10b981">
                 </div>
               </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                  <label class="text-xs font-bold text-slate-700">Chest Start No.</label>
+                  <input id="team-chest-start" type="number" min="1" required class="form-input" value="1">
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-xs font-bold text-slate-700">Next Chest No.</label>
+                  <input id="team-next-chest" type="number" min="1" class="form-input" value="1">
+                </div>
+              </div>
+              <div class="border-t border-slate-100 pt-4 space-y-3">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Team Leader Login</p>
+                <div class="grid grid-cols-2 gap-4">
+                  <input id="leader-name" class="form-input" placeholder="Leader name">
+                  <input id="leader-role" class="form-input" value="Team Leader" placeholder="Role">
+                  <input id="leader-username" class="form-input" placeholder="Username">
+                  <input id="leader-password" type="password" class="form-input" placeholder="Password">
+                </div>
+                <input id="leader-photo" class="form-input" placeholder="Photo URL (optional)">
+              </div>
               <label class="flex items-center gap-2 text-xs font-bold text-slate-700">
                 <input id="team-active" type="checkbox" checked class="rounded border-slate-300 text-emerald-500"> Active group
               </label>
@@ -71,7 +91,7 @@
             </div>
             <div class="table-container">
               <table class="w-full text-left border-collapse">
-                <thead><tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest"><th class="px-6 py-4">Code</th><th class="px-6 py-4">Name</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Actions</th></tr></thead>
+                <thead><tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest"><th class="px-6 py-4">Code</th><th class="px-6 py-4">Name</th><th class="px-6 py-4">Chest Series</th><th class="px-6 py-4">Leader</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Actions</th></tr></thead>
                 <tbody id="teams-body" class="divide-y divide-slate-100 text-xs"></tbody>
               </table>
             </div>
@@ -104,11 +124,11 @@
     async function loadTeams() {
       teams = (await getTeams() || []).sort((a, b) => (a.code || '').localeCompare(b.code || ''));
       document.getElementById('team-count').textContent = teams.length;
-      body.innerHTML = teams.length ? '' : '<tr><td colspan="4" class="px-6 py-10 text-center text-slate-400">No groups created yet.</td></tr>';
+      body.innerHTML = teams.length ? '' : '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-400">No groups created yet.</td></tr>';
       teams.forEach(team => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/70';
-        tr.innerHTML = `<td class="px-6 py-4 font-mono font-bold" style="color:${team.colour || '#10b981'}">${team.code || team.id}</td><td class="px-6 py-4 font-bold text-slate-800">${team.name || '-'}</td><td class="px-6 py-4"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${team.active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${team.active !== false ? 'Active' : 'Inactive'}</span></td><td class="px-6 py-4 text-right space-x-2"><button class="edit-team text-emerald-600 font-bold">Edit</button><button class="delete-team text-rose-600 font-bold">Delete</button></td>`;
+        tr.innerHTML = `<td class="px-6 py-4 font-mono font-bold" style="color:${team.colour || '#10b981'}">${team.code || team.id}</td><td class="px-6 py-4 font-bold text-slate-800">${team.name || '-'}</td><td class="px-6 py-4 font-mono text-slate-600">${team.chestStartNumber || 1} → ${team.nextChestNumber || team.chestStartNumber || 1}</td><td class="px-6 py-4 text-slate-600">${team.leader?.name || '-'}<div class="text-[10px] font-mono text-slate-400">${team.leader?.username || ''}</div></td><td class="px-6 py-4"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${team.active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${team.active !== false ? 'Active' : 'Inactive'}</span></td><td class="px-6 py-4 text-right space-x-2"><button class="edit-team text-emerald-600 font-bold">Edit</button><button class="delete-team text-rose-600 font-bold">Delete</button></td>`;
         tr.querySelector('.edit-team').onclick = () => fillForm(team);
         tr.querySelector('.delete-team').onclick = async () => { if (confirm('Delete this group?')) { await deleteTeam(team.id); await loadTeams(); } };
         body.appendChild(tr);
@@ -117,7 +137,7 @@
 
     async function saveCurrentTeam(e) {
       e.preventDefault();
-      await saveTeam({ id: document.getElementById('team-id').value, name: document.getElementById('team-name').value.trim(), code: document.getElementById('team-code').value.trim().toUpperCase(), colour: document.getElementById('team-colour').value, active: document.getElementById('team-active').checked });
+      await saveTeam({ id: document.getElementById('team-id').value, name: document.getElementById('team-name').value.trim(), code: document.getElementById('team-code').value.trim().toUpperCase(), colour: document.getElementById('team-colour').value, chestStartNumber: document.getElementById('team-chest-start').value, nextChestNumber: document.getElementById('team-next-chest').value, leaderName: document.getElementById('leader-name').value.trim(), leaderRole: document.getElementById('leader-role').value.trim(), leaderUsername: document.getElementById('leader-username').value.trim(), leaderPassword: document.getElementById('leader-password').value, leaderPhotoUrl: document.getElementById('leader-photo').value.trim(), active: document.getElementById('team-active').checked });
       resetForm();
       await loadTeams();
     }
@@ -127,6 +147,13 @@
       document.getElementById('team-name').value = team.name || '';
       document.getElementById('team-code').value = team.code || team.id;
       document.getElementById('team-colour').value = team.colour || '#10b981';
+      document.getElementById('team-chest-start').value = team.chestStartNumber || 1;
+      document.getElementById('team-next-chest').value = team.nextChestNumber || team.chestStartNumber || 1;
+      document.getElementById('leader-name').value = team.leader?.name || '';
+      document.getElementById('leader-role').value = team.leader?.role || 'Team Leader';
+      document.getElementById('leader-username').value = team.leader?.username || '';
+      document.getElementById('leader-password').value = '';
+      document.getElementById('leader-photo').value = team.leader?.photoUrl || '';
       document.getElementById('team-active').checked = team.active !== false;
       document.getElementById('team-cancel').classList.remove('hidden');
     }
@@ -135,6 +162,9 @@
       form.reset();
       document.getElementById('team-id').value = '';
       document.getElementById('team-colour').value = '#10b981';
+      document.getElementById('team-chest-start').value = 1;
+      document.getElementById('team-next-chest').value = 1;
+      document.getElementById('leader-role').value = 'Team Leader';
       document.getElementById('team-active').checked = true;
       document.getElementById('team-cancel').classList.add('hidden');
     }

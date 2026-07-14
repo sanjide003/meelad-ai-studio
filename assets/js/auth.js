@@ -7,7 +7,7 @@ import {
   signInWithEmailAndPassword as firebaseSignIn,
   sendPasswordResetEmail as firebaseResetPassword
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, getDoc, updateDoc, serverTimestamp, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 function appPath(path) {
   return new URL(path.replace(/^\//, ""), new URL(/* @vite-ignore */ "../../", import.meta.url)).pathname;
@@ -60,7 +60,7 @@ export async function loginWithEmailAndPassword(email, password, rememberMe) {
   let targetPath = "";
 
   if (role === "admin") {
-    targetPath = appPath("admin/dashboard.html");
+    targetPath = appPath("admin/app.html");
   } else if (role === "judge") {
     targetPath = appPath("judge/dashboard.html");
   } else if (role === "teamLeader") {
@@ -71,6 +71,27 @@ export async function loginWithEmailAndPassword(email, password, rememberMe) {
   }
 
   return targetPath;
+}
+
+export async function loginWithUsernamePassword(username, password) {
+  const usernameLower = username.trim().toLowerCase();
+  const q = query(collection(db, 'manualUsers'), where('usernameLower', '==', usernameLower), where('password', '==', password));
+  const snap = await getDocs(q);
+  if (snap.empty) {
+    const err = new Error('Invalid username or password.');
+    err.code = 'auth/manual-invalid';
+    throw err;
+  }
+  const profile = { id: snap.docs[0].id, ...snap.docs[0].data(), manualAuth: true };
+  if (profile.active !== true) {
+    const err = new Error('Account Inactive: Your account access has been suspended by the administrator.');
+    err.code = 'auth/user-disabled';
+    throw err;
+  }
+  sessionStorage.setItem('meeladpulse_manual_user', JSON.stringify(profile));
+  if (profile.role === 'judge') return appPath('judge/dashboard.html');
+  if (profile.role === 'teamLeader') return appPath('team/dashboard.html');
+  return appPath('unauthorized.html?reason=invalid_manual_role');
 }
 
 /**

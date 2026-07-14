@@ -180,10 +180,24 @@ export async function createFestivalStudent(studentData) {
     throw new Error("Student registration mode is set to Admin Only. Team Leaders cannot register students.");
   }
 
-  // Set chest number constraint
-  const chestNumber = studentData.chestNumber.trim();
+  if (!studentData.teamId) {
+    throw new Error("Team group selection is required before adding students.");
+  }
+  if (!studentData.categoryId) {
+    throw new Error("Category selection is required before adding students.");
+  }
+
+  let chestNumber = (studentData.chestNumber || '').toString().trim();
   if (!chestNumber) {
-    throw new Error("Chest number is required.");
+    const teamRef = doc(db, `festivals/${festId}/teams`, studentData.teamId);
+    const teamSnap = await getDoc(teamRef);
+    if (!teamSnap.exists()) {
+      throw new Error("Selected team group was not found.");
+    }
+    const team = teamSnap.data();
+    const nextNumber = Number(team.nextChestNumber || team.chestStartNumber || 1);
+    chestNumber = String(nextNumber).padStart(3, '0');
+    await updateDoc(teamRef, { nextChestNumber: nextNumber + 1, updatedAt: serverTimestamp() });
   }
 
   // Check if chest number is unique in this festival
@@ -209,6 +223,7 @@ export async function createFestivalStudent(studentData) {
     festId,
     teamId: studentData.teamId,
     categoryId: studentData.categoryId,
+    subdivisionId: studentData.subdivisionId || '',
     name: studentData.name.trim(),
     chestNumber,
     status,

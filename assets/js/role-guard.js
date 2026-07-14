@@ -17,6 +17,28 @@ if (loaderEl) {
 }
 
 export async function verifyUserRole(allowedRoles) {
+  const manualProfileRaw = sessionStorage.getItem('meeladpulse_manual_user');
+  if (manualProfileRaw) {
+    try {
+      const manualProfile = JSON.parse(manualProfileRaw);
+      if (manualProfile.active === true && allowedRoles.includes(manualProfile.role)) {
+        window.currentUserProfile = manualProfile;
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('select-fest.html') && !currentPath.includes('unauthorized.html')) {
+          const selectedFestId = localStorage.getItem('meeladpulse_selected_fest_id');
+          if (!selectedFestId) {
+            window.location.replace(appUrl('select-fest.html'));
+            throw new Error('No festival selected');
+          }
+        }
+        const loader = document.getElementById('global-page-loader');
+        if (loader) loader.classList.add('hidden');
+        return manualProfile;
+      }
+    } catch (err) {
+      sessionStorage.removeItem('meeladpulse_manual_user');
+    }
+  }
   return new Promise((resolve, reject) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       // Unsubscribe immediately to prevent multiple triggers
@@ -58,7 +80,7 @@ export async function verifyUserRole(allowedRoles) {
         if (!currentPath.includes('select-fest.html') && !currentPath.includes('unauthorized.html')) {
           const selectedFestId = localStorage.getItem('meeladpulse_selected_fest_id');
           if (!selectedFestId) {
-            const isAdminDashboard = userData.role === 'admin' && currentPath.includes('admin/dashboard.html');
+            const isAdminDashboard = userData.role === 'admin' && currentPath.includes('admin/dashboard.html') || currentPath.includes('admin/app.html');
             if (!isAdminDashboard) {
               window.location.replace(appUrl('select-fest.html'));
               return reject('No festival selected');

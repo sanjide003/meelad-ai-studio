@@ -55,8 +55,8 @@
         
         <!-- Email field -->
         <div class="space-y-1.5">
-          <label id="lbl-email" for="email" class="text-xs font-bold text-slate-700">Email Address</label>
-          <input type="email" id="email" required class="form-input" placeholder="name@domain.com">
+          <label id="lbl-email" for="email" class="text-xs font-bold text-slate-700">Email / Username</label>
+          <input type="text" id="email" required class="form-input" placeholder="admin@email.com or team username">
           <p id="err-email" class="hidden text-[10px] text-rose-600 font-medium"></p>
         </div>
 
@@ -101,7 +101,7 @@
 
   <!-- Module Core Auth Script -->
   <script type="module">
-    import { loginWithEmailAndPassword } from "./assets/js/auth.js";
+    import { loginWithEmailAndPassword, loginWithUsernamePassword } from "./assets/js/auth.js";
 
     // Simple dual translation database
     const t = {
@@ -193,9 +193,9 @@
       const rememberMe = document.getElementById('remember-me').checked;
 
       // Simple validations
-      if (!email.includes('@')) {
+      if (!email) {
         const errEmail = document.getElementById('err-email');
-        errEmail.textContent = t[activeLang].invalidEmail;
+        errEmail.textContent = "Email or username is required.";
         errEmail.classList.remove('hidden');
         return;
       }
@@ -213,7 +213,7 @@
       submitBtn.querySelector('span').textContent = t[activeLang].btnSigningIn;
 
       try {
-        const redirectPath = await loginWithEmailAndPassword(email, password, rememberMe);
+        const redirectPath = email.includes('@') ? await loginWithEmailAndPassword(email, password, rememberMe) : await loginWithUsernamePassword(email, password);
         window.location.replace(redirectPath);
       } catch (err) {
         console.error("Auth transaction failed:", err);

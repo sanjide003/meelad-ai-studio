@@ -76,7 +76,7 @@
               </div>
             `;
             document.getElementById('create-default-festival-btn').onclick = createInitialFestivalAndEnter;
-            document.getElementById('admin-dashboard-without-fest-btn').onclick = () => window.location.replace('admin/dashboard.html');
+            document.getElementById('admin-dashboard-without-fest-btn').onclick = () => window.location.replace('admin/app.html');
           } else {
             festivalsGrid.innerHTML = `
               <div class="bg-white border border-slate-100 rounded-2xl p-8 text-center space-y-3">
@@ -117,7 +117,7 @@
 
             // Redirect user to their custom dashboard
             let redirectUrl = "login.html";
-            if (userProfile.role === 'admin') redirectUrl = "admin/dashboard.html";
+            if (userProfile.role === 'admin') redirectUrl = "admin/app.html";
             else if (userProfile.role === 'judge') redirectUrl = "judge/dashboard.html";
             else if (userProfile.role === 'teamLeader') redirectUrl = "team/dashboard.html";
 
@@ -155,7 +155,7 @@
       }, { merge: true });
       localStorage.setItem('meeladpulse_selected_fest_id', festId);
       localStorage.setItem('meeladpulse_selected_fest_title', festivalTitle);
-      window.location.replace('admin/dashboard.html');
+      window.location.replace('admin/app.html');
     }
 
     // Initialize layout navigation controls (e.g. signout)
