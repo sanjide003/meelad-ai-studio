@@ -203,6 +203,7 @@ export async function savePointRule(ruleData) {
       cGradePoints: Number(ruleData.cGradePoints) || 0,
       participationPoints: Number(ruleData.participationPoints) || 0,
       calculationMode: ruleData.calculationMode || 'positionAndGrade',
+      gradeRuleId: ruleData.gradeRuleId || '',
       active: ruleData.active !== false,
       updatedAt: serverTimestamp()
     };
