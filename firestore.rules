@@ -13,8 +13,16 @@ service cloud.firestore {
     }
 
     // Helper to check user roles
+    function isSuperAdmin() {
+      return isAuthenticated() && getUserData().role == 'superAdmin';
+    }
+
     function isAdmin() {
-      return isAuthenticated() && getUserData().role == 'admin';
+      return isAuthenticated() && (getUserData().role == 'admin' || getUserData().role == 'institutionAdmin' || getUserData().role == 'superAdmin');
+    }
+
+    function isInstitutionMember(institutionId) {
+      return isSuperAdmin() || (isAuthenticated() && getUserData().institutionId == institutionId);
     }
 
     function isJudge() {
@@ -76,6 +84,42 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+
+    // --- Premium SaaS Institutions Collection ---
+    match /institutions/{institutionId} {
+      allow read: if isSuperAdmin() || isInstitutionMember(institutionId);
+      allow create, update, delete: if isSuperAdmin();
+
+      match /admins/{adminId} {
+        allow read: if isSuperAdmin() || isInstitutionMember(institutionId);
+        allow write: if isSuperAdmin();
+      }
+
+      match /festivals/{festId} {
+        allow read: if isSuperAdmin() || isInstitutionMember(institutionId) || resource.data.publicRead == true;
+        allow write: if isSuperAdmin() || isInstitutionMember(institutionId);
+
+        match /manualUsers/{manualUserId} {
+          allow read, write: if isSuperAdmin() || isInstitutionMember(institutionId);
+        }
+
+        match /publicData/{pubId} {
+          allow read: if true;
+          allow write: if isSuperAdmin() || isInstitutionMember(institutionId);
+          match /{document=**} {
+            allow read: if true;
+            allow write: if isSuperAdmin() || isInstitutionMember(institutionId);
+          }
+        }
+
+        match /{document=**} {
+          allow read: if isSuperAdmin() || isInstitutionMember(institutionId);
+          allow write: if isSuperAdmin() || isInstitutionMember(institutionId);
+        }
+      }
+    }
+
 
     // --- Festivals Collection ---
     match /festivals/{festId} {

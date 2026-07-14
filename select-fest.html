@@ -202,6 +202,7 @@
         title,
         name: title,
         code: slug.toUpperCase().slice(0, 12),
+        institutionId: slug,
         institutionName: title,
         active: true,
         plan: 'trial',
@@ -212,11 +213,32 @@
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       }, { merge: true });
+      await setDoc(doc(db, 'institutions', slug), {
+        id: slug,
+        name: title,
+        slug,
+        active: true,
+        plan: 'trial',
+        subscriptionStatus: 'trial',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      await setDoc(doc(db, `institutions/${slug}/festivals`, slug), {
+        id: slug,
+        title,
+        name: title,
+        active: true,
+        plan: 'trial',
+        subscriptionStatus: 'trial',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
       await renderSuperAdminPortal();
     }
 
     function enterFestivalScope(festId, festival, redirectUrl) {
       localStorage.setItem('meeladpulse_selected_fest_id', festId);
+      localStorage.setItem('meeladpulse_selected_institution_id', festival.institutionId || festival.id || festId);
       localStorage.setItem('meeladpulse_selected_fest_title', festival.title || festival.name || festId);
       window.location.replace(redirectUrl);
     }
@@ -237,6 +259,7 @@
         updatedAt: serverTimestamp()
       }, { merge: true });
       localStorage.setItem('meeladpulse_selected_fest_id', festId);
+      localStorage.setItem('meeladpulse_selected_institution_id', festId);
       localStorage.setItem('meeladpulse_selected_fest_title', festivalTitle);
       window.location.replace('admin/app.html');
     }

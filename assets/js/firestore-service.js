@@ -47,19 +47,31 @@ export function handleFirestoreError(error, operationType, path) {
   throw new Error(JSON.stringify(errInfo));
 }
 
-// Helper to check for active festival scope
-export function getActiveFestivalId() {
-  const festId = localStorage.getItem('meeladpulse_selected_fest_id');
-  if (!festId) {
+// Helper to check for active institution/festival scope.
+export function getActiveScope() {
+  const festivalId = localStorage.getItem('meeladpulse_selected_fest_id');
+  const institutionId = localStorage.getItem('meeladpulse_selected_institution_id') || festivalId;
+  if (!festivalId) {
     throw new Error("No active festival scope selected. Please select a festival first.");
   }
-  return festId;
+  return { institutionId, festivalId };
+}
+
+// Backward-compatible helper used by legacy pages during the SaaS migration.
+export function getActiveFestivalId() {
+  return getActiveScope().festivalId;
+}
+
+export function getScopedFestivalPath(subPath = '') {
+  const { institutionId, festivalId } = getActiveScope();
+  const suffix = subPath ? `/${subPath.replace(/^\//, '')}` : '';
+  return `institutions/${institutionId}/festivals/${festivalId}${suffix}`;
 }
 
 // Verification that user is an admin
 export function assertAdminRole() {
   const profile = window.currentUserProfile;
-  if (!profile || profile.role !== 'admin') {
+  if (!profile || !['superAdmin', 'institutionAdmin', 'admin'].includes(profile.role)) {
     throw new Error("Unauthorized access. Admin role required.");
   }
 }

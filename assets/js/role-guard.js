@@ -16,6 +16,20 @@ if (loaderEl) {
   loaderEl.classList.toggle('hidden', fastNavRequested);
 }
 
+async function isSelectedFestivalAvailable(festId, role) {
+  if (role === 'superAdmin') return true;
+  try {
+    const snap = await getDoc(doc(db, 'festivals', festId));
+    if (!snap.exists()) return false;
+    const data = snap.data();
+    const blockedStatuses = ['inactive', 'expired', 'payment_due', 'suspended'];
+    return data.active !== false && !blockedStatuses.includes(data.subscriptionStatus);
+  } catch (err) {
+    console.warn('Could not verify selected festival subscription:', err);
+    return false;
+  }
+}
+
 export async function verifyUserRole(allowedRoles) {
   const manualProfileRaw = sessionStorage.getItem('meeladpulse_manual_user');
   if (manualProfileRaw) {
@@ -29,6 +43,11 @@ export async function verifyUserRole(allowedRoles) {
           if (!selectedFestId) {
             window.location.replace(appUrl('select-fest.html'));
             throw new Error('No festival selected');
+          }
+          const available = await isSelectedFestivalAvailable(selectedFestId, manualProfile.role);
+          if (!available) {
+            window.location.replace(appUrl('unauthorized.html?reason=subscription_inactive'));
+            throw new Error('Selected festival is inactive or subscription is blocked');
           }
         }
         const loader = document.getElementById('global-page-loader');
@@ -80,10 +99,16 @@ export async function verifyUserRole(allowedRoles) {
         if (!currentPath.includes('select-fest.html') && !currentPath.includes('unauthorized.html')) {
           const selectedFestId = localStorage.getItem('meeladpulse_selected_fest_id');
           if (!selectedFestId) {
-            const isAdminDashboard = userData.role === 'admin' && currentPath.includes('admin/dashboard.html') || currentPath.includes('admin/app.html');
+            const isAdminDashboard = ['admin', 'superAdmin', 'institutionAdmin'].includes(userData.role) && (currentPath.includes('admin/dashboard.html') || currentPath.includes('admin/app.html'));
             if (!isAdminDashboard) {
               window.location.replace(appUrl('select-fest.html'));
               return reject('No festival selected');
+            }
+          } else {
+            const available = await isSelectedFestivalAvailable(selectedFestId, userData.role);
+            if (!available) {
+              window.location.replace(appUrl('unauthorized.html?reason=subscription_inactive'));
+              return reject('Selected festival is inactive or subscription is blocked');
             }
           }
         }

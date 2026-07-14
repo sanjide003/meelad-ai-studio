@@ -1,38 +1,44 @@
 # MeeladPulse SaaS Multi-Institution Implementation Prompt
 
+## Already started in this codebase
+
+- `superAdmin` is routed to the selector portal.
+- The selector portal has a first super-admin workspace manager.
+- Newly created workspaces save basic SaaS metadata: `plan`, `subscriptionStatus`, `active`, and `institutionId`.
+- The dashboard has a setup roadmap and scoped share-link generator.
+- Firestore rules now include a first `/institutions/{institutionId}/festivals/{festivalId}` scoped rules block.
+- Client helpers now expose `getActiveScope()` and `getScopedFestivalPath()` while keeping legacy `getActiveFestivalId()` during migration.
+
+## Remaining production migration prompt
+
 Implement the remaining premium SaaS architecture in phases:
 
-1. Add `superAdmin` as the application-owner role.
-2. Add `institutionId` to every Firebase admin profile.
-3. Replace global festival paths from `festivals/{festivalId}` to `institutions/{institutionId}/festivals/{festivalId}`.
-4. Move manual judge/team leader credentials from global `manualUsers` to `institutions/{institutionId}/festivals/{festivalId}/manualUsers`.
-5. Update `getActiveFestivalId()` into `getActiveScope()` returning `{ institutionId, festivalId }`.
-6. Update every Firestore service to use scoped paths and reject missing scope.
-7. Convert `select-fest.html` into a dual-mode portal:
-   - `superAdmin`: institution/festival subscription manager.
-   - `institutionAdmin`: own institution/festival selector only.
-8. Add Firestore security rules that enforce institution-level access server-side.
-9. Add super admin pages:
-   - `super-admin/dashboard.html`
-   - `super-admin/institutions.html`
-   - `super-admin/subscriptions.html`
-   - `super-admin/usage.html`
-10. Add subscription fields to each institution/festival:
-    - `plan`
-    - `subscriptionStatus`
-    - `subscriptionEndsAt`
-    - `active`
-    - `ownerUid`
-    - `adminUids`
-11. Block inactive/expired institutions before admin, judge, or team access.
-12. Add share-link generation for admin, judge, team, public result, live scoreboard, and verification portals.
-13. Add migration script for existing `festivals/*` data into `institutions/{institutionId}/festivals/*`.
-14. Replace plaintext manual passwords with password hashes before production.
+1. Convert every data service from legacy `festivals/{festivalId}` reads/writes to `institutions/{institutionId}/festivals/{festivalId}` using `getScopedFestivalPath()`.
+2. Add `institutionId` and `allowedFestivalIds` to every Firebase admin profile and backfill old admin documents.
+3. Move manual judge/team leader credentials from global `manualUsers` to `institutions/{institutionId}/festivals/{festivalId}/manualUsers`.
+4. Update team and judge login so username/password lookups read only from the selected institution/festival scoped `manualUsers` collection.
+5. Add a migration script that copies existing `festivals/*` documents and subcollections into `institutions/{institutionId}/festivals/*`.
+6. Replace plaintext manual passwords with salted password hashes or a Firebase Function-based credential check before production.
+7. Update Firestore Security Rules to remove broad legacy `/festivals/{festId}` writes after migration is complete.
+8. Add subscription dates and payment states: `trialEndsAt`, `subscriptionEndsAt`, `paymentStatus`, `suspendedReason`.
+9. Block inactive/expired institutions from admin, judge, team, and private result pages.
+10. Add dedicated super-admin pages:
+    - `super-admin/dashboard.html`
+    - `super-admin/institutions.html`
+    - `super-admin/subscriptions.html`
+    - `super-admin/usage.html`
+11. Add institution admin creation from the super-admin portal.
+12. Add usage limits per plan: max students, max competitions, max judges, max team leaders, max public result views.
+13. Generate signed/shareable links for admin, judge, team, public result, live scoreboard, certificate verification, and result search.
+14. Add Firestore indexes for institution/festival scoped dashboards.
+15. Add audit logs for super-admin actions: create, activate, deactivate, delete, subscription update, admin creation.
 
-Acceptance criteria:
-- A super admin can create, activate, deactivate, and delete institutions/festivals.
+## Acceptance criteria
+
+- A super admin can create, activate, deactivate, delete, and open institution workspaces.
 - Institution admins can only access their own institution/festival.
 - Team leaders can only access their own team.
 - Judges can only access assigned competitions.
 - Public users can only read published public data.
-- No Firestore collection mixes data between institutions.
+- Expired or inactive subscriptions block private portals.
+- No Firestore collection mixes data between institutions after migration.

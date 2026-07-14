@@ -148,6 +148,7 @@ export function initializeNavigation() {
         await signOut(auth);
         sessionStorage.removeItem('meeladpulse_manual_user');
         localStorage.removeItem('meeladpulse_selected_fest_id');
+        localStorage.removeItem('meeladpulse_selected_institution_id');
         localStorage.removeItem('meeladpulse_selected_fest_title');
         window.location.replace(appUrl('login.html'));
       } catch (err) {

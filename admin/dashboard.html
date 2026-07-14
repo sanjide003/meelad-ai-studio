@@ -137,6 +137,25 @@
           </div>
         </div>
 
+
+        <!-- Scoped Portal Share Links -->
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <p class="text-[10px] font-bold text-sky-600 uppercase tracking-widest">Share Links</p>
+              <h2 class="text-lg font-extrabold text-slate-900 font-display">Scoped Portal Links</h2>
+              <p class="text-xs text-slate-500">Share these links only after selecting the correct institution/festival workspace.</p>
+            </div>
+            <button id="copy-public-link-btn" class="btn btn-secondary text-xs font-bold px-4 py-2 border border-slate-200">Copy Public Result Link</button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-[11px] font-mono">
+            <input id="share-admin-link" class="form-input" readonly value="Admin link unavailable">
+            <input id="share-team-link" class="form-input" readonly value="Team link unavailable">
+            <input id="share-judge-link" class="form-input" readonly value="Judge link unavailable">
+            <input id="share-public-link" class="form-input" readonly value="Public link unavailable">
+          </div>
+        </div>
+
         <!-- Portal Info Panel -->
         <div class="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
           <h2 class="text-lg font-bold text-slate-900 font-display">Administrator Control Center</h2>
@@ -179,10 +198,33 @@
 
         // 4. Load basic quick statistics from Firestore
         loadQuickStatistics();
+        populateShareLinks();
       } catch (err) {
         console.error("Dashboard initialize failed:", err);
       }
     }
+    function populateShareLinks() {
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id') || '';
+      const institutionId = localStorage.getItem('meeladpulse_selected_institution_id') || festId;
+      const root = new URL('../', window.location.href);
+      const scope = `?institution=${encodeURIComponent(institutionId)}&festival=${encodeURIComponent(festId)}`;
+      const links = {
+        'share-admin-link': new URL(`admin/app.html${scope}`, root).href,
+        'share-team-link': new URL(`team/dashboard.html${scope}`, root).href,
+        'share-judge-link': new URL(`judge/dashboard.html${scope}`, root).href,
+        'share-public-link': new URL(`public/index.html${scope}`, root).href,
+      };
+      Object.entries(links).forEach(([id, value]) => {
+        const input = document.getElementById(id);
+        if (input) input.value = festId ? value : 'Select a festival workspace first';
+      });
+      document.getElementById('copy-public-link-btn')?.addEventListener('click', async () => {
+        if (!festId) return alert('Select a festival workspace first.');
+        await navigator.clipboard.writeText(links['share-public-link']);
+        alert('Public result link copied.');
+      });
+    }
+
 
     async function loadQuickStatistics() {
       try {
