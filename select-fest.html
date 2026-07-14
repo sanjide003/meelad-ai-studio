@@ -382,12 +382,23 @@
         `;
         row.querySelector('.edit-workspace').onclick = () => openInstitutionModal(festival);
         row.querySelector('.share-login').onclick = async () => {
-          const loginUrl = new URL('login.html', window.location.href);
-          loginUrl.searchParams.set('institution', festival.id);
-          loginUrl.searchParams.set('festival', festival.defaultFestivalId || festival.id);
-          if (navigator.clipboard) await navigator.clipboard.writeText(loginUrl.href);
-          alert(`Institution login link copied:
-${loginUrl.href}`);
+          const festivalId = festival.defaultFestivalId || festival.id;
+          const scopedUrl = (path) => {
+            const url = new URL(path, window.location.href);
+            url.searchParams.set('institution', festival.id);
+            url.searchParams.set('festival', festivalId);
+            return url.href;
+          };
+          const links = [
+            ['Admin Login', scopedUrl('login.html')],
+            ['Admin Portal', scopedUrl('admin/app.html')],
+            ['Public Results/Home', scopedUrl('public/index.html')],
+            ['Team Login', scopedUrl('login.html?portal=team')],
+            ['Judge Login', scopedUrl('login.html?portal=judge')]
+          ];
+          const linkText = links.map(([label, url]) => `${label}: ${url}`).join(String.fromCharCode(10));
+          if (navigator.clipboard) await navigator.clipboard.writeText(linkText);
+          alert(`Portal links copied:\n${linkText}`);
         };
         row.querySelector('.toggle-workspace').onclick = async () => {
           const nextActive = !info.effectiveActive;

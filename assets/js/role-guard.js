@@ -16,17 +16,32 @@ if (loaderEl) {
   loaderEl.classList.toggle('hidden', fastNavRequested);
 }
 
-async function isSelectedFestivalAvailable(festId, role) {
+function isSubscriptionDataAvailable(data = {}) {
+  const subscriptionStatus = ['trial', 'active', 'suspended'].includes(data.subscriptionStatus) ? data.subscriptionStatus : (data.plan === 'purchased' ? 'active' : 'trial');
+  const expiryDate = subscriptionStatus === 'trial' ? data.trialEndsAt : data.subscriptionEndsAt;
+  const isUnlimited = data.billingCycle === 'unlimited';
+  const expiredByDate = expiryDate && !isUnlimited && new Date(`${expiryDate}T23:59:59`) < new Date();
+  return data.active !== false && subscriptionStatus !== 'suspended' && !expiredByDate;
+}
+
+async function isSelectedFestivalAvailable(festId, role, profile = null) {
   if (role === 'superAdmin') return true;
+  if (profile?.manualAuth) {
+    try {
+      const loginKey = profile.usernameLower || profile.username?.toLowerCase();
+      if (loginKey) {
+        const loginSnap = await getDoc(doc(db, 'institutionLogins', loginKey));
+        if (loginSnap.exists()) return isSubscriptionDataAvailable(loginSnap.data());
+      }
+    } catch (err) {
+      console.warn('Could not refresh manual subscription from login index; using session profile.', err);
+    }
+    return isSubscriptionDataAvailable(profile);
+  }
   try {
     const snap = await getDoc(doc(db, window.meeladPulseScopedFestivalPath()));
     if (!snap.exists()) return false;
-    const data = snap.data();
-    const subscriptionStatus = ['trial', 'active', 'suspended'].includes(data.subscriptionStatus) ? data.subscriptionStatus : (data.plan === 'purchased' ? 'active' : 'trial');
-    const expiryDate = subscriptionStatus === 'trial' ? data.trialEndsAt : data.subscriptionEndsAt;
-    const isUnlimited = data.billingCycle === 'unlimited';
-    const expiredByDate = expiryDate && !isUnlimited && new Date(`${expiryDate}T23:59:59`) < new Date();
-    return data.active !== false && subscriptionStatus !== 'suspended' && !expiredByDate;
+    return isSubscriptionDataAvailable(snap.data());
   } catch (err) {
     console.warn('Could not verify selected festival subscription:', err);
     return false;
@@ -56,7 +71,7 @@ export async function verifyUserRole(allowedRoles) {
             window.location.replace(appUrl('select-fest.html'));
             throw new Error('No festival selected');
           }
-          const available = await isSelectedFestivalAvailable(selectedFestId, manualProfile.role);
+          const available = await isSelectedFestivalAvailable(selectedFestId, manualProfile.role, manualProfile);
           if (!available) {
             window.location.replace(appUrl('unauthorized.html?reason=subscription_inactive'));
             throw new Error('Selected festival is inactive or subscription is blocked');
@@ -121,7 +136,7 @@ export async function verifyUserRole(allowedRoles) {
               return reject('No festival selected');
             }
           } else {
-            const available = await isSelectedFestivalAvailable(selectedFestId, userData.role);
+            const available = await isSelectedFestivalAvailable(selectedFestId, userData.role, userData);
             if (!available) {
               window.location.replace(appUrl('unauthorized.html?reason=subscription_inactive'));
               return reject('Selected festival is inactive or subscription is blocked');
