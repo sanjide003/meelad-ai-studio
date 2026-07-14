@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fest Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manjari:wght@100;400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Inter', 'Manjari', sans-serif; background-color: #f2f3f7; overscroll-behavior-y: none; color: #0f172a; }
+        .hide { display: none !important; }
+        #sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
+        .sidebar-open { transform: translateX(0) !important; }
+        .sidebar-closed { transform: translateX(-100%); }
+        #sidebar-overlay { transition: opacity 0.3s ease-in-out; }
+        .touch-target { min-height: 48px; }
+        select { -webkit-appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.75rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; }
+        .header-wrapper { position: sticky; top: 0; z-index: 40; padding: 16px 16px 0; pointer-events: none; }
+        .app-header { pointer-events: auto; height: 64px; display: flex; align-items: center; padding: 0 20px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.5); width: 100%; transition: all 0.3s ease; }
+        .header-title { font-size: 18px; font-weight: 800; color: #1e293b; letter-spacing: -0.025em; margin-left: 12px; }
+        .menu-toggle { width: 24px; height: 24px; position: relative; cursor: pointer; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+        .menu-toggle span { display: block; width: 100%; height: 2px; background: #334155; border-radius: 2px; transition: 0.3s ease; }
+        .sidebar-open-btn .menu-toggle span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .sidebar-open-btn .menu-toggle span:nth-child(2) { opacity: 0; }
+        .sidebar-open-btn .menu-toggle span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-enter { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .is-loading i { animation: spin 1s linear infinite; }
+        .tab-view { display: none; opacity: 0; transition: opacity 0.2s ease-in-out; }
+        .tab-view.active { display: block; opacity: 1; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden selection:bg-indigo-100 selection:text-indigo-700">
+
+    <!-- ... (Loader, Toast, Modal code remains same as previous admin.html) ... -->
+    <!-- I am including the full structure for completeness -->
+    <div id="app-loader" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center transition-opacity duration-500"><div class="animate-spin rounded-full h-10 w-10 border-4 border-slate-100 border-t-indigo-600 mb-4"></div><p class="text-indigo-600 font-bold animate-pulse text-xs tracking-widest uppercase">Loading Admin...</p></div>
+    <div id="toast-container" class="fixed bottom-6 right-6 left-6 md:left-auto z-[90] flex flex-col gap-3 pointer-events-none"></div>
+    <div id="confirm-modal" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 transform scale-100 transition-all animate-enter"><h3 class="text-lg font-bold text-slate-800 mb-2 text-center">Confirm Action</h3><p class="text-slate-600 text-sm mb-6 text-center" id="confirm-msg">Are you sure?</p><div class="flex gap-3"><button id="confirm-cancel" class="flex-1 py-3 text-slate-600 hover:bg-slate-100 rounded-xl text-sm font-bold">Cancel</button><button id="confirm-ok" class="flex-1 py-3 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 shadow-lg">Confirm</button></div></div></div>
+    <div id="prompt-modal" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 transform scale-100 transition-all animate-enter"><h3 class="text-lg font-bold text-slate-800 mb-2" id="prompt-title">Enter Value</h3><input type="text" id="prompt-input" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 mb-6 font-medium" dir="auto"><div class="flex justify-end gap-3"><button id="prompt-cancel" class="px-5 py-3 text-slate-600 hover:bg-slate-100 rounded-xl text-sm font-bold">Cancel</button><button id="prompt-ok" class="px-5 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-lg">Save</button></div></div></div>
+
+    <div id="app-layout" class="flex h-full relative opacity-0 transition-opacity duration-500">
+        <div id="sidebar-overlay" onclick="closeSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden backdrop-blur-sm"></div>
+
+        <aside id="sidebar" class="sidebar-closed fixed md:relative z-50 w-[85%] max-w-[280px] h-full bg-white border-r border-slate-200 flex flex-col md:translate-x-0 shadow-2xl md:shadow-none">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10 h-[80px]">
+                <div><h1 class="font-black text-2xl text-indigo-700 tracking-tight">FestAdmin</h1><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Committee Panel</p></div>
+                <button onclick="closeSidebar()" class="md:hidden p-2 hover:bg-slate-50 rounded-full text-slate-500 active:bg-slate-100"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            
+            <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+                <p class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-2">Main Menu</p>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all active-nav"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</button>
+                <button onclick="switchTab('registrations')" id="nav-registrations" class="nav-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all"><i data-lucide="clipboard-check" class="w-5 h-5"></i> Registrations</button>
+                <button onclick="switchTab('students')" id="nav-students" class="nav-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all"><i data-lucide="users" class="w-5 h-5"></i> Students</button>
+                <button onclick="switchTab('events')" id="nav-events" class="nav-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all"><i data-lucide="calendar" class="w-5 h-5"></i> Events</button>
+                
+                <p class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Configuration</p>
+                <button onclick="switchTab('config')" id="nav-config" class="nav-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all"><i data-lucide="settings-2" class="w-5 h-5"></i> Master Setup</button>
+                <button onclick="switchTab('danger')" id="nav-danger" class="nav-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700 transition-all mt-4"><i data-lucide="trash-2" class="w-5 h-5"></i> Data Reset</button>
+            </nav>
+
+            <div class="p-4 border-t border-slate-100 space-y-2">
+                <!-- NEW LINK TO HOME -->
+                <a href="home.html" target="_blank" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-blue-100 bg-blue-50 text-blue-700 text-sm font-bold hover:bg-blue-100 transition active:scale-[0.98]">
+                    <i data-lucide="globe" class="w-4 h-4"></i> Public Website
+                </a>
+                <a href="publish.html" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-bold hover:bg-amber-100 transition active:scale-[0.98]">
+                    <i data-lucide="trophy" class="w-4 h-4"></i> Result Publishing
+                </a>
+                <a href="team.html" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition active:scale-[0.98]">
+                    <i data-lucide="external-link" class="w-4 h-4"></i> Team Portal
+                </a>
+            </div>
+        </aside>
+
+        <!-- CONTENT AREA (Same as previous admin.html) -->
+        <!-- Since only sidebar change was requested, I will provide the full admin.html content to ensure no breakage -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
+            <div class="header-wrapper">
+                <header class="app-header">
+                    <button onclick="openSidebar()" class="md:hidden menu-toggle mr-2" aria-label="Open Menu"><span></span><span></span><span></span></button>
+                    <div class="flex items-center gap-3 flex-1"><h2 id="page-title" class="header-title">Dashboard</h2></div>
+                    <div class="flex items-center gap-3"><div class="bg-indigo-50 px-3 py-1.5 rounded-full text-xs font-bold text-indigo-700 border border-indigo-100 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div> Admin</div></div>
+                </header>
+            </div>
+
+            <div id="content-container" class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative scroll-smooth pt-4">
+                <!-- ALL TABS CONTENT FROM PREVIOUS ADMIN.HTML (DASHBOARD, REG, STUDENTS, EVENTS, CONFIG, DANGER) GOES HERE -->
+                <!-- For brevity, assume all existing tab content is preserved exactly as in the previous admin.html version provided -->
+                <!-- I will include the full code in the file block below to be safe -->
+                
+                <!-- 1. DASHBOARD -->
+                <div id="view-dashboard" class="tab-view active max-w-7xl mx-auto space-y-4 md:space-y-6">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition"><div class="relative z-10"><p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Students</p><h3 class="text-2xl font-bold text-slate-800 tracking-tight" id="stat-students">0</h3></div><div class="absolute right-3 bottom-3 w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform"><i data-lucide="users" class="w-4 h-4"></i></div></div>
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition"><div class="relative z-10"><p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Events</p><h3 class="text-2xl font-bold text-slate-800 tracking-tight" id="stat-events">0</h3></div><div class="absolute right-3 bottom-3 w-8 h-8 bg-purple-50 rounded-full flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform"><i data-lucide="calendar" class="w-4 h-4"></i></div></div>
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition"><div class="relative z-10"><p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Entries</p><h3 class="text-2xl font-bold text-slate-800 tracking-tight" id="stat-regs">0</h3></div><div class="absolute right-3 bottom-3 w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform"><i data-lucide="check-circle" class="w-4 h-4"></i></div></div>
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition"><div class="relative z-10"><p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Results</p><h3 class="text-2xl font-bold text-amber-600 tracking-tight" id="stat-results">0</h3></div><div class="absolute right-3 bottom-3 w-8 h-8 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform"><i data-lucide="trophy" class="w-4 h-4"></i></div></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden"><div class="relative z-10"><h3 class="font-bold text-lg mb-1">Manage Students</h3><p class="text-indigo-200 text-xs mb-4">Add, edit or view student directory.</p><button onclick="switchTab('students')" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg text-xs font-bold transition active:scale-95">View Directory</button></div><i data-lucide="users" class="absolute right-4 bottom-4 w-24 h-24 text-white opacity-10"></i></div>
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden"><div class="relative z-10"><h3 class="font-bold text-lg text-slate-800 mb-1">Publishing Desk</h3><p class="text-slate-500 text-xs mb-4">Enter winners and publish results.</p><a href="publish.html" class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-lg shadow-amber-500/20 active:scale-95">Go to Desk <i data-lucide="arrow-right" class="w-3 h-3"></i></a></div><i data-lucide="award" class="absolute right-4 bottom-4 w-24 h-24 text-amber-500 opacity-10"></i></div>
+                    </div>
+                </div>
+
+                <!-- 2. REGISTRATIONS -->
+                <div id="view-registrations" class="tab-view max-w-7xl mx-auto space-y-4">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full min-h-[500px]">
+                        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row gap-4 items-center shrink-0">
+                            <h3 class="font-bold text-slate-800 whitespace-nowrap flex items-center gap-2"><i data-lucide="filter" class="w-4 h-4 text-indigo-500"></i>Filter</h3>
+                            <select id="reg-filter-cat" onchange="populateRegEvents()" class="touch-target w-full md:w-48 bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 select-cat-filter font-medium text-slate-700"><option value="">Select Category</option></select>
+                            <select id="reg-filter-stage" onchange="populateRegEvents()" class="touch-target w-full md:w-48 bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700"><option value="">All Stages</option><option value="On-Stage">On-Stage</option><option value="Off-Stage">Off-Stage</option></select>
+                            <select id="reg-filter-event" onchange="renderRegList(true)" class="touch-target w-full md:w-64 bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700"><option value="">Select Event</option></select>
+                        </div>
+                        <div class="p-4 bg-slate-50 flex-1 overflow-y-auto" id="registrations-container"><div class="flex flex-col items-center justify-center h-full text-slate-400 italic"><i data-lucide="mouse-pointer-click" class="w-10 h-10 mb-2 opacity-50"></i>Select Category and Event to view team status</div></div>
+                    </div>
+                </div>
+
+                <!-- 3. STUDENTS -->
+                <div id="view-students" class="tab-view max-w-6xl mx-auto space-y-4 md:space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between sm:items-center gap-3"><h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="user-plus" class="w-5 h-5 text-indigo-500"></i> Add Student</h3><button onclick="toggleBulkMode()" id="btn-bulk" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 hover:bg-indigo-100 transition w-full sm:w-auto text-center active:scale-95">Switch to Bulk Mode</button></div>
+                        <div class="p-5"><form id="form-student" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end"><div class="md:col-span-4 space-y-1.5"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Name</label><input type="text" id="inp-std-name" class="touch-target w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="Student Name" dir="auto"><textarea id="inp-std-name-bulk" rows="4" class="hidden w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="Paste Names (One per line)" dir="auto"></textarea></div><div class="md:col-span-3 space-y-1.5"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Team</label><select id="inp-std-team" class="touch-target w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 select-team"></select></div><div class="md:col-span-3 space-y-1.5"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Category</label><select id="inp-std-cat" class="touch-target w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 select-cat" onchange="previewChestNo()"></select></div><div class="md:col-span-2"><button type="submit" id="btn-save-std" class="touch-target w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl shadow-lg shadow-indigo-500/30 transition flex items-center justify-center gap-2 active:scale-95"><i data-lucide="save" class="w-4 h-4"></i> Save</button></div></form><p id="chest-hint" class="text-right text-xs font-bold mt-2 h-4 text-slate-400 mr-1"></p></div>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col"><div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4"><div class="flex items-center gap-2 w-full lg:w-auto"><h3 class="font-bold text-slate-700 whitespace-nowrap">Directory</h3><span class="bg-slate-200 px-2 py-0.5 rounded text-xs font-bold text-slate-600" id="count-students">0</span><div class="relative w-full lg:w-64 ml-2"><i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i><input type="text" id="inp-search-std" onkeyup="renderStudentTable(true)" placeholder="Search student..." class="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium" dir="auto"></div></div><div class="flex flex-col sm:flex-row gap-2 w-full lg:w-auto"><select id="filter-std-team" onchange="renderStudentTable(true)" class="touch-target w-full sm:w-40 border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 outline-none select-team-filter bg-white"></select><select id="filter-std-cat" onchange="renderStudentTable(true)" class="touch-target w-full sm:w-40 border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 outline-none select-cat-filter-directory bg-white"></select><button onclick="exportToCSV()" class="touch-target w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-500/20 active:scale-95"><i data-lucide="download" class="w-4 h-4"></i> Export</button></div></div><div id="list-students-mobile" class="md:hidden p-4 space-y-3 bg-slate-50"></div><div class="hidden md:block overflow-x-auto"><table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs"><tr><th class="px-6 py-4">Chest No</th><th class="px-6 py-4">Name</th><th class="px-6 py-4">Team</th><th class="px-6 py-4">Category</th><th class="px-6 py-4 text-right">Actions</th></tr></thead><tbody id="table-students-desktop" class="divide-y divide-slate-100"></tbody></table></div></div>
+                </div>
+
+                <!-- 4. EVENTS -->
+                <div id="view-events" class="tab-view max-w-6xl mx-auto space-y-4 md:space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-5 border-b border-slate-100 bg-slate-50/50"><h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="calendar-plus" class="w-5 h-5 text-purple-500"></i> Create Event</h3></div>
+                        <div class="p-5"><form id="form-event" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="space-y-3"><div class="space-y-1.5"><label class="text-xs font-bold text-slate-500 ml-1">EVENT NAME</label><input type="text" id="inp-ev-name" required class="touch-target w-full border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500 outline-none transition" dir="auto"></div><div class="space-y-1.5"><label class="text-xs font-bold text-slate-500 ml-1">STAGE TYPE</label><div class="flex gap-4"><label class="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl flex-1 hover:bg-indigo-50 hover:border-indigo-200 transition has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-500 has-[:checked]:text-indigo-700"><input type="radio" name="ev-stage" value="Off-Stage" class="w-4 h-4 text-indigo-600" checked> <span class="text-sm font-bold">Off-Stage</span></label><label class="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl flex-1 hover:bg-indigo-50 hover:border-indigo-200 transition has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-500 has-[:checked]:text-indigo-700"><input type="radio" name="ev-stage" value="On-Stage" class="w-4 h-4 text-indigo-600"> <span class="text-sm font-bold">On-Stage</span></label></div></div></div><div class="space-y-3"><div class="space-y-1.5"><label class="text-xs font-bold text-slate-500 ml-1">CATEGORY</label><select id="inp-ev-cat" class="touch-target w-full border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500 select-cat-create"></select></div><div class="grid grid-cols-2 gap-3"><div class="space-y-1.5"><label class="text-xs font-bold text-slate-500 ml-1">TYPE</label><select id="inp-ev-type" onchange="toggleEventConfig()" class="touch-target w-full border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500"><option value="Single">Single</option><option value="Group">Group</option></select></div><div class="space-y-1.5"><label class="text-xs font-bold text-slate-500 ml-1">MAX LIMIT</label><input type="number" id="inp-ev-limit" value="1" min="1" class="touch-target w-full border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm font-bold text-center"></div></div></div></div><div id="event-config-panel" class="bg-purple-50 rounded-xl p-4 border border-purple-100 flex flex-wrap gap-4 items-center hidden"><label class="text-xs font-bold text-purple-800">Group Size:</label><input type="number" id="inp-ev-grpsize" value="5" min="2" class="w-24 bg-white border border-purple-200 rounded px-2 py-1.5 text-sm font-bold"></div><div class="pt-2"><button type="submit" id="btn-save-event" class="touch-target w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-500/20 transition flex items-center justify-center gap-2 active:scale-95"><i data-lucide="plus-circle" class="w-5 h-5"></i> Add Event</button></div></form></div>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full min-h-[400px]"><div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center"><h3 class="font-bold text-slate-700">Events List</h3><select id="filter-ev-stage" onchange="renderEventTable(true)" class="touch-target w-40 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 outline-none"><option value="">All Stages</option><option value="On-Stage">On-Stage</option><option value="Off-Stage">Off-Stage</option></select></div><div id="list-events-mobile" class="md:hidden p-4 space-y-3 bg-slate-50"></div><div class="hidden md:block overflow-x-auto flex-1"><table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs"><tr><th class="px-6 py-4">Event</th><th class="px-6 py-4">Stage</th><th class="px-6 py-4">Type</th><th class="px-6 py-4">Category</th><th class="px-6 py-4">Config</th><th class="px-6 py-4 text-right">Actions</th></tr></thead><tbody id="table-events-desktop" class="divide-y divide-slate-100"></tbody></table></div></div>
+                </div>
+
+                <!-- 5. MASTER SETUP -->
+                <div id="view-config" class="tab-view max-w-7xl mx-auto space-y-4 md:space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5"><h3 class="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">Quick Add</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="flex gap-2"><input type="text" id="inp-new-team" placeholder="New Team Name" class="touch-target flex-1 border border-slate-200 bg-slate-50 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" dir="auto"><button onclick="addItem('teams', 'inp-new-team')" class="bg-blue-600 text-white px-5 rounded-xl font-bold text-sm hover:bg-blue-700 shadow-lg shadow-blue-500/20 active:scale-95 transition">Add</button></div><div class="flex gap-2"><input type="text" id="inp-new-cat" placeholder="New Category Name" class="touch-target flex-1 border border-slate-200 bg-slate-50 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" dir="auto"><button onclick="addItem('categories', 'inp-new-cat')" class="bg-indigo-600 text-white px-5 rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 active:scale-95 transition">Add</button></div></div></div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"><div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-4"><div><h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><i data-lucide="settings" class="w-5 h-5 text-teal-600"></i> Master Setup</h3><p class="text-xs text-slate-500 mt-1">Manage Teams, Categories & Chest Numbers.</p></div><button onclick="saveChestNoConfig()" id="btnSaveChest" disabled class="touch-target w-full md:w-auto bg-teal-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-teal-700 flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20 transition active:scale-95 opacity-50 cursor-not-allowed"><i data-lucide="save" class="w-4 h-4"></i> Save All</button></div><div class="p-4 bg-orange-50 border-b border-orange-100 flex justify-between items-center"><span class="text-xs font-bold text-orange-700">Chest Numbers are Read-Only by default</span><button onclick="enableChestNoEdit()" id="btnEditChest" class="text-xs bg-white border border-orange-200 text-orange-600 px-3 py-1.5 rounded-lg font-bold hover:bg-orange-100 transition">Enable Edit</button></div><div id="chest-config-container" class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></div>
+                </div>
+
+                <!-- 6. DATA RESET -->
+                <div id="view-danger" class="tab-view max-w-5xl mx-auto space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"><div class="p-5 border-b border-slate-100 bg-slate-50/50"><h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><i data-lucide="trash-2" class="w-5 h-5 text-red-500"></i> Data Management</h3><p class="text-xs text-slate-500 mt-1">Permanently delete application data. Actions cannot be undone.</p></div><div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6"><div class="space-y-4"><h4 class="font-bold text-sm text-slate-700 uppercase tracking-wider">Clear Specific Data</h4><div class="space-y-3"><div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl"><div><p class="font-bold text-slate-700">Clear All Students</p><p class="text-xs text-slate-400">Deletes student directory.</p></div><button onclick="clearCollection('students', 'Students')" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:text-red-600 hover:border-red-200 transition active:scale-95">Clear</button></div><div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl"><div><p class="font-bold text-slate-700">Clear All Events</p><p class="text-xs text-slate-400">Deletes all events.</p></div><button onclick="clearCollection('events', 'Events')" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:text-red-600 hover:border-red-200 transition active:scale-95">Clear</button></div><div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl"><div><p class="font-bold text-slate-700">Clear Registrations</p><p class="text-xs text-slate-400">Resets all event entries.</p></div><button onclick="clearCollection('registrations', 'Registrations')" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:text-red-600 hover:border-red-200 transition active:scale-95">Clear</button></div><div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl"><div><p class="font-bold text-slate-700">Clear Results</p><p class="text-xs text-slate-400">Deletes all published results.</p></div><button onclick="clearCollection('results', 'Results')" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:text-red-600 hover:border-red-200 transition active:scale-95">Clear</button></div></div></div><div class="space-y-6"><div><h4 class="font-bold text-sm text-slate-700 uppercase tracking-wider mb-3">Clear Team Data</h4><div class="p-4 bg-indigo-50 border border-indigo-100 rounded-xl"><p class="text-xs text-indigo-800 mb-3 font-medium">Deletes Students, Registrations & Notifications for selected team.</p><div class="flex gap-2"><select id="reset-team-select" class="flex-1 bg-white border border-indigo-200 text-indigo-900 text-sm rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 select-team font-bold"></select><button onclick="deleteTeamData()" class="px-4 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition active:scale-95">Clear</button></div></div></div><div><h4 class="font-bold text-sm text-red-600 uppercase tracking-wider mb-3">Danger Zone</h4><button onclick="factoryReset()" class="w-full p-4 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center gap-3 text-red-600 font-bold hover:bg-red-600 hover:text-white transition group active:scale-95"><i data-lucide="alert-triangle" class="w-5 h-5"></i><span>Factory Reset (Delete Everything)</span></button></div></div></div></div></div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Modals (Student & Event) -->
+    <div id="edit-student-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeEditStudentModal()"></div><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative z-10 transform transition-all animate-enter"><h3 class="font-bold text-lg text-slate-800 mb-5">Edit Student</h3><form id="edit-student-form" class="space-y-4"><input type="hidden" id="edit-std-id"><div class="space-y-1"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Name</label><input type="text" id="edit-std-name" class="touch-target w-full border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium" dir="auto"></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Team</label><select id="edit-std-team" class="touch-target w-full border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none select-team font-medium"></select></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Category</label><select id="edit-std-cat" class="touch-target w-full border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none select-cat font-medium"></select></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Chest No</label><input type="number" id="edit-std-chest" class="touch-target w-full border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none font-bold"></div><div class="flex gap-3 pt-3"><button type="button" onclick="closeEditStudentModal()" class="flex-1 py-3 text-slate-500 hover:bg-slate-50 rounded-xl font-bold text-sm active:scale-95">Cancel</button><button type="submit" class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 active:scale-95">Update</button></div></form></div></div>
+    <div id="edit-event-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4"><div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeEditEventModal()"></div><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative z-10 transform transition-all animate-enter"><h3 class="font-bold text-lg text-slate-800 mb-5">Edit Event</h3><form id="edit-event-form" class="space-y-4"><input type="hidden" id="edit-ev-id"><div class="space-y-1"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Name</label><input type="text" id="edit-ev-name" class="touch-target w-full border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none font-medium" dir="auto"></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Stage Type</label><div class="flex gap-2"><label class="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg flex-1"><input type="radio" name="edit-ev-stage" value="Off-Stage" class="text-indigo-600"> <span class="text-xs font-bold">Off-Stage</span></label><label class="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg flex-1"><input type="radio" name="edit-ev-stage" value="On-Stage" class="text-indigo-600"> <span class="text-xs font-bold">On-Stage</span></label></div></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Category</label><select id="edit-ev-cat" class="touch-target w-full border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none select-cat-create font-medium"></select></div><div class="grid grid-cols-2 gap-4"><div class="space-y-1"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Type</label><select id="edit-ev-type" class="touch-target w-full border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none font-medium"><option value="Single">Single</option><option value="Group">Group</option></select></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Max Limit</label><input type="number" id="edit-ev-limit" class="touch-target w-full border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none font-bold"></div></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500 uppercase ml-1">Group Size</label><input type="number" id="edit-ev-grp" class="touch-target w-full border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none font-bold"></div><div class="flex gap-3 pt-3"><button type="button" onclick="closeEditEventModal()" class="flex-1 py-3 text-slate-500 hover:bg-slate-50 rounded-xl font-bold text-sm active:scale-95">Cancel</button><button type="submit" class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 active:scale-95">Update</button></div></form></div></div>
+
+    <script type="module">
+        import { db, auth } from './firebase-config.js';
+        import { collection, onSnapshot, doc, setDoc, addDoc, deleteDoc, updateDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        let students = [], events = [], registrations = [], categories = [], teams = [], chestConfig = [], results = [];
+        let teamPasscodes = {};
+        let lastRenderHash = {};
+
+        const generateHash = (data) => JSON.stringify(data).length;
+
+        const setLoading = (btnId, isLoading, text='Save') => {
+            const btn = document.getElementById(btnId); if(!btn) return;
+            if(isLoading) { btn.disabled = true; btn.classList.add('opacity-75', 'cursor-not-allowed', 'is-loading'); btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 mr-2"></i> Processing...`; } 
+            else { btn.disabled = false; btn.classList.remove('opacity-75', 'cursor-not-allowed', 'is-loading'); btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 mr-2"></i> ${text}`; setTimeout(() => lucide.createIcons(), 100); }
+            lucide.createIcons();
+        };
+
+        window.showToast = (msg, type='success') => {
+            const c = document.getElementById('toast-container'); const d = document.createElement('div');
+            d.className = `${type==='success'?'bg-slate-800':'bg-red-600'} text-white px-5 py-3 rounded-xl shadow-lg shadow-slate-300/50 flex items-center gap-3 animate-enter mx-auto w-full md:w-auto`;
+            d.innerHTML = `<i data-lucide="${type==='success'?'check':'alert-circle'}" class="w-5 h-5 flex-shrink-0"></i><span class="text-sm font-bold">${msg}</span>`;
+            c.appendChild(d); setTimeout(()=>d.remove(),3000); lucide.createIcons();
+        };
+
+        window.confirmAction = (msg) => {
+            return new Promise((res) => {
+                const m = document.getElementById('confirm-modal'); document.getElementById('confirm-msg').innerText = msg; m.classList.remove('hidden');
+                const y = () => { clean(); res(true); }; const n = () => { clean(); res(false); };
+                const clean = () => { document.getElementById('confirm-ok').removeEventListener('click', y); document.getElementById('confirm-cancel').removeEventListener('click', n); m.classList.add('hidden'); };
+                document.getElementById('confirm-ok').addEventListener('click', y); document.getElementById('confirm-cancel').addEventListener('click', n);
+            });
+        };
+
+        window.promptAction = (title, defaultVal = '') => {
+            return new Promise((res) => {
+                const m = document.getElementById('prompt-modal'); const inp = document.getElementById('prompt-input');
+                document.getElementById('prompt-title').innerText = title; inp.value = defaultVal; m.classList.remove('hidden'); inp.focus();
+                const y = () => { clean(); res(inp.value.trim()); }; const n = () => { clean(); res(null); };
+                const clean = () => { document.getElementById('prompt-ok').removeEventListener('click', y); document.getElementById('prompt-cancel').removeEventListener('click', n); m.classList.add('hidden'); };
+                document.getElementById('prompt-ok').addEventListener('click', y); document.getElementById('prompt-cancel').addEventListener('click', n);
+            });
+        };
+
+        window.updateStats = () => {
+            if(document.getElementById('stat-students')) document.getElementById('stat-students').innerText = students.length;
+            if(document.getElementById('stat-events')) document.getElementById('stat-events').innerText = events.length;
+            if(document.getElementById('stat-regs')) document.getElementById('stat-regs').innerText = registrations.length;
+            if(document.getElementById('stat-results')) document.getElementById('stat-results').innerText = results.length;
+        };
+
+        window.openSidebar = () => { document.getElementById('sidebar').classList.remove('sidebar-closed'); document.getElementById('sidebar').classList.add('sidebar-open'); document.getElementById('sidebar-overlay').classList.remove('hidden'); document.body.classList.add('sidebar-open-btn'); };
+        window.closeSidebar = () => { document.getElementById('sidebar').classList.remove('sidebar-open'); document.getElementById('sidebar').classList.add('sidebar-closed'); document.getElementById('sidebar-overlay').classList.add('hidden'); document.body.classList.remove('sidebar-open-btn'); };
+        
+        window.switchTab = (tab) => {
+            document.querySelectorAll('.tab-view').forEach(e => { e.classList.remove('active'); setTimeout(() => { if(!e.classList.contains('active')) e.classList.add('hidden'); }, 200); });
+            const target = document.getElementById('view-'+tab); target.classList.remove('hidden'); setTimeout(() => target.classList.add('active'), 10);
+            document.querySelectorAll('#sidebar .nav-item').forEach(b => { b.classList.remove('bg-indigo-50', 'text-indigo-600'); b.classList.add('text-slate-600'); if(b.id === 'nav-danger') { b.classList.remove('bg-red-100', 'text-red-700'); b.classList.add('bg-red-50', 'text-red-600'); }});
+            const btn = document.getElementById('nav-'+tab);
+            if(tab === 'danger') { btn.classList.remove('bg-red-50', 'text-red-600'); btn.classList.add('bg-red-100', 'text-red-700'); } else { btn.classList.add('bg-indigo-50', 'text-indigo-600'); btn.classList.remove('text-slate-600'); }
+            if(window.innerWidth < 768) window.closeSidebar();
+            
+            const titles = { 'dashboard': 'Dashboard', 'registrations': 'Registrations', 'students': 'Students Directory', 'events': 'Events Management', 'config': 'Master Configuration', 'danger': 'Data Reset' };
+            document.getElementById('page-title').innerText = titles[tab] || 'Admin Panel';
+            if(tab === 'students') renderStudentTable(); if(tab === 'events') renderEventTable(); if(tab === 'registrations') renderRegList();
+        };
+
+        window.renderDropdowns = () => {
+            const catOpts = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            const teamOpts = teams.map(t => `<option value="${t}">${t}</option>`).join('');
+            const updateSelect = (selector, html) => { document.querySelectorAll(selector).forEach(s => { const old = s.value; s.innerHTML = html; if(old && Array.from(s.options).some(o => o.value === old)) s.value = old; }); };
+            updateSelect('.select-cat', '<option value="">Select Category</option><option value="General" class="font-bold text-indigo-600">General</option>' + catOpts);
+            updateSelect('.select-team', '<option value="">Select Team</option>' + teamOpts);
+            updateSelect('.select-cat-filter', '<option value="">All Categories</option><option value="General" class="font-bold text-indigo-600">General</option>' + catOpts);
+            updateSelect('.select-cat-filter-directory', '<option value="">All Categories</option><option value="General" class="font-bold text-indigo-600">General</option>' + catOpts);
+            updateSelect('.select-team-filter', '<option value="">All Teams</option>' + teamOpts);
+            updateSelect('.select-cat-create', '<option value="General" class="font-bold text-indigo-600">General</option>' + catOpts);
+        };
+
+        // --- DATA MANIPULATION LOGIC (Add/Edit/Delete/Clear) ---
+        // Same as original admin.html, just ensure "General" is handled if not already
+        async function deleteCollectionBatch(collectionName, queryRef = null) {
+            const ref = queryRef || collection(db, collectionName);
+            const snapshot = await getDocs(ref);
+            if (snapshot.empty) return 0;
+            const promises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+            await Promise.all(promises);
+            return snapshot.size;
+        }
+
+        window.clearCollection = async (colName, displayName) => {
+            if (await window.confirmAction(`Are you sure you want to delete ALL ${displayName}? This cannot be undone.`)) {
+                document.getElementById('app-loader').classList.remove('hide');
+                try { const count = await deleteCollectionBatch(colName); window.showToast(`Deleted ${count} ${displayName}`); } 
+                catch (e) { console.error(e); window.showToast("Error deleting data", "error"); }
+                document.getElementById('app-loader').classList.add('hide');
+            }
+        };
+
+        window.deleteTeamData = async () => {
+            const team = document.getElementById('reset-team-select').value;
+            if (!team) return window.showToast("Select a team first", "error");
+            const confirmation = await window.promptAction(`Type '${team}' to confirm deletion:`);
+            if (confirmation !== team) return window.showToast("Incorrect team name. Action cancelled.", "error");
+            document.getElementById('app-loader').classList.remove('hide');
+            try {
+                const qStd = query(collection(db, "students"), where("team", "==", team)); await deleteCollectionBatch("students", qStd);
+                const qReg = query(collection(db, "registrations"), where("team", "==", team)); await deleteCollectionBatch("registrations", qReg);
+                const qNot = query(collection(db, "notifications"), where("team", "==", team)); await deleteCollectionBatch("notifications", qNot);
+                window.showToast(`Cleared Data for ${team}`);
+            } catch (e) { console.error(e); window.showToast("Error clearing team data", "error"); }
+            document.getElementById('app-loader').classList.add('hide');
+        };
+
+        window.factoryReset = async () => {
+            const confirmation = await window.promptAction("Type 'DELETE' to confirm Factory Reset (All Data):");
+            if (confirmation !== 'DELETE') return window.showToast("Verification failed. Reset cancelled.", "error");
+            document.getElementById('app-loader').classList.remove('hide');
+            try {
+                await Promise.all([deleteCollectionBatch("students"), deleteCollectionBatch("events"), deleteCollectionBatch("registrations"), deleteCollectionBatch("notifications"), deleteCollectionBatch("results")]);
+                window.showToast("Factory Reset Complete. System Clean.");
+            } catch (e) { console.error(e); window.showToast("Error performing reset", "error"); }
+            document.getElementById('app-loader').classList.add('hide');
+        };
+
+        // --- REGISTRATIONS LOGIC ---
+        window.populateRegEvents = () => {
+            const cat = document.getElementById('reg-filter-cat').value;
+            const stage = document.getElementById('reg-filter-stage').value;
+            const evSelect = document.getElementById('reg-filter-event');
+            if(!cat) { evSelect.innerHTML = '<option value="">Select Event</option>'; return; }
+            let filteredEvents = events.filter(e => e.category === cat || (cat !== 'General' && e.category === 'General'));
+            if(stage) { filteredEvents = filteredEvents.filter(e => e.stage === stage); }
+            evSelect.innerHTML = '<option value="">Select Event</option>' + filteredEvents.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+        };
+
+        window.renderRegList = (force = false) => {
+            const evId = document.getElementById('reg-filter-event').value;
+            const container = document.getElementById('registrations-container');
+            const currentHash = generateHash(registrations) + evId + generateHash(students);
+            if(!force && lastRenderHash.regs === currentHash) return;
+            lastRenderHash.regs = currentHash;
+
+            if(!evId) { container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-slate-400 italic animate-enter"><i data-lucide="mouse-pointer-click" class="w-10 h-10 mb-2 opacity-50"></i>Select an Event to view entries</div>`; lucide.createIcons(); return; }
+            
+            const eventInfo = events.find(e => e.id === evId);
+            const sortedTeams = [...teams].sort();
+
+            const teamsHtml = sortedTeams.map(teamName => {
+                const teamRegs = registrations.filter(r => r.eventId === evId && r.team === teamName).sort((a,b)=>a.slotIndex-b.slotIndex);
+                const isRegistered = teamRegs.length > 0;
+                let contentHtml = '';
+                if (isRegistered) {
+                    contentHtml = teamRegs.map(r => {
+                        const studentList = r.studentIds.map(sid => {
+                            const s = students.find(std => std.id === sid);
+                            return s ? `<div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg text-sm border border-slate-100 mb-1 group/std"><div class="flex items-center gap-2"><span class="font-mono text-indigo-600 font-bold text-xs bg-indigo-50 px-1.5 rounded">${s.chestNo || '-'}</span><span class="text-slate-700 font-medium truncate max-w-[120px] sm:max-w-[150px]">${s.name}</span></div><button onclick="rejectStudent('${r.id}', '${s.id}', '${teamName}', '${eventInfo?.name}', '${s.name}', '${eventInfo?.id}')" class="p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded transition opacity-100 sm:opacity-0 sm:group-hover/std:opacity-100" title="Remove Student"><i data-lucide="x" class="w-4 h-4"></i></button></div>` : '';
+                        }).join('');
+                        return `<div class="mt-3 border-l-2 border-indigo-200 pl-3"><div class="flex justify-between items-center mb-2"><span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase tracking-wider">Slot ${r.slotIndex}</span><button onclick="rejectTeam('${r.id}', '${teamName}', '${eventInfo?.name}', '${eventInfo?.id}')" class="text-[10px] font-bold text-red-500 hover:bg-red-50 px-2 py-1 rounded border border-red-100 transition">Reject Entry</button></div><div class="space-y-1">${studentList || '<p class="text-[10px] text-red-400 italic">No students listed</p>'}</div></div>`;
+                    }).join('');
+                } else { contentHtml = `<div class="py-6 text-center"><span class="text-xs font-bold text-slate-400 italic flex flex-col items-center gap-1"><i data-lucide="minus-circle" class="w-5 h-5 opacity-50"></i>Not Registered</span></div>`; }
+                const cardBorder = isRegistered ? 'border-indigo-500 ring-1 ring-indigo-500/20' : 'border-slate-200';
+                const cardBg = isRegistered ? 'bg-white' : 'bg-slate-50/50';
+                const headerColor = isRegistered ? 'text-indigo-700' : 'text-slate-500';
+                return `<div class="rounded-xl border ${cardBorder} ${cardBg} shadow-sm overflow-hidden break-inside-avoid mb-4 transition hover:shadow-md animate-enter"><div class="px-4 py-3 bg-slate-100/50 border-b border-slate-100 flex justify-between items-center"><h4 class="font-bold ${headerColor} truncate max-w-[70%]">${teamName}</h4>${isRegistered ? `<span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Registered</span>` : ''}</div><div class="p-3">${contentHtml}</div></div>`;
+            }).join('');
+            container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">${teamsHtml}</div>`; lucide.createIcons();
+        };
+
+        window.rejectTeam = async (regId, team, eventName, eventId) => {
+            const reason = await window.promptAction("Reason for rejecting entire team?", "Disqualified / Incomplete");
+            if(!reason) return;
+            await deleteDoc(doc(db, "registrations", regId));
+            await addDoc(collection(db, "notifications"), { team: team, title: `Entry Rejected: ${eventName}`, message: `Your entire team entry was removed. Reason: ${reason}`, eventId: eventId, timestamp: Date.now(), type: 'error', read: false });
+            window.showToast("Team Entry Rejected");
+        };
+
+        window.rejectStudent = async (regId, studentId, team, eventName, studentName, eventId) => {
+            const reason = await window.promptAction(`Reason for removing ${studentName}?`, "Disqualified / Not Eligible");
+            if(!reason) return;
+            const reg = registrations.find(r => r.id === regId); if(!reg) return;
+            const newIds = reg.studentIds.filter(id => id !== studentId);
+            if(newIds.length === 0) { await deleteDoc(doc(db, "registrations", regId)); } else { await updateDoc(doc(db, "registrations", regId), { studentIds: newIds }); }
+            await addDoc(collection(db, "notifications"), { team: team, title: `Participant Removed: ${eventName}`, message: `${studentName} was removed from this event. Reason: ${reason}`, eventId: eventId, timestamp: Date.now(), type: 'warning', read: false });
+            window.showToast("Student Removed");
+        };
+
+        // --- STUDENTS TABLE ---
+        window.renderStudentTable = (force = false) => {
+            const teamFilter = document.getElementById('filter-std-team').value;
+            const catFilter = document.getElementById('filter-std-cat').value;
+            const searchQuery = document.getElementById('inp-search-std').value.toLowerCase();
+            const currentHash = generateHash(students) + teamFilter + catFilter + searchQuery;
+            if(!force && lastRenderHash.students === currentHash) return;
+            lastRenderHash.students = currentHash;
+
+            const desktopBody = document.getElementById('table-students-desktop');
+            const mobileList = document.getElementById('list-students-mobile');
+
+            let filteredStudents = students;
+            if (teamFilter) filteredStudents = filteredStudents.filter(s => s.team === teamFilter);
+            if (catFilter) { if(catFilter !== 'General') filteredStudents = filteredStudents.filter(s => s.category === catFilter); }
+            if (searchQuery) filteredStudents = filteredStudents.filter(s => s.name.toLowerCase().includes(searchQuery) || (s.chestNo && s.chestNo.toString().includes(searchQuery)));
+            const sorted = [...filteredStudents].sort((a,b) => (parseInt(a.chestNo)||0) - (parseInt(b.chestNo)||0));
+            document.getElementById('count-students').innerText = sorted.length;
+            
+            if(sorted.length===0) { const emptyMsg = `<div class="p-8 text-center text-slate-400 italic">No students found</div>`; desktopBody.innerHTML = `<tr><td colspan="5">${emptyMsg}</td></tr>`; mobileList.innerHTML = emptyMsg; return; }
+
+            desktopBody.innerHTML = sorted.map(s => `
+                <tr class="hover:bg-slate-50 border-b border-slate-100 last:border-0 group animate-enter">
+                    <td class="px-6 py-4 font-mono text-indigo-600 font-bold">${s.chestNo || '-'}</td><td class="px-6 py-4 font-medium text-slate-800">${s.name}</td><td class="px-6 py-4"><span class="bg-white border border-slate-200 px-2.5 py-1 rounded-md text-xs font-bold text-slate-600 shadow-sm">${s.team}</span></td><td class="px-6 py-4 text-xs uppercase font-bold text-slate-500">${s.category}</td>
+                    <td class="px-6 py-4 text-right"><div class="flex justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"><button onclick="openEditStudent('${s.id}')" class="text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button onclick="deleteStudent('${s.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>
+                </tr>`).join('');
+
+            mobileList.innerHTML = sorted.map(s => `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center animate-enter">
+                    <div><div class="flex items-center gap-2 mb-1"><span class="font-mono text-indigo-600 font-bold text-xs bg-indigo-50 px-2 py-0.5 rounded">${s.chestNo || '-'}</span><span class="font-bold text-slate-800 text-sm">${s.name}</span></div><div class="text-[10px] text-slate-500 font-bold uppercase tracking-wide flex gap-2"><span>${s.team}</span><span class="text-slate-300">•</span><span>${s.category}</span></div></div>
+                    <div class="flex gap-2"><button onclick="openEditStudent('${s.id}')" class="p-2 bg-slate-50 border border-slate-100 rounded-lg text-indigo-600 active:bg-indigo-50"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button onclick="deleteStudent('${s.id}')" class="p-2 bg-red-50 border border-red-100 rounded-lg text-red-500 active:bg-red-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>
+                </div>`).join('');
+            lucide.createIcons();
+        };
+
+        // --- EVENTS TABLE ---
+        window.renderEventTable = (force = false) => {
+            const stageFilter = document.getElementById('filter-ev-stage').value;
+            const currentHash = generateHash(events) + stageFilter;
+            if(!force && lastRenderHash.events === currentHash) return;
+            lastRenderHash.events = currentHash;
+
+            const desktopBody = document.getElementById('table-events-desktop');
+            const mobileList = document.getElementById('list-events-mobile');
+
+            let filteredEvents = events;
+            if(stageFilter) filteredEvents = events.filter(e => e.stage === stageFilter);
+            
+            if(filteredEvents.length===0) { const emptyMsg = `<div class="p-8 text-center text-slate-400 italic">No events found</div>`; desktopBody.innerHTML = `<tr><td colspan="6">${emptyMsg}</td></tr>`; mobileList.innerHTML = emptyMsg; return; }
+            
+            desktopBody.innerHTML = filteredEvents.map(e => `
+                <tr class="hover:bg-slate-50 border-b border-slate-100 animate-enter">
+                    <td class="px-6 py-4 font-bold text-slate-700">${e.name}</td><td class="px-6 py-4 text-xs font-bold uppercase text-slate-500">${e.stage || 'Off-Stage'}</td><td class="px-6 py-4 text-xs font-bold ${e.type==='Group'?'text-purple-600':'text-blue-600'}">${e.type}</td><td class="px-6 py-4 text-sm"><span class="${e.category==='General'?'bg-orange-100 text-orange-700':'bg-slate-100 text-slate-600'} px-2 py-1 rounded text-xs font-bold">${e.category}</span></td><td class="px-6 py-4 text-xs text-slate-500">Max ${e.limit} ${e.type==='Group' ? `(Grp: ${e.groupSize})` : ''}</td>
+                    <td class="px-6 py-4 text-right"><div class="flex justify-end gap-1"><button onclick="openEditEvent('${e.id}')" class="text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button onclick="deleteEvent('${e.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>
+                </tr>`).join('');
+
+            mobileList.innerHTML = filteredEvents.map(e => {
+                const stageColor = e.stage === 'On-Stage' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700';
+                return `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative group animate-enter"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-slate-800 pr-2">${e.name}</h4><span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded ${stageColor} whitespace-nowrap">${e.stage || 'Off-Stage'}</span></div><div class="flex flex-wrap gap-2 text-[10px] font-bold text-slate-500 mb-3"><span class="bg-slate-100 px-2 py-1 rounded border border-slate-200 uppercase">${e.category}</span><span class="bg-slate-100 px-2 py-1 rounded border border-slate-200 uppercase ${e.type==='Group'?'text-purple-600':'text-blue-600'}">${e.type}</span><span class="bg-slate-100 px-2 py-1 rounded border border-slate-200">Max: ${e.limit}</span>${e.type==='Group' ? `<span class="bg-purple-50 px-2 py-1 rounded border border-purple-100 text-purple-700">Grp Size: ${e.groupSize}</span>` : ''}</div><div class="flex justify-end gap-2 border-t border-slate-100 pt-2 mt-2"><button onclick="openEditEvent('${e.id}')" class="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold flex items-center gap-1 active:bg-indigo-100"><i data-lucide="edit-3" class="w-3 h-3"></i> Edit</button><button onclick="deleteEvent('${e.id}')" class="px-3 py-1.5 bg-red-50 text-red-500 rounded-lg text-xs font-bold flex items-center gap-1 active:bg-red-100"><i data-lucide="trash-2" class="w-3 h-3"></i> Delete</button></div></div>`;
+            }).join('');
+            lucide.createIcons();
+        };
+
+        // --- CHEST NO & MASTER SETUP ---
+        window.renderChestGrid = () => {
+            const container = document.getElementById('chest-config-container');
+            if(teams.length === 0 || categories.length === 0) { container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 italic bg-slate-50 rounded-xl border border-dashed border-slate-300">Add Teams and Categories first.</div>`; return; }
+            container.innerHTML = teams.map(t => {
+                const catRows = categories.map(c => {
+                    const key = `${t}-${c}`;
+                    const val = chestConfig[key] || '';
+                    return `<div class="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0 setup-row group/row"><div class="flex items-center gap-2"><span class="text-xs font-bold text-slate-500 uppercase tracking-wide">${c}</span><div class="flex opacity-100 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity"><button onclick="editItem('categories', '${c}')" class="p-1 text-slate-400 hover:text-indigo-600" title="Rename"><i data-lucide="edit-2" class="w-3 h-3"></i></button><button onclick="removeItem('categories', '${c}')" class="p-1 text-slate-300 hover:text-red-500" title="Delete"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div><input type="number" data-key="${key}" value="${val}" class="chest-start-input w-20 border border-slate-200 bg-slate-50 rounded-lg px-2 py-1.5 text-sm font-bold text-center focus:ring-2 focus:ring-teal-500 outline-none transition" placeholder="#" readonly></div>`;
+                }).join('');
+                return `<div class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden animate-enter"><div class="bg-slate-50 px-5 py-4 border-b border-slate-100 flex items-center justify-between group/card"><div class="flex items-center gap-3"><div class="w-1.5 h-8 bg-indigo-500 rounded-full"></div><h4 class="font-bold text-slate-700 text-lg">${t}</h4></div><div class="flex opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 transition-opacity gap-1"><button onclick="setTeamPasscode('${t}')" class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-amber-500 hover:border-amber-200 transition" title="Set Passcode"><i data-lucide="key" class="w-3.5 h-3.5"></i></button><button onclick="editItem('teams', '${t}')" class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button><button onclick="removeItem('teams', '${t}')" class="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-red-600 hover:border-red-200 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div></div><div class="p-5 bg-white space-y-1">${catRows}</div></div>`;
+            }).join('');
+            lucide.createIcons();
+        };
+
+        window.exportToCSV = () => {
+            const teamFilter = document.getElementById('filter-std-team').value;
+            const catFilter = document.getElementById('filter-std-cat').value;
+            const searchQuery = document.getElementById('inp-search-std').value.toLowerCase();
+            let filteredStudents = students;
+            if (teamFilter) filteredStudents = filteredStudents.filter(s => s.team === teamFilter);
+            if (catFilter) { if(catFilter !== 'General') filteredStudents = filteredStudents.filter(s => s.category === catFilter); }
+            if (searchQuery) filteredStudents = filteredStudents.filter(s => s.name.toLowerCase().includes(searchQuery) || (s.chestNo && s.chestNo.toString().includes(searchQuery)));
+            
+            if(!filteredStudents.length) return window.showToast('No students to export', 'error');
+            const sorted = [...filteredStudents].sort((a,b) => (parseInt(a.chestNo)||0) - (parseInt(b.chestNo)||0));
+            const data = sorted.map(s => ({ "Chest No": s.chestNo || '', "Name": s.name, "Team": s.team, "Category": s.category }));
+            const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); 
+            XLSX.utils.book_append_sheet(wb, ws, "Filtered_Students");
+            XLSX.writeFile(wb, "Student_List.xlsx"); 
+            window.showToast('Downloading Filtered List...');
+        };
+
+        // --- AUTH & LISTENERS ---
+        signInAnonymously(auth).catch(e => console.error("Auth Error", e));
+        
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('app-loader').classList.add('hide');
+                document.getElementById('app-layout').classList.remove('opacity-0');
+                
+                onSnapshot(doc(db, "settings", "general"), (d) => { if (d.exists()) { const data = d.data(); categories = data.categories || []; teams = data.teams || []; chestConfig = data.chestConfig || {}; teamPasscodes = data.teamPasscodes || {}; window.renderDropdowns(); window.renderChestGrid(); } });
+                onSnapshot(collection(db, "students"), (snap) => { students = snap.docs.map(d => ({ id: d.id, ...d.data() })); window.renderStudentTable(); window.updateStats(); });
+                onSnapshot(collection(db, "events"), (snap) => { events = snap.docs.map(d => ({ id: d.id, ...d.data() })); window.renderEventTable(); window.updateStats(); });
+                onSnapshot(collection(db, "registrations"), (snap) => { registrations = snap.docs.map(d => ({ id: d.id, ...d.data() })); window.updateStats(); window.renderRegList(); });
+                onSnapshot(collection(db, "results"), (snap) => { results = snap.docs.map(d => ({ ...d.data() })); window.updateStats(); });
+                lucide.createIcons();
+            }
+        });
+
+        // --- HELPER FUNCTIONS ---
+        window.generateChestNo = (team, category) => { const key = `${team}-${category}`; if (!chestConfig[key]) return null; const startNum = parseInt(chestConfig[key]); const existing = students.filter(s => s.team === team && s.category === category); let max = startNum - 1; existing.forEach(s => { if(s.chestNo > max) max = s.chestNo; }); return max + 1; };
+        window.previewChestNo = () => { const t = document.getElementById('inp-std-team').value; const c = document.getElementById('inp-std-cat').value; const h = document.getElementById('chest-hint'); if (t && c) { const val = window.generateChestNo(t, c); if (val) { h.innerText = `Next Chest No: ${val}`; h.className = "text-right text-xs font-bold mt-2 h-4 text-indigo-600"; } else { h.innerText = "Chest No not set in Settings!"; h.className = "text-right text-xs font-bold mt-2 h-4 text-red-500"; } } else h.innerText = ""; };
+
+        window.editItem = async (type, oldVal) => {
+            const newVal = await window.promptAction(`Rename ${oldVal} to:`, oldVal);
+            if (!newVal || newVal === oldVal) return;
+            window.showToast(`Renaming ${oldVal}...`, 'info'); document.getElementById('app-loader').classList.remove('hide');
+            let newChestConfig = { ...chestConfig }; let newPasscodes = { ...teamPasscodes };
+            Object.keys(chestConfig).forEach(key => { const [t, c] = key.split('-'); if (type === 'teams' && t === oldVal) { newChestConfig[`${newVal}-${c}`] = chestConfig[key]; delete newChestConfig[key]; } else if (type === 'categories' && c === oldVal) { newChestConfig[`${t}-${newVal}`] = chestConfig[key]; delete newChestConfig[key]; } });
+            if(type === 'teams' && newPasscodes[oldVal]) { newPasscodes[newVal] = newPasscodes[oldVal]; delete newPasscodes[oldVal]; }
+            let list = type === 'categories' ? [...categories] : [...teams]; const idx = list.indexOf(oldVal); if(idx !== -1) list[idx] = newVal;
+            await updateDoc(doc(db, "settings", "general"), { [type]: list, chestConfig: newChestConfig, teamPasscodes: newPasscodes });
+            const promises = [];
+            if (type === 'teams') { const qStd = query(collection(db, "students"), where("team", "==", oldVal)); const qReg = query(collection(db, "registrations"), where("team", "==", oldVal)); const [stdSnap, regSnap] = await Promise.all([getDocs(qStd), getDocs(qReg)]); stdSnap.forEach(d => promises.push(updateDoc(d.ref, { team: newVal }))); regSnap.forEach(d => promises.push(updateDoc(d.ref, { team: newVal }))); } 
+            else { const qStd = query(collection(db, "students"), where("category", "==", oldVal)); const qEvt = query(collection(db, "events"), where("category", "==", oldVal)); const [stdSnap, evtSnap] = await Promise.all([getDocs(qStd), getDocs(qEvt)]); stdSnap.forEach(d => promises.push(updateDoc(d.ref, { category: newVal }))); evtSnap.forEach(d => promises.push(updateDoc(d.ref, { category: newVal }))); }
+            await Promise.all(promises); document.getElementById('app-loader').classList.add('hide'); window.showToast('Sync Complete!');
+        };
+        
+        window.addItem = async (type, id) => { const val = document.getElementById(id).value.trim(); if(!val) return; if(type==='categories' && !categories.includes(val)) await setDoc(doc(db, "settings", "general"), { categories: [...categories, val] }, { merge: true }); if(type==='teams' && !teams.includes(val)) await setDoc(doc(db, "settings", "general"), { teams: [...teams, val] }, { merge: true }); document.getElementById(id).value = ''; window.showToast('Added'); };
+        window.removeItem = async (type, val) => { if(await window.confirmAction(`Delete ${val}?`)) { const update = type==='categories' ? { categories: categories.filter(x !== val) } : { teams: teams.filter(x !== val) }; await setDoc(doc(db, "settings", "general"), update, { merge: true }); window.showToast('Deleted'); } };
+
+        window.setTeamPasscode = async (team) => { const current = teamPasscodes[team] || ''; const newPass = await window.promptAction(`Set Passcode for ${team}:`, current); if (newPass === null) return; const newMap = { ...teamPasscodes }; newMap[team] = newPass; document.getElementById('app-loader').classList.remove('hide'); try { await setDoc(doc(db, "settings", "general"), { teamPasscodes: newMap }, { merge: true }); window.showToast(`Passcode updated for ${team}`); } catch(e) { console.error(e); window.showToast('Error updating passcode', 'error'); } document.getElementById('app-loader').classList.add('hide'); };
+        window.enableChestNoEdit = () => { document.querySelectorAll('.chest-start-input').forEach(inp => { inp.readOnly = false; inp.classList.add('bg-white', 'border-indigo-500', 'ring-2', 'ring-indigo-100'); inp.classList.remove('bg-slate-50', 'border-slate-200'); }); document.getElementById('btnEditChest').style.display = 'none'; document.getElementById('btnSaveChest').disabled = false; document.getElementById('btnSaveChest').classList.remove('opacity-50', 'cursor-not-allowed'); };
+        window.saveChestNoConfig = async () => { let updatedConfig = {...chestConfig}; let hasChanges = false; document.querySelectorAll('.chest-start-input').forEach(inp => { if(inp.value) { updatedConfig[inp.getAttribute('data-key')] = parseInt(inp.value); hasChanges = true; } inp.readOnly = true; inp.classList.remove('bg-white', 'border-indigo-500', 'ring-2', 'ring-indigo-100'); inp.classList.add('bg-slate-50', 'border-slate-200'); }); if(hasChanges) { await setDoc(doc(db, "settings", "general"), { chestConfig: updatedConfig }, { merge: true }); window.showToast('Config Saved!'); } document.getElementById('btnEditChest').style.display = 'flex'; document.getElementById('btnSaveChest').disabled = true; document.getElementById('btnSaveChest').classList.add('opacity-50', 'cursor-not-allowed'); };
+
+        document.getElementById('form-student').addEventListener('submit', async (e) => { 
+            e.preventDefault(); setLoading('btn-save-std', true);
+            const team = document.getElementById('inp-std-team').value; const cat = document.getElementById('inp-std-cat').value; const isBulk = !document.getElementById('inp-std-name-bulk').classList.contains('hidden'); 
+            let nextChest = window.generateChestNo(team, cat); 
+            if(!nextChest) { setLoading('btn-save-std', false, 'Save'); return window.showToast('Chest No Config Missing', 'error'); }
+            try {
+                if(isBulk) { 
+                    const names = document.getElementById('inp-std-name-bulk').value.split('\n').filter(n=>n.trim()); 
+                    if(!names.length) { setLoading('btn-save-std', false, 'Save'); return; }
+                    const batch = names.map(async name => addDoc(collection(db, "students"), { name, team, category: cat, chestNo: nextChest++ })); 
+                    await Promise.all(batch); document.getElementById('inp-std-name-bulk').value = ''; window.showToast(`${names.length} Students Added`); 
+                } else { 
+                    const name = document.getElementById('inp-std-name').value.trim(); 
+                    if(!name) { setLoading('btn-save-std', false, 'Save'); return; }
+                    await addDoc(collection(db, "students"), { name, team, category: cat, chestNo: nextChest }); document.getElementById('inp-std-name').value = ''; window.showToast('Student Added'); 
+                } 
+                window.previewChestNo(); 
+            } catch(e) { console.error(e); window.showToast('Save Failed', 'error'); }
+            setLoading('btn-save-std', false, 'Save');
+        });
+        
+        window.deleteStudent = async (id) => { if(await window.confirmAction('Delete Student?')) await deleteDoc(doc(db, "students", id)); };
+        window.openEditStudent = (id) => { const s = students.find(x => x.id === id); if(!s) return; document.getElementById('edit-std-id').value = s.id; document.getElementById('edit-std-name').value = s.name; document.getElementById('edit-std-team').value = s.team; document.getElementById('edit-std-cat').value = s.category; document.getElementById('edit-std-chest').value = s.chestNo; document.getElementById('edit-student-modal').classList.remove('hidden'); };
+        window.closeEditStudentModal = () => document.getElementById('edit-student-modal').classList.add('hidden');
+        document.getElementById('edit-student-form').addEventListener('submit', async (e) => { e.preventDefault(); const id = document.getElementById('edit-std-id').value; const d = { name: document.getElementById('edit-std-name').value, team: document.getElementById('edit-std-team').value, category: document.getElementById('edit-std-cat').value, chestNo: parseInt(document.getElementById('edit-std-chest').value) }; await updateDoc(doc(db, "students", id), d); window.closeEditStudentModal(); window.showToast('Updated'); });
+
+        document.getElementById('form-event').addEventListener('submit', async (e) => { 
+            e.preventDefault(); setLoading('btn-save-event', true);
+            try {
+                const d = { name: document.getElementById('inp-ev-name').value, category: document.getElementById('inp-ev-cat').value, type: document.getElementById('inp-ev-type').value, limit: parseInt(document.getElementById('inp-ev-limit').value), groupSize: parseInt(document.getElementById('inp-ev-grpsize').value), stage: document.querySelector('input[name="ev-stage"]:checked').value }; 
+                await addDoc(collection(db, "events"), d); e.target.reset(); window.toggleEventConfig(); window.showToast('Event Added'); 
+            } catch(e) { console.error(e); window.showToast('Save Failed', 'error'); }
+            setLoading('btn-save-event', false, 'Add Event');
+        });
+
+        window.deleteEvent = async (id) => { if(await window.confirmAction('Delete Event?')) await deleteDoc(doc(db, "events", id)); };
+        window.openEditEvent = (id) => { 
+            const e = events.find(x => x.id === id); if(!e) return; 
+            document.getElementById('edit-ev-id').value = e.id; 
+            document.getElementById('edit-ev-name').value = e.name; 
+            document.getElementById('edit-ev-cat').value = e.category; 
+            document.getElementById('edit-ev-type').value = e.type; 
+            document.getElementById('edit-ev-limit').value = e.limit; 
+            document.getElementById('edit-ev-grp').value = e.groupSize || 1; 
+            const stage = e.stage || 'Off-Stage'; const radio = document.querySelector(`input[name="edit-ev-stage"][value="${stage}"]`); if(radio) radio.checked = true;
+            document.getElementById('edit-event-modal').classList.remove('hidden'); 
+        };
+        window.closeEditEventModal = () => document.getElementById('edit-event-modal').classList.add('hidden');
+        document.getElementById('edit-event-form').addEventListener('submit', async (e) => { e.preventDefault(); const id = document.getElementById('edit-ev-id').value; const d = { name: document.getElementById('edit-ev-name').value, category: document.getElementById('edit-ev-cat').value, type: document.getElementById('edit-ev-type').value, limit: parseInt(document.getElementById('edit-ev-limit').value), groupSize: parseInt(document.getElementById('edit-ev-grp').value), stage: document.querySelector('input[name="edit-ev-stage"]:checked').value }; await updateDoc(doc(db, "events", id), d); window.closeEditEventModal(); window.showToast('Updated'); });
+
+        window.toggleEventConfig=()=>{const t=document.getElementById('inp-ev-type').value;document.getElementById('event-config-panel').className=t==='Group'||t==='General'?"bg-purple-50 rounded-xl p-4 border border-purple-100 flex gap-4 items-center":"hidden";};
+        window.toggleBulkMode=()=>{const b=document.getElementById('btn-bulk');const s=document.getElementById('inp-std-name');const bl=document.getElementById('inp-std-name-bulk');if(bl.classList.contains('hidden')){bl.classList.remove('hidden');s.classList.add('hidden');b.innerText="Switch to Single";}else{bl.classList.add('hidden');s.classList.remove('hidden');b.innerText="Switch to Bulk";}};
+    </script>
+</body>
+</html>

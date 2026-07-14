@@ -1,0 +1,701 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+    <title>Fest Home</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Manjari:wght@100;400;700&family=Saira:wght@700&family=Noto+Sans+Malayalam:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+
+    <style>
+        /* Optimization for Mobile Smoothness */
+        body { 
+            font-family: 'Poppins', 'Noto Sans Malayalam', sans-serif; 
+            background-color: #f8fafc; 
+            color: #1e293b; 
+            overflow-x: hidden; 
+            -webkit-tap-highlight-color: transparent; 
+            scroll-behavior: smooth;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Better Touch Response */
+        a, button, .btn, .clickable { 
+            touch-action: manipulation; 
+            transition: transform 0.1s ease-out;
+        }
+        a:active, button:active {
+            transform: scale(0.96);
+        }
+        
+        .hide { display: none !important; }
+        
+        /* Floating Header */
+        .header-wrap { 
+            position: fixed; 
+            top: 12px; 
+            left: 0; 
+            right: 0; 
+            display: flex; 
+            justify-content: center; 
+            z-index: 50; 
+            padding: 0 16px; 
+            pointer-events: none; 
+            opacity: 0; 
+            transition: opacity 0.6s ease; 
+            will-change: opacity, transform;
+            transform: translate3d(0, 0, 0);
+        }
+        .header-wrap.visible { opacity: 1; pointer-events: auto; }
+
+        .app-header { 
+            pointer-events: auto; 
+            width: 100%; 
+            max-width: 600px; 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px; 
+            padding: 10px 16px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06); 
+            position: relative; 
+            border: 1px solid rgba(255,255,255,0.6); 
+        }
+        
+        /* Hamburger Button */
+        .menu-btn { width: 24px; height: 24px; position: relative; cursor: pointer; z-index: 60; display: flex; align-items: center; justify-content: center; }
+        .menu-btn span { position: absolute; height: 2px; width: 18px; background: #1e293b; border-radius: 4px; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .menu-btn span:nth-child(1) { transform: translateY(-6px); }
+        .menu-btn span:nth-child(2) { }
+        .menu-btn span:nth-child(3) { transform: translateY(6px); }
+        .menu-btn.active span:nth-child(1) { transform: rotate(45deg); top: 50%; margin-top: -1px; }
+        .menu-btn.active span:nth-child(2) { opacity: 0; }
+        .menu-btn.active span:nth-child(3) { transform: rotate(-45deg); top: 50%; margin-top: -1px; }
+
+        /* Dropdown Menu */
+        .dropdown-menu { 
+            position: absolute; 
+            top: 50px; 
+            right: 0; 
+            width: auto;
+            min-width: 180px; 
+            background: white; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.15); 
+            border: 1px solid #f1f5f9;
+            padding: 8px; 
+            opacity: 0; 
+            transform: translateY(-10px) scale(0.95); 
+            pointer-events: none; 
+            transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
+            z-index: 55;
+            transform-origin: top right;
+        }
+        .dropdown-menu.open { 
+            opacity: 1; 
+            transform: translateY(0) scale(1); 
+            pointer-events: auto; 
+        }
+        
+        .nav-link { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            padding: 10px 16px; 
+            font-size: 13px; 
+            font-weight: 600; 
+            color: #475569; 
+            text-decoration: none; 
+            border-radius: 10px; 
+            transition: all 0.2s;
+            white-space: nowrap; 
+        }
+        .nav-link:hover { background: #f8fafc; color: #2563eb; }
+        .nav-link.active { background: #eff6ff; color: #2563eb; }
+        .nav-link i { width: 16px; height: 16px; }
+
+        .menu-overlay { position: fixed; inset: 0; z-index: 40; display: none; }
+        .menu-overlay.active { display: block; }
+
+        /* CARD STYLES */
+        .team-card {
+            background: #fff;
+            border-radius: 22px;
+            padding: 22px 18px 26px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.04);
+            border: 1px solid #e5e9ef;
+            position: relative;
+            margin-bottom: 16px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            will-change: transform;
+            transform: translateZ(0);
+        }
+        .team-card:active { transform: scale(0.98); }
+
+        .team-rank {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .team-rank.one { background: linear-gradient(135deg, #f4b400, #d97706); }
+        .team-rank.two { background: linear-gradient(135deg, #9aa0a6, #64748b); }
+        .team-rank.three { background: linear-gradient(135deg, #cd7f32, #a05a2c); }
+        .team-rank.other { background: #f1f5f9; color: #64748b; }
+
+        .team-name {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 10px 0 4px;
+            color: #1e293b;
+            font-family: 'Saira', sans-serif;
+        }
+
+        .score-text {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .info-row {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            margin-bottom: 8px;
+            border: 1px solid #f1f5f9;
+        }
+        .info-label { color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+        .info-val { font-weight: 600; color: #334155; }
+
+        .animate-float { animation: float 6s ease-in-out infinite; will-change: transform; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        .section-title { font-family: 'Saira', sans-serif; font-size: 1.75rem; font-weight: 700; color: #1e293b; text-align: center; margin-bottom: 0.5rem; }
+        .section-subtitle { font-family: 'Saira', sans-serif; color: #64748b; letter-spacing: 1px; text-transform: uppercase; font-size: 0.75rem; font-weight: 700; margin-bottom: 0.25rem; display: block; text-align: center; }
+
+        /* Stats */
+        .stat-card { background: #fff; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 1rem; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); transition: transform 0.2s; }
+        .stat-card:active { transform: scale(0.95); }
+        .stat-value { font-size: 1.8rem; font-weight: 800; color: #2563eb; line-height: 1; margin-bottom: 0.25rem; }
+        .stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #64748b; }
+
+        /* Quick Links */
+        .quick-nav-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 99px; background: #fff; border: 1px solid #e2e8f0; color: #475569; font-size: 13px; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .quick-nav-btn:active { background: #f8fafc; transform: translateY(1px); border-color: #cbd5e1; color: #1e293b; }
+
+        /* Footer */
+        footer { background: #f9f9f9; padding: 24px 16px; margin-top: auto; border-top: 1px solid #e2e8f0; padding-bottom: 40px; }
+        .follow { text-align: center; }
+        .follow h4 { font-size: 13px; margin-bottom: 10px; letter-spacing: .5px; font-family: Arial, sans-serif; font-weight: bold; color: #333; }
+        .socials { display: flex; justify-content: center; gap: 14px; }
+        .socials a { color: #333; font-size: 20px; transition: transform .2s ease, opacity .2s ease; }
+        .socials a:hover { transform: translateY(-2px) scale(1.05); opacity: .7; }
+        .footer-bottom { text-align: center; font-size: 12px; margin-top: 14px; color: #777; line-height: 1.5; font-family: Arial, sans-serif; }
+        .footer-bottom a { color: #555; text-decoration: none; }
+        .footer-bottom a:hover { text-decoration: underline; }
+        
+        /* Skeleton & Fade */
+        .skeleton { background: #e2e8f0; animation: skel-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; border-radius: 6px; }
+        @keyframes skel-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        
+        .fade-img { opacity: 0; transition: opacity 0.5s ease-in-out; }
+        .fade-img.loaded { opacity: 1; }
+
+        /* Gallery Sizes */
+        .gallery-container { display: flex; flex-direction: column; gap: 16px; }
+        
+        .gallery-row {
+            display: flex;
+            gap: 16px; 
+            overflow-x: auto; 
+            scroll-snap-type: x mandatory;
+            padding-left: 16px; 
+            padding-right: 16px; 
+            padding-bottom: 10px; 
+            -ms-overflow-style: none;  
+            scrollbar-width: none;  
+            -webkit-overflow-scrolling: touch; 
+        }
+        .gallery-row::-webkit-scrollbar { display: none; }
+
+        .gallery-item {
+            scroll-snap-align: start;
+            flex-shrink: 0;
+            width: 85vw;
+            max-width: 360px;
+            aspect-ratio: 4 / 5;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #e2e8f0;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateZ(0);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        /* --- LOADER --- */
+        .loader-screen { position: fixed; inset: 0; background: #ffffff; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s ease; will-change: opacity; }
+        .loader-wrapper { position: relative; width: 120px; height: 120px; display: flex; justify-content: center; align-items: center; }
+        .loader-ring { position: absolute; inset: -4px; border-radius: 50%; border: 4px solid #f1f5f9; border-top-color: #2563eb; animation: spin 1s linear infinite; z-index: 1; opacity: 1; transition: opacity 0.3s ease; will-change: transform; }
+        .loader-logo-circle { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: #fff; overflow: hidden; z-index: 2; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); will-change: transform, left, top, width, height; }
+        .loader-logo-circle img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
+        .loader-logo-circle img.loaded { opacity: 1; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .ring-hidden { opacity: 0; }
+        
+        .skeleton-text { color: transparent; background: #e2e8f0; border-radius: 4px; pointer-events: none; user-select: none; }
+        .skeleton-block { background: #e2e8f0; border-radius: 8px; animation: skel-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    </style>
+</head>
+<body class="pt-24 flex flex-col min-h-screen">
+
+    <!-- INSTANT CACHE LOADER SCRIPT -->
+    <script>
+        try {
+            const cachedConfig = localStorage.getItem('fest_home_config');
+            if (cachedConfig) {
+                const data = JSON.parse(cachedConfig);
+                if (data.logoUrl) {
+                    document.write(`<style>#loader-img-tag { content: url("${data.logoUrl}"); opacity: 1 !important; }</style>`);
+                }
+            }
+        } catch (e) {}
+    </script>
+
+    <!-- MAIN APP LOADER -->
+    <div class="loader-screen" id="loader-screen">
+        <div class="loader-wrapper" id="loader-wrapper">
+            <div class="loader-ring" id="loader-ring"></div>
+            <div class="loader-logo-circle" id="moving-logo">
+                 <img src="" id="loader-img-tag" alt="Fest Logo">
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <div class="header-wrap" id="main-header">
+        <div class="app-header">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center overflow-hidden border border-slate-200">
+                    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="header-logo-img" class="w-full h-full object-cover fade-img" alt="Logo">
+                </div>
+                <span class="font-bold text-base text-slate-800 tracking-tight font-['Saira'] leading-tight skeleton-text transition-colors duration-300" id="header-fest-name">Fest Name</span>
+            </div>
+            <div class="relative">
+                <div class="menu-btn" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <div class="flex flex-col gap-1">
+                        <a href="#" class="nav-link active"><i data-lucide="home"></i> Home</a>
+                        <a href="index.html" class="nav-link"><i data-lucide="trophy"></i> Results</a>
+                        <a href="#about" class="nav-link" onclick="closeMenu()"><i data-lucide="info"></i> About</a>
+                        <a href="#leaders" class="nav-link" onclick="closeMenu()"><i data-lucide="users"></i> Leaders</a>
+                         <a href="#gallery" class="nav-link" onclick="closeMenu()"><i data-lucide="image"></i> Gallery</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+
+    <!-- MAIN CONTENT -->
+    <div class="flex-1 max-w-2xl mx-auto px-4 pb-10 w-full">
+
+        <!-- 1. HERO SECTION -->
+        <section class="text-center py-8 mb-24 relative">
+            <div id="hero-target-box" class="w-44 h-44 mx-auto bg-white rounded-2xl shadow-xl flex items-center justify-center mb-6 animate-float border-4 border-white overflow-hidden relative opacity-0">
+                <img src="" id="hero-logo" class="w-full h-full object-cover fade-img" alt="Logo" fetchpriority="high">
+            </div>
+            
+            <h1 class="text-4xl md:text-5xl font-black text-slate-900 mb-2 font-['Saira'] tracking-tight min-h-[48px]">
+                <span id="hero-title-1" class="skeleton-text transition-colors duration-300">Title Line 1</span> <span class="text-blue-600 skeleton-text transition-colors duration-300" id="hero-title-2">Year</span>
+            </h1>
+            <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-8 min-h-[20px]" id="hero-tagline">
+                <span class="skeleton-text transition-colors duration-300">The Tagline Goes Here</span>
+            </p>
+            
+            <a href="index.html" id="view-results-btn" class="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 rounded-full font-bold text-sm shadow-xl shadow-slate-200 hover:scale-105 transition active:scale-95 mb-8">
+                View Results <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+
+            <div class="flex flex-wrap justify-center gap-3">
+                <a href="#about" class="quick-nav-btn"><i data-lucide="info" class="w-4 h-4 text-blue-500"></i> About</a>
+                <a href="#leaders" class="quick-nav-btn"><i data-lucide="users" class="w-4 h-4 text-orange-500"></i> Leaders</a>
+                <a href="#gallery" class="quick-nav-btn"><i data-lucide="image" class="w-4 h-4 text-pink-500"></i> Gallery</a>
+            </div>
+        </section>
+
+        <!-- 2. ABOUT SECTION -->
+        <section id="about" class="scroll-mt-32 mb-24">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 text-center mb-6 relative overflow-hidden">
+                <span class="section-subtitle skeleton-text transition-colors duration-300 mx-auto w-32" id="about-subtitle">Subtitle</span>
+                <h2 class="section-title">About The Fest</h2>
+                <div id="about-text" class="text-slate-600 leading-loose text-sm md:text-base font-medium mt-4">
+                    <div class="space-y-3" id="about-skeleton">
+                        <div class="h-3 bg-slate-100 rounded w-full skeleton-block"></div>
+                        <div class="h-3 bg-slate-100 rounded w-11/12 mx-auto skeleton-block"></div>
+                        <div class="h-3 bg-slate-100 rounded w-4/5 mx-auto skeleton-block"></div>
+                        <div class="h-3 bg-slate-100 rounded w-5/6 mx-auto skeleton-block"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="stat-card"><div class="stat-value skeleton-text transition-colors duration-300" id="stat-programs">0</div><div class="stat-label">Programs</div></div>
+                <div class="stat-card"><div class="stat-value skeleton-text transition-colors duration-300" id="stat-contestants">0</div><div class="stat-label">Contestants</div></div>
+                <div class="stat-card"><div class="stat-value skeleton-text transition-colors duration-300" id="stat-categories">0</div><div class="stat-label">Categories</div></div>
+                <div class="stat-card"><div class="stat-value skeleton-text transition-colors duration-300" id="stat-teams">0</div><div class="stat-label">Teams</div></div>
+            </div>
+        </section>
+
+        <!-- 3. LEADERS SECTION -->
+        <section id="leaders" class="scroll-mt-32 mb-24">
+            <h2 class="section-title mb-6">Team Leaders</h2>
+            <div id="groups-container" class="space-y-4 mb-6">
+                <!-- Skeleton Loader Cards -->
+                <div class="team-card skeleton-block"><div class="h-6 w-32 bg-slate-200 rounded mb-4 mx-auto opacity-50"></div><div class="space-y-2"><div class="h-8 bg-slate-100 rounded opacity-50"></div><div class="h-8 bg-slate-100 rounded opacity-50"></div></div></div>
+                <div class="team-card skeleton-block"><div class="h-6 w-32 bg-slate-200 rounded mb-4 mx-auto opacity-50"></div><div class="space-y-2"><div class="h-8 bg-slate-100 rounded opacity-50"></div><div class="h-8 bg-slate-100 rounded opacity-50"></div></div></div>
+            </div>
+            
+            <!-- TEAM SCORE BUTTON (UPDATED) -->
+            <a href="index.html?tab=team" id="team-score-btn" class="w-3/4 mx-auto bg-white text-slate-900 font-bold py-4 rounded-full border border-slate-200 shadow-xl shadow-slate-100 flex items-center justify-center hover:bg-slate-50 transition active:scale-95">
+                Team Score
+            </a>
+        </section>
+
+        <!-- 4. GALLERY SECTION -->
+        <section id="gallery" class="scroll-mt-32 mb-24">
+            <span class="section-subtitle">Moments</span>
+            <h2 class="section-title mb-6">Image Gallery</h2>
+            <div class="gallery-container" id="gallery-container">
+                <div class="gallery-row"><div class="gallery-item skeleton-block"></div><div class="gallery-item skeleton-block"></div></div>
+                <div class="gallery-row"><div class="gallery-item skeleton-block"></div><div class="gallery-item skeleton-block"></div></div>
+            </div>
+            <p class="text-center text-xs text-slate-400 mt-2"><i class="fas fa-arrow-right"></i> Swipe for more</p>
+        </section>
+
+    </div>
+
+    <footer>
+        <div class="follow">
+            <h4>FOLLOW US</h4>
+            <div class="socials" id="social-links">
+                <div class="flex gap-2 justify-center opacity-50"><div class="w-8 h-8 bg-slate-200 rounded-full"></div><div class="w-8 h-8 bg-slate-200 rounded-full"></div></div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 <span id="footer-fest-name">Fest Name</span> media team. All Rights Reserved.<br>
+            <a href="https://www.instagram.com/muhammed_sanjide_p" target="_blank">Powered by hadi mahiri faizy</a>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { db, auth } from './firebase-config.js';
+        import { collection, onSnapshot, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        let students = [], results = [], teams = [], events = [], categories = [];
+        let teamScores = {};
+        let homeConfig = {};
+        let iconsCreated = false;
+        let isSplashDone = false;
+
+        const debounce = (func, wait) => {
+            let timeout;
+            return (...args) => {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        };
+
+        try {
+            const cached = localStorage.getItem('fest_home_config');
+            if(cached) {
+                homeConfig = JSON.parse(cached);
+                const loaderImg = document.getElementById('loader-img-tag');
+                if(homeConfig.logoUrl && loaderImg) {
+                    loaderImg.src = homeConfig.logoUrl;
+                    loaderImg.classList.add('loaded');
+                }
+            }
+        } catch(e) {}
+
+        window.toggleMenu = () => {
+            document.querySelector('.menu-btn').classList.toggle('active');
+            document.getElementById('dropdownMenu').classList.toggle('open');
+            document.getElementById('menuOverlay').classList.toggle('active');
+        };
+        window.closeMenu = () => {
+            document.querySelector('.menu-btn').classList.remove('active');
+            document.getElementById('dropdownMenu').classList.remove('open');
+            document.getElementById('menuOverlay').classList.remove('active');
+        }
+
+        const processData = debounce(() => {
+            teamScores = {};
+            teams.forEach(t => { teamScores[t] = 0; });
+            results.forEach(r => {
+                if (r.status && r.status !== 'published') return;
+                const addScore = (val, pts) => {
+                    if (!val) return;
+                    const list = Array.isArray(val) ? val : [val];
+                    list.forEach(w => {
+                        let teamName = null;
+                        if (r.type === 'Group') teamName = w;
+                        else { const s = students.find(std => std.id === w); if (s) teamName = s.team; }
+                        if (teamName && teamScores[teamName] !== undefined) teamScores[teamName] += pts;
+                    });
+                };
+                addScore(r.winners.first, r.points.first);
+                addScore(r.winners.second, r.points.second);
+                addScore(r.winners.third, r.points.third);
+            });
+            
+            requestAnimationFrame(() => {
+                updateGroupsUI();
+                updateStatsUI();
+            });
+        }, 150);
+
+        function removeSkeletonClasses(ids) {
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('skeleton-text', 'text-transparent');
+            });
+        }
+
+        function applyConfigToUI(config, updateLoader) {
+            let fName = '';
+            if (config.festName1) fName += config.festName1;
+            if (config.festName2) fName += ' ' + config.festName2;
+            const defaultName = "Sadaye Madeena 2k25";
+            const finalName = fName || defaultName;
+
+            const headerName = document.getElementById('header-fest-name');
+            if(headerName) { headerName.innerText = finalName; headerName.classList.remove('skeleton-text'); }
+            
+            const title1 = document.getElementById('hero-title-1');
+            const title2 = document.getElementById('hero-title-2');
+            if(title1) { title1.innerText = config.festName1 || 'Sadaye Madeena'; title1.classList.remove('skeleton-text'); }
+            if(title2) { title2.innerText = config.festName2 || '2k25'; title2.classList.remove('skeleton-text'); }
+
+            const footerNameEl = document.getElementById('footer-fest-name');
+            if(footerNameEl) footerNameEl.innerText = config.festName1 || defaultName;
+
+            if (config.tagline) {
+                const tagEl = document.getElementById('hero-tagline');
+                if(tagEl) { 
+                    tagEl.innerHTML = config.tagline; 
+                    const skel = tagEl.querySelector('.skeleton-text');
+                    if(skel) tagEl.innerText = config.tagline;
+                }
+            }
+            
+            if (config.logoUrl) {
+                const heroLogo = document.getElementById('hero-logo');
+                if(heroLogo) {
+                    heroLogo.onload = () => heroLogo.classList.add('loaded');
+                    heroLogo.src = config.logoUrl;
+                }
+                const headLogo = document.getElementById('header-logo-img');
+                if(headLogo) {
+                     headLogo.onload = () => headLogo.classList.add('loaded');
+                     headLogo.src = config.logoUrl;
+                }
+                if(updateLoader && !isSplashDone) {
+                    const loaderImg = document.getElementById('loader-img-tag');
+                    if(loaderImg) { loaderImg.src = config.logoUrl; loaderImg.classList.add('loaded'); }
+                }
+            }
+
+            if(config.btnColor) {
+                const btn = document.getElementById('view-results-btn');
+                if(btn) {
+                    btn.style.backgroundColor = config.btnColor;
+                    btn.style.boxShadow = `0 10px 15px -3px ${config.btnColor}40`;
+                }
+                // Removed config color override for Team Score button to keep it white as requested
+            }
+            
+            if (config.aboutSubtitle) {
+                const sub = document.getElementById('about-subtitle');
+                if(sub) { sub.innerText = config.aboutSubtitle; sub.classList.remove('skeleton-text'); }
+            }
+            
+            if (config.aboutText) {
+                const txt = document.getElementById('about-text');
+                const skel = document.getElementById('about-skeleton');
+                if(txt && skel) { skel.remove(); txt.innerText = config.aboutText; }
+            }
+
+            const galleryContainer = document.getElementById('gallery-container');
+            if(config.gallery && config.gallery.length > 0 && galleryContainer) {
+                const images = config.gallery;
+                const rows = 3; 
+                let galleryHtml = '';
+                for(let r = 0; r < rows; r++) {
+                    galleryHtml += '<div class="gallery-row">';
+                    for(let i = r; i < images.length; i += rows) {
+                         galleryHtml += `<div class="gallery-item"><img src="${images[i]}" class="fade-img" onload="this.classList.add('loaded')" loading="lazy" decoding="async" alt="Gallery" onerror="this.parentElement.style.display='none'"></div>`;
+                    }
+                    galleryHtml += '</div>';
+                }
+                galleryContainer.innerHTML = galleryHtml;
+            }
+
+            const s = config.social || {};
+            const sDiv = document.getElementById('social-links');
+            if(sDiv) {
+                let sHtml = '';
+                if(s.wa) sHtml += `<a href="${s.wa}" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
+                if(s.ig) sHtml += `<a href="${s.ig}" aria-label="Instagram"><i class="fab fa-instagram"></i></a>`;
+                if(s.fb) sHtml += `<a href="${s.fb}" aria-label="Facebook"><i class="fab fa-facebook"></i></a>`;
+                if(s.yt) sHtml += `<a href="${s.yt}" aria-label="YouTube"><i class="fab fa-youtube"></i></a>`;
+                if(s.tg) sHtml += `<a href="${s.tg}" aria-label="Telegram"><i class="fab fa-telegram"></i></a>`;
+                sDiv.innerHTML = sHtml;
+            }
+        }
+
+        const updateHomeContent = () => {
+            applyConfigToUI(homeConfig, true);
+            const loaderScreen = document.getElementById('loader-screen');
+            if(loaderScreen && !isSplashDone) {
+                setTimeout(() => {
+                    document.getElementById('main-header').classList.add('visible');
+                    const movingLogo = document.getElementById('moving-logo');
+                    const targetBox = document.getElementById('hero-target-box'); 
+                    const loaderRing = document.getElementById('loader-ring');
+
+                    if(movingLogo && targetBox && homeConfig.logoUrl) {
+                        loaderRing.classList.add('ring-hidden'); 
+                        const startRect = movingLogo.getBoundingClientRect();
+                        const targetRect = targetBox.getBoundingClientRect();
+                        movingLogo.style.transition = 'none';
+                        movingLogo.style.position = 'fixed';
+                        movingLogo.style.left = startRect.left + 'px';
+                        movingLogo.style.top = startRect.top + 'px';
+                        movingLogo.style.width = startRect.width + 'px';
+                        movingLogo.style.height = startRect.height + 'px';
+                        movingLogo.style.margin = '0';
+                        movingLogo.offsetHeight; 
+                        movingLogo.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+                        requestAnimationFrame(() => {
+                            movingLogo.style.left = targetRect.left + 'px';
+                            movingLogo.style.top = targetRect.top + 'px';
+                            movingLogo.style.width = targetRect.width + 'px';
+                            movingLogo.style.height = targetRect.height + 'px';
+                            movingLogo.style.borderRadius = '16px'; 
+                            movingLogo.style.boxShadow = 'none';
+                        });
+                        setTimeout(() => {
+                            loaderScreen.style.opacity = '0'; 
+                            targetBox.style.opacity = '1'; 
+                            setTimeout(() => loaderScreen.remove(), 500);
+                        }, 800); 
+                    } else {
+                        loaderScreen.style.opacity = '0';
+                        if(targetBox) targetBox.style.opacity = '1';
+                        setTimeout(() => loaderScreen.remove(), 500);
+                    }
+                    isSplashDone = true;
+                }, 1200);
+            }
+        };
+
+        const updateGroupsUI = () => {
+            const container = document.getElementById('groups-container');
+            const sortedTeams = Object.entries(teamScores).sort((a,b) => b[1] - a[1]);
+            if(sortedTeams.length === 0 && teams.length === 0) return; 
+            if(sortedTeams.length === 0) { container.innerHTML = `<div class="text-center py-10 text-slate-400 font-bold text-sm">Teams will appear here shortly...</div>`; return; }
+            
+            const html = sortedTeams.map(([teamName, points], index) => {
+                const rank = index + 1;
+                const leaders = homeConfig.leaders ? homeConfig.leaders[teamName] : {};
+                const leaderName = leaders?.leader || "Not Assigned";
+                const assistName = leaders?.assistant || "Not Assigned";
+                let rankClass = rank === 1 ? 'one' : rank === 2 ? 'two' : rank === 3 ? 'three' : 'other';
+                return `<div class="team-card"><div class="team-rank ${rankClass}">#${rank}</div><div class="team-name">${teamName}</div><div class="score-text">Score: ${points} pts</div><div class="info-group"><div class="info-row"><span class="info-label">Leader</span><span class="info-val">${leaderName}</span></div><div class="info-row"><span class="info-label">Ass. Leader</span><span class="info-val">${assistName}</span></div></div></div>`;
+            }).join('');
+            if(container.innerHTML !== html) container.innerHTML = html;
+        };
+
+        const updateStatsUI = () => {
+            const removeSkel = (id) => { const el = document.getElementById(id); if(el) el.classList.remove('skeleton-text', 'text-transparent'); };
+            const animateValue = (id, start, end, duration) => {
+                const obj = document.getElementById(id);
+                if(!obj) return;
+                removeSkel(id);
+                if(end === 0) { obj.innerText = "0+"; return; }
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    obj.innerHTML = Math.floor(progress * (end - start) + start) + "+";
+                    if (progress < 1) window.requestAnimationFrame(step);
+                };
+                window.requestAnimationFrame(step);
+            };
+            const regCount = new Set(students.map(s => s.id)).size; 
+            animateValue("stat-programs", 0, events.length, 1000);
+            animateValue("stat-contestants", 0, regCount, 1000);
+            animateValue("stat-categories", 0, categories.length, 1000);
+            animateValue("stat-teams", 0, teams.length, 1000);
+        };
+
+        const initIcons = () => { if(window.lucide && !iconsCreated) { window.lucide.createIcons(); iconsCreated = true; } else if (!window.lucide) { setTimeout(initIcons, 100); } };
+
+        signInAnonymously(auth).catch(console.error);
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const configSnap = await getDoc(doc(db, "settings", "home_config"));
+                if(configSnap.exists()) {
+                    homeConfig = configSnap.data();
+                    localStorage.setItem('fest_home_config', JSON.stringify(homeConfig));
+                }
+                updateHomeContent(); 
+                initIcons();
+                onSnapshot(doc(db, "settings", "general"), d => { if(d.exists()) { const data = d.data(); teams = data.teams || []; categories = data.categories || []; processData(); } });
+                onSnapshot(collection(db, "students"), s => { students = s.docs.map(d=>({id:d.id, ...d.data()})); processData(); });
+                onSnapshot(collection(db, "events"), s => { events = s.docs.map(d=>({id:d.id, ...d.data()})); processData(); });
+                onSnapshot(collection(db, "results"), s => { results = s.docs.map(d=>({eventId:d.id, ...d.data()})); processData(); });
+            }
+        });
+        document.addEventListener('DOMContentLoaded', initIcons);
+    </script>
+</body>
+</html>

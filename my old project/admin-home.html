@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Manage Home Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .hide { display: none !important; }
+        .input-group { margin-bottom: 1rem; }
+        .input-label { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 0.5rem; text-transform: uppercase; }
+        .text-input { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; outline: none; transition: all 0.2s; }
+        .text-input:focus { border-color: #3b82f6; ring: 2px solid #3b82f6; }
+        .color-preview { width: 30px; height: 30px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block; vertical-align: middle; margin-right: 10px; }
+    </style>
+</head>
+<body class="p-6 max-w-4xl mx-auto">
+
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-black text-slate-800">Manage Home Page</h1>
+        <a href="admin.html" class="text-sm font-bold text-blue-600 hover:underline">Back to Admin</a>
+    </div>
+
+    <!-- LOADER -->
+    <div id="loader" class="fixed inset-0 bg-white/80 z-50 flex items-center justify-center">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-4 border-blue-600"></div>
+    </div>
+
+    <form id="home-config-form" class="space-y-8 pb-20">
+        
+        <!-- 1. HERO SECTION -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="layout-template" class="w-5 h-5 text-blue-500"></i> Hero Section</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="input-group">
+                    <label class="input-label">Fest Name (Line 1)</label>
+                    <input type="text" id="inp-fest-name-1" class="text-input" placeholder="e.g. Sadaye Madeena">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Fest Name (Line 2 / Year)</label>
+                    <input type="text" id="inp-fest-name-2" class="text-input" placeholder="e.g. 2k25">
+                </div>
+                <div class="input-group md:col-span-2">
+                    <label class="input-label">Tagline</label>
+                    <input type="text" id="inp-tagline" class="text-input" placeholder="The Ultimate Art Fest">
+                </div>
+                <div class="input-group md:col-span-2">
+                    <label class="input-label">Logo URL</label>
+                    <input type="text" id="inp-logo-url" class="text-input" placeholder="https://example.com/logo.png">
+                    <p class="text-xs text-slate-400 mt-1">Paste image link here.</p>
+                </div>
+                
+                <!-- NEW: Button Color Config -->
+                <div class="input-group md:col-span-2">
+                    <label class="input-label">"View Results" Button Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" id="inp-btn-color-picker" class="h-10 w-10 rounded border border-slate-200 p-0 cursor-pointer" value="#0f172a">
+                        <input type="text" id="inp-btn-color" class="text-input flex-1" placeholder="#0f172a" value="#0f172a">
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">Select a color or enter hex code (e.g., #42c2f5)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. ABOUT SECTION -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="info" class="w-5 h-5 text-orange-500"></i> About Section</h2>
+            <div class="input-group">
+                <label class="input-label">Subtitle</label>
+                <input type="text" id="inp-about-sub" class="text-input" placeholder="e.g. Thirunoor'25">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Description</label>
+                <textarea id="inp-about-text" rows="4" class="text-input" placeholder="About the fest..."></textarea>
+            </div>
+        </div>
+
+        <!-- 3. TEAM LEADERS -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="users" class="w-5 h-5 text-green-500"></i> Team Leaders</h2>
+            <div id="leaders-container" class="space-y-4">
+                <!-- Dynamic Inputs -->
+            </div>
+            <p class="text-xs text-slate-400 mt-2 italic">* Team names are fetched from General Settings. Edit names there.</p>
+        </div>
+
+        <!-- 4. GALLERY IMAGES -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="image" class="w-5 h-5 text-pink-500"></i> Gallery Images</h2>
+            <div id="gallery-inputs" class="space-y-3">
+                <input type="text" class="text-input gallery-url" placeholder="Image URL 1">
+                <input type="text" class="text-input gallery-url" placeholder="Image URL 2">
+                <input type="text" class="text-input gallery-url" placeholder="Image URL 3">
+                <input type="text" class="text-input gallery-url" placeholder="Image URL 4">
+                <input type="text" class="text-input gallery-url" placeholder="Image URL 5">
+                <input type="text" class="text-input gallery-url" placeholder="Image URL 6">
+            </div>
+        </div>
+
+        <!-- 5. SOCIAL MEDIA LINKS -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="share-2" class="w-5 h-5 text-blue-400"></i> Social Media Links</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="input-group"><label class="input-label">WhatsApp</label><input type="text" id="inp-social-wa" class="text-input"></div>
+                <div class="input-group"><label class="input-label">Instagram</label><input type="text" id="inp-social-ig" class="text-input"></div>
+                <div class="input-group"><label class="input-label">Facebook</label><input type="text" id="inp-social-fb" class="text-input"></div>
+                <div class="input-group"><label class="input-label">YouTube</label><input type="text" id="inp-social-yt" class="text-input"></div>
+                <div class="input-group"><label class="input-label">Telegram</label><input type="text" id="inp-social-tg" class="text-input"></div>
+            </div>
+        </div>
+
+        <!-- SAVE BUTTON -->
+        <div class="sticky bottom-6">
+            <button type="submit" id="btn-save" class="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-xl hover:bg-slate-800 transition transform active:scale-95 flex justify-center gap-2">
+                <i data-lucide="save" class="w-5 h-5"></i> Save Changes
+            </button>
+        </div>
+
+    </form>
+
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg hidden">Saved Successfully</div>
+
+    <script type="module">
+        import { db, auth } from './firebase-config.js';
+        import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        let teams = [];
+
+        // Auth & Load
+        signInAnonymously(auth).catch(console.error);
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await loadData();
+                document.getElementById('loader').classList.add('hide');
+            }
+        });
+
+        // Sync Color Inputs
+        const colorPicker = document.getElementById('inp-btn-color-picker');
+        const colorText = document.getElementById('inp-btn-color');
+
+        colorPicker.addEventListener('input', (e) => colorText.value = e.target.value);
+        colorText.addEventListener('input', (e) => colorPicker.value = e.target.value);
+
+        async function loadData() {
+            // 1. Fetch Teams
+            const settingsSnap = await getDoc(doc(db, "settings", "general"));
+            if (settingsSnap.exists()) {
+                teams = settingsSnap.data().teams || [];
+            }
+
+            // 2. Fetch Home Config
+            const configSnap = await getDoc(doc(db, "settings", "home_config"));
+            const data = configSnap.exists() ? configSnap.data() : {};
+
+            // Populate Fields
+            document.getElementById('inp-fest-name-1').value = data.festName1 || 'Sadaye Madeena';
+            document.getElementById('inp-fest-name-2').value = data.festName2 || '2k25';
+            document.getElementById('inp-tagline').value = data.tagline || 'The Ultimate Art Fest';
+            document.getElementById('inp-logo-url').value = data.logoUrl || '';
+            
+            // Populate Button Color
+            const btnColor = data.btnColor || '#0f172a';
+            document.getElementById('inp-btn-color').value = btnColor;
+            document.getElementById('inp-btn-color-picker').value = btnColor;
+
+            document.getElementById('inp-about-sub').value = data.aboutSubtitle || "Thirunoor'25";
+            document.getElementById('inp-about-text').value = data.aboutText || '';
+
+            // Leaders
+            const leaderContainer = document.getElementById('leaders-container');
+            leaderContainer.innerHTML = '';
+            teams.forEach(t => {
+                const l = data.leaders ? data.leaders[t] : {};
+                leaderContainer.innerHTML += `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h3 class="font-bold text-slate-700 mb-2">${t}</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="leader-${t}" class="text-input" placeholder="Leader Name" value="${l?.leader || ''}">
+                            <input type="text" id="assist-${t}" class="text-input" placeholder="Assistant Name" value="${l?.assistant || ''}">
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Gallery
+            const urls = document.querySelectorAll('.gallery-url');
+            const savedUrls = data.gallery || [];
+            urls.forEach((inp, i) => inp.value = savedUrls[i] || '');
+
+            // Social
+            const social = data.social || {};
+            document.getElementById('inp-social-wa').value = social.wa || '';
+            document.getElementById('inp-social-ig').value = social.ig || '';
+            document.getElementById('inp-social-fb').value = social.fb || '';
+            document.getElementById('inp-social-yt').value = social.yt || '';
+            document.getElementById('inp-social-tg').value = social.tg || '';
+        }
+
+        // Save Data
+        document.getElementById('home-config-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save');
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Saving...';
+            btn.disabled = true;
+
+            const leadersData = {};
+            teams.forEach(t => {
+                leadersData[t] = {
+                    leader: document.getElementById(`leader-${t}`).value,
+                    assistant: document.getElementById(`assist-${t}`).value
+                };
+            });
+
+            const galleryData = Array.from(document.querySelectorAll('.gallery-url')).map(i => i.value).filter(v => v);
+
+            const saveData = {
+                festName1: document.getElementById('inp-fest-name-1').value,
+                festName2: document.getElementById('inp-fest-name-2').value,
+                tagline: document.getElementById('inp-tagline').value,
+                logoUrl: document.getElementById('inp-logo-url').value,
+                btnColor: document.getElementById('inp-btn-color').value, // Save Button Color
+                aboutSubtitle: document.getElementById('inp-about-sub').value,
+                aboutText: document.getElementById('inp-about-text').value,
+                leaders: leadersData,
+                gallery: galleryData,
+                social: {
+                    wa: document.getElementById('inp-social-wa').value,
+                    ig: document.getElementById('inp-social-ig').value,
+                    fb: document.getElementById('inp-social-fb').value,
+                    yt: document.getElementById('inp-social-yt').value,
+                    tg: document.getElementById('inp-social-tg').value
+                }
+            };
+
+            try {
+                await setDoc(doc(db, "settings", "home_config"), saveData, { merge: true });
+                showToast();
+            } catch (err) {
+                console.error(err);
+                alert("Error saving data!");
+            }
+
+            btn.innerHTML = '<i data-lucide="save" class="w-5 h-5"></i> Save Changes';
+            btn.disabled = false;
+            lucide.createIcons();
+        });
+
+        function showToast() {
+            const t = document.getElementById('toast');
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 2000);
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>

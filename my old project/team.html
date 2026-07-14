@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fest Team Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manjari:wght@100;400;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans+Malayalam:wght@400;700&family=Saira:wght@700&display=swap" rel="stylesheet">
+
+    <!-- ICONS -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Font Awesome for Footer -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Excel & PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', 'Noto Sans Malayalam', sans-serif; background-color: #f8fafc; color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
+        .hide { display: none !important; }
+        .touch-target { min-height: 40px; }
+        
+        select { -webkit-appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%232563eb' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.2em 1.2em; padding-right: 2rem; }
+        
+        /* HEADER (Fixed at top) */
+        .header-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 10px 10px 0; pointer-events: none; opacity: 0; transition: opacity 0.5s ease; }
+        .header-wrapper.visible { opacity: 1; pointer-events: auto; }
+
+        .app-header { 
+            pointer-events: auto; 
+            height: 68px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+            padding: 0 16px; 
+            background: #ffffff; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+            width: 100%; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            border: 1px solid rgba(255,255,255,0.6);
+            position: relative;
+        }
+        
+        /* HAMBURGER */
+        .menu-toggle { width: 32px; height: 32px; border: none; background: none; cursor: pointer; position: relative; display: block; flex-shrink: 0; }
+        .menu-toggle span { position: absolute; left: 0px; width: 24px; height: 2.5px; background: #1e293b; border-radius: 2px; transition: 0.3s ease; }
+        .menu-toggle span:nth-child(1) { top: 8px; }
+        .menu-toggle span:nth-child(2) { top: 15px; }
+        .menu-toggle span:nth-child(3) { top: 22px; }
+        .menu-toggle.active span:nth-child(1) { transform: rotate(45deg); top: 15px; }
+        .menu-toggle.active span:nth-child(2) { opacity: 0; }
+        .menu-toggle.active span:nth-child(3) { transform: rotate(-45deg); top: 15px; }
+
+        /* MENU */
+        .popup-menu { position: fixed; background: #ffffff; border-radius: 16px; box-shadow: 0 14px 36px rgba(0,0,0,0.2); min-width: 240px; overflow: hidden; transform: scale(0.9); opacity: 0; pointer-events: none; transition: 0.25s ease; z-index: 90; top: 80px; left: 20px; transform-origin: top left; }
+        .popup-menu.open { transform: scale(1); opacity: 1; pointer-events: auto; }
+        .popup-item { padding: 14px 20px; font-size: 14px; font-weight: 600; color: #334155; cursor: pointer; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px; transition: background 0.2s; }
+        .popup-item:hover { background: #f8fafc; color: #2563eb; }
+        .popup-item.active { background: #eff6ff; color: #2563eb; }
+
+        /* NOTIFICATION DROPDOWN (Fixed Position) */
+        .notif-popup { 
+            position: fixed; 
+            top: 80px; 
+            right: 16px; 
+            width: 90vw; 
+            max-width: 360px; 
+            background: #ffffff; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2); 
+            border: 1px solid #f1f5f9; 
+            z-index: 110; 
+            opacity: 0; 
+            transform: translateY(-10px) scale(0.95); 
+            pointer-events: none; 
+            transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: top right;
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh; 
+        }
+        .notif-popup.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+        /* REGISTRATION MODAL (UPDATED - CENTERED & COMPACT) */
+        #reg-modal { 
+            position: fixed; 
+            inset: 0; 
+            z-index: 150; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 16px; 
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #reg-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #reg-panel {
+            width: 100%;
+            max-width: 400px;
+            max-height: 85vh;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            transform: scale(0.95);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        #reg-panel.open {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .overlay { position: fixed; inset: 0; display: none; z-index: 80; backdrop-filter: blur(2px); background: rgba(0,0,0,0.1); }
+        .overlay.show { display: block; }
+        
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @keyframes pulse-highlight { 0% { background-color: #eff6ff; } 50% { background-color: #dbeafe; } 100% { background-color: #ffffff; } }
+        .card-highlight { animation: pulse-highlight 2s ease-out; border-color: #3b82f6 !important; }
+
+        /* LOADER */
+        .loader-screen { position: fixed; inset: 0; background: #ffffff; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s ease; will-change: opacity; }
+        .loader-wrapper { position: relative; width: 120px; height: 120px; display: flex; justify-content: center; align-items: center; }
+        .loader-ring { position: absolute; inset: -4px; border-radius: 50%; border: 4px solid #f1f5f9; border-top-color: #2563eb; animation: spin 1s linear infinite; z-index: 1; }
+        .loader-logo-circle { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: #fff; overflow: hidden; z-index: 2; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .loader-logo-circle img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
+        .loader-logo-circle img.loaded { opacity: 1; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* FOOTER */
+        footer { background: #f9f9f9; padding: 24px 16px; margin-top: auto; border-top: 1px solid #e2e8f0; padding-bottom: 40px; }
+        .follow { text-align: center; }
+        .follow h4 { font-size: 13px; margin-bottom: 10px; font-weight: bold; color: #333; }
+        .socials { display: flex; justify-content: center; gap: 14px; }
+        .socials a { color: #333; font-size: 20px; transition: transform .2s ease; }
+        .socials a:hover { transform: translateY(-2px) scale(1.05); }
+        .footer-bottom { text-align: center; font-size: 12px; margin-top: 14px; color: #777; line-height: 1.5; }
+
+        .compact-input { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; outline: none; transition: border-color 0.2s; }
+        .main-container { 
+    padding-top: 100px !important; 
+    display: flex; 
+    flex-direction: column; 
+    min-height: calc(100vh - 90px); 
+        }
+        .report-table th, .report-table td { border: 1px solid #e2e8f0; padding: 4px; text-align: center; vertical-align: middle; }
+        .report-table th.rotate { height: 120px; white-space: nowrap; vertical-align: bottom; }
+        .report-table th.rotate > div { transform: translate(0px, -5px) rotate(-90deg); width: 20px; margin: 0 auto; }
+        .report-table th.rotate > div > span { padding: 5px 5px; font-size: 10px; }
+        .stat-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.02); position: relative; overflow: hidden; }
+        .dash-table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        
+        .badge-count { position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; height: 18px; min-width: 18px; display: flex; align-items: center; justify-content: center; border-radius: 9px; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="text-slate-900 text-base">
+
+    <!-- CACHE LOADER -->
+    <script>
+        try {
+            const cachedConfig = localStorage.getItem('fest_home_config');
+            if (cachedConfig) {
+                const data = JSON.parse(cachedConfig);
+                if (data.logoUrl) {
+                    document.write(`<style>#loader-img-tag { content: url("${data.logoUrl}"); opacity: 1 !important; }</style>`);
+                }
+            }
+        } catch (e) {}
+    </script>
+
+    <!-- SPLASH SCREEN -->
+    <div class="loader-screen" id="loader-screen">
+        <div class="loader-wrapper" id="loader-wrapper">
+            <div class="loader-ring" id="loader-ring"></div>
+            <div class="loader-logo-circle" id="moving-logo">
+                 <img src="" id="loader-img-tag" alt="Fest Logo">
+            </div>
+        </div>
+    </div>
+
+    <!-- INTERNAL SPINNER -->
+    <div id="app-loader" class="fixed inset-0 bg-white z-[1000] flex flex-col items-center justify-center hide">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-4 border-blue-600 mb-4"></div>
+        <p class="text-blue-600 font-bold animate-pulse text-sm">Processing...</p>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-50 z-[200] flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-sm text-center relative z-10">
+            <div id="login-logo-target" class="w-24 h-24 mx-auto mb-6 relative z-10 flex items-center justify-center"></div>
+            <h1 class="text-2xl font-black text-slate-800 mb-2 font-['Saira']">Team Login</h1>
+            <p class="text-slate-500 text-sm mb-6">Access your team dashboard</p>
+            <div class="bg-white p-6 rounded-2xl shadow-xl border border-slate-100 space-y-4">
+                <select id="login-team-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 select-team transition">
+                    <option value="">Loading Teams...</option>
+                </select>
+                <input type="password" id="login-passcode" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition placeholder:font-normal text-center tracking-widest" placeholder="Passcode">
+                <button onclick="attemptLogin()" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition active:scale-95 flex items-center justify-center gap-2">
+                    Enter Portal <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OVERLAY -->
+    <div class="overlay" id="overlay"></div>
+    <div id="toast-container" class="fixed bottom-6 right-6 left-6 md:left-auto z-[200] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- HEADER -->
+    <div class="header-wrapper" id="main-header">
+        <header class="app-header relative">
+            <!-- Left -->
+            <div class="flex items-center gap-3 z-20">
+                <button class="menu-toggle" id="menuBtn"><span></span><span></span><span></span></button>
+                <div class="flex flex-col">
+                    <span class="text-lg font-black text-slate-900 leading-none truncate max-w-[140px]" id="header-team-name">Team</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight" id="page-title">Dashboard</span>
+                </div>
+            </div>
+            <!-- Center -->
+            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-center pointer-events-none">
+                <h2 class="font-black text-blue-600 text-sm sm:text-base leading-tight uppercase tracking-tight" id="header-fest-name">FEST NAME</h2>
+            </div>
+            <!-- Right -->
+            <div class="flex items-center gap-3 ml-auto z-20">
+                <div class="w-9 h-9 bg-slate-50 rounded-lg border border-slate-200 overflow-hidden flex-shrink-0 p-0.5">
+                    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="header-logo-img" class="w-full h-full object-cover rounded-md" alt="Logo">
+                </div>
+                <!-- Notification Bell with Count -->
+                <button id="notifBtn" onclick="toggleNotifications()" class="relative p-2 rounded-full hover:bg-slate-100 transition">
+                    <i data-lucide="bell" class="w-6 h-6 text-slate-700"></i>
+                    <span id="notif-badge" class="badge-count hidden">0</span>
+                </button>
+            </div>
+        </header>
+    </div>
+
+    <!-- POPUP MENU -->
+    <div class="popup-menu" id="popupMenu">
+        <div onclick="setTeamSubTab('dashboard')" id="nav-dashboard" class="popup-item active"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</div>
+        <div onclick="setTeamSubTab('available')" id="nav-available" class="popup-item"><i data-lucide="calendar" class="w-5 h-5"></i> Events</div>
+        <div onclick="setTeamSubTab('myreg')" id="nav-myreg" class="popup-item"><i data-lucide="user-check" class="w-5 h-5"></i> My Registrations</div>
+        <div onclick="setTeamSubTab('report')" id="nav-report" class="popup-item"><i data-lucide="file-text" class="w-5 h-5"></i> Reports</div>
+        <div onclick="logout()" class="popup-item border-t border-slate-100 mt-1 text-red-500"><i data-lucide="log-out" class="w-5 h-5"></i> Logout</div>
+    </div>
+
+    <!-- NOTIFICATION DROPDOWN -->
+    <div id="notif-popup" class="notif-popup">
+        <div class="p-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between rounded-t-2xl shrink-0">
+            <h3 class="font-bold text-sm text-slate-800">Notifications</h3>
+            <button onclick="toggleNotifications()" class="p-1 hover:bg-slate-200 rounded-full"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        
+        <!-- Filter Buttons -->
+        <div class="flex p-2 gap-2 bg-white border-b border-slate-50 shrink-0">
+            <button onclick="filterNotifs('all')" id="n-btn-all" class="flex-1 py-1.5 rounded-lg text-[10px] font-bold bg-red-600 text-white transition">All</button>
+            <button onclick="filterNotifs('alert')" id="n-btn-alert" class="flex-1 py-1.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-500 hover:bg-slate-200 transition">Alerts</button>
+            <button onclick="filterNotifs('result')" id="n-btn-result" class="flex-1 py-1.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-500 hover:bg-slate-200 transition">Results</button>
+        </div>
+
+        <div id="notif-list" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50 rounded-b-2xl"></div>
+    </div>
+
+    <!-- MAIN APP CONTENT -->
+    <div id="app-layout" class="flex-1 overflow-y-auto p-3 md:p-6 lg:p-8 relative scroll-smooth max-w-5xl mx-auto w-full main-container opacity-0 transition-opacity duration-300 pointer-events-none">
+        
+        <!-- DASHBOARD TAB -->
+        <div id="tview-dashboard" class="tab-view space-y-5 animate-fade-in">
+            <!-- Points Card -->
+            <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div class="relative z-10 flex justify-between items-center">
+                    <div><p class="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-1">Total Points</p><h1 class="text-4xl font-black tracking-tight" id="dash-points">0</h1></div>
+                    <div class="text-right"><div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10"><p class="text-xs font-bold opacity-80 uppercase">Position</p><p class="text-2xl font-black" id="dash-rank"># -</p></div></div>
+                </div>
+                <i data-lucide="trophy" class="absolute -bottom-6 -right-6 w-36 h-36 text-white opacity-10 transform rotate-12"></i>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="stat-card border-l-4 border-l-blue-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Total Students</p><h3 class="text-xl font-bold text-slate-800" id="dash-std-total">0</h3></div>
+                <div class="stat-card border-l-4 border-l-emerald-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Participating</p><h3 class="text-xl font-bold text-emerald-600" id="dash-std-reg">0</h3></div>
+            </div>
+
+            <!-- Category Table -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-100 bg-slate-50"><h4 class="font-bold text-slate-800 flex items-center gap-2 text-sm"><i data-lucide="layers" class="w-4 h-4 text-blue-500"></i> Event Status</h4></div>
+                <div class="dash-table-container"><table class="w-full text-left text-xs whitespace-nowrap"><thead class="bg-slate-50 text-slate-500 font-bold uppercase"><tr><th class="px-4 py-3">Category</th><th class="px-4 py-3 text-center">Total</th><th class="px-4 py-3 text-center text-green-600">Done</th><th class="px-4 py-3 text-center text-orange-500">Pending</th></tr></thead><tbody id="dash-cat-table" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody></table></div>
+            </div>
+
+            <!-- Winners & Alerts -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="medal" class="w-4 h-4 text-amber-500"></i> Winners Tally</h4>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-yellow-50 rounded-xl border border-yellow-100"><span class="text-xs font-bold text-yellow-800 uppercase">First Prize</span><div class="text-right"><span class="text-lg font-black text-yellow-600" id="dash-first">0</span> <span class="text-[10px] text-yellow-500 font-bold" id="dash-first-pts">(0 pts)</span></div></div>
+                        <div class="flex justify-between items-center p-3 bg-slate-100 rounded-xl border border-slate-200"><span class="text-xs font-bold text-slate-600 uppercase">Second Prize</span><div class="text-right"><span class="text-lg font-black text-slate-500" id="dash-second">0</span> <span class="text-[10px] text-slate-400 font-bold" id="dash-second-pts">(0 pts)</span></div></div>
+                        <div class="flex justify-between items-center p-3 bg-orange-50 rounded-xl border border-orange-100"><span class="text-xs font-bold text-orange-700 uppercase">Third Prize</span><div class="text-right"><span class="text-lg font-black text-orange-600" id="dash-third">0</span> <span class="text-[10px] text-orange-500 font-bold" id="dash-third-pts">(0 pts)</span></div></div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="bell" class="w-4 h-4 text-red-500"></i> Latest Alerts</h4>
+                        <button onclick="toggleNotifications()" class="text-xs font-bold text-blue-600 hover:underline">View All</button>
+                    </div>
+                    <div id="dash-notif-preview" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OTHER TABS -->
+        <div id="tview-available" class="tab-view hidden space-y-4">
+            <div class="flex flex-col sm:flex-row justify-end gap-2 bg-white p-3 rounded-xl border border-slate-200 shadow-sm sticky top-0 z-10">
+                <select id="filter-event-stage" onchange="renderTeamEvents()" class="compact-input bg-white font-bold text-slate-600 w-full sm:w-auto"><option value="">All Stages</option><option value="On-Stage">On-Stage</option><option value="Off-Stage">Off-Stage</option></select>
+                <select id="filter-event-cat" onchange="renderTeamEvents()" class="compact-input bg-white font-bold text-slate-600 w-full sm:w-auto select-cat-filter"></select>
+            </div>
+            <div id="team-events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20"></div>
+        </div>
+
+        <div id="tview-myreg" class="tab-view hidden space-y-4">
+            <div class="flex flex-col md:flex-row gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm sticky top-0 z-10">
+                <div class="relative flex-1"><i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i><input type="text" id="myreg-search" onkeyup="renderStudentRegs()" placeholder="Search student..." class="compact-input pl-9 bg-white" dir="auto"></div>
+                <select id="myreg-cat-filter" onchange="renderStudentRegs()" class="compact-input bg-white font-bold text-slate-600 w-full md:w-1/3 select-cat-filter"></select>
+            </div>
+            <div id="myreg-student-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pb-20"></div>
+        </div>
+
+        <div id="tview-report" class="tab-view hidden space-y-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col min-h-[500px]">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-5 shrink-0">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="file-text" class="w-5 h-5 text-blue-500"></i> Participation Report</h3>
+                    <div class="flex gap-2 w-full md:w-auto flex-wrap">
+                        <select id="report-cat-select" onchange="renderReportTable()" class="flex-1 md:w-48 p-2.5 rounded-lg border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-blue-500 select-cat text-slate-700 font-bold"></select>
+                        <button onclick="downloadReportPDF()" class="flex items-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition font-bold text-xs border border-red-100"><i data-lucide="file-down" class="w-4 h-4"></i> PDF</button>
+                        <button onclick="downloadReportExcel()" class="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition font-bold text-xs border border-emerald-100"><i data-lucide="sheet" class="w-4 h-4"></i> CSV</button>
+                    </div>
+                </div>
+                <div class="overflow-auto border border-slate-200 rounded-xl flex-1 p-2 bg-white" id="report-print-area">
+                    <div class="hidden print-header mb-4 text-center"><h1 class="text-xl font-bold text-slate-800">Fest Participation Report</h1><p class="text-sm text-slate-500" id="print-team-name"></p></div>
+                    <table class="w-full text-xs text-left report-table" id="report-table-content"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="follow"><h4>FOLLOW US</h4><div class="socials" id="social-links"><div class="flex gap-2 justify-center opacity-50"><div class="w-8 h-8 bg-slate-200 rounded-full"></div><div class="w-8 h-8 bg-slate-200 rounded-full"></div></div></div></div>
+        <div class="footer-bottom">&copy; 2025 <span id="footer-fest-name">Fest Name</span> media team. All Rights Reserved.<br><a href="https://www.instagram.com/muhammed_sanjide_p" target="_blank">Powered by hadi mahiri faizy</a></div>
+    </footer>
+
+    <!-- UPDATED REGISTRATION MODAL - COMPACT & CENTERED -->
+    <div id="reg-modal" class="hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeRegModal()"></div>
+        <div id="reg-panel">
+            <!-- Header with Title and Action Buttons -->
+            <div class="p-4 bg-white border-b border-slate-100 flex justify-between items-center sticky top-0 z-10">
+                <div>
+                    <h3 class="font-bold text-lg text-slate-800 leading-tight" id="reg-modal-title">Event Name</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5"><span id="reg-modal-slot">Entry 1</span> • <span id="reg-modal-limit">Max 1</span> • <span id="reg-counter">0/0</span></p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="submitRegistration()" class="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition shadow-sm border border-emerald-100" title="Confirm Registration">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="closeRegModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100 transition shadow-sm border border-red-100" title="Close">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Student List -->
+            <div class="flex-1 overflow-y-auto p-4 bg-slate-50">
+                <div class="mb-3">
+                    <h4 class="font-bold text-slate-500 text-[10px] uppercase tracking-wider mb-2">Select Students</h4>
+                    <div id="reg-student-list" class="space-y-2 max-h-[55vh] overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STUDENT DETAILS MODAL -->
+    <div id="std-events-modal" class="fixed inset-0 z-[250] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeStdEventsModal()"></div>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm relative z-10 overflow-hidden flex flex-col max-h-[80vh] animate-fade-in">
+            <div class="p-5 bg-blue-600 text-white shrink-0">
+                <h3 class="font-bold text-lg" id="std-events-name">Student Name</h3>
+                <p class="text-blue-100 text-xs font-bold uppercase mt-1" id="std-events-info">Chest No: 101 • Senior</p>
+                <button onclick="closeStdEventsModal()" class="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-4 overflow-y-auto bg-slate-50 flex-1 space-y-3" id="std-events-list"></div>
+        </div>
+    </div>
+
+    <!-- CONFIRM MODAL -->
+    <div id="confirm-modal" class="fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5 transform scale-100 transition-all">
+            <h3 class="text-lg font-bold text-slate-800 mb-2 text-center">Confirm Action</h3>
+            <p class="text-slate-500 text-sm mb-5 text-center" id="confirm-msg">Are you sure?</p>
+            <div class="flex gap-3">
+                <button id="confirm-cancel" class="px-4 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-bold transition flex-1">Cancel</button>
+                <button id="confirm-ok" class="px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 shadow-lg shadow-red-500/30 transition flex-1">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from './firebase-config.js';
+        import { collection, onSnapshot, doc, setDoc, addDoc, deleteDoc, updateDoc, getDocs, query, where, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        
+        let students = [], events = [], registrations = [], categories = [], teams = [], notifications = [], results = [];
+        let teamPasscodes = {};
+        let currentTeam = '', regModalData = null;
+        let currentTab = 'dashboard';
+        let homeConfig = {};
+        let isSplashDone = false;
+        let activeNotifFilter = 'all';
+
+        const menuBtn = document.getElementById("menuBtn");
+        const popupMenu = document.getElementById("popupMenu");
+        const overlay = document.getElementById("overlay");
+
+        menuBtn.addEventListener("click", () => { 
+            document.getElementById('notif-popup').classList.remove('open');
+            menuBtn.classList.toggle("active"); popupMenu.classList.toggle("open"); 
+            if(popupMenu.classList.contains("open")) overlay.classList.add("show"); else overlay.classList.remove("show");
+        });
+        
+        overlay.addEventListener("click", () => { 
+            menuBtn.classList.remove("active"); 
+            popupMenu.classList.remove("open"); 
+            overlay.classList.remove("show"); 
+            document.getElementById('notif-popup').classList.remove('open');
+            closeRegModal();
+        });
+
+        // SPLASH LOGIC
+        const runSplashAnimation = () => {
+            const loaderScreen = document.getElementById('loader-screen');
+            if(loaderScreen && !isSplashDone) {
+                setTimeout(() => {
+                    const movingLogo = document.getElementById('moving-logo');
+                    const targetBox = document.getElementById('login-logo-target'); 
+                    const loaderRing = document.getElementById('loader-ring');
+
+                    if(movingLogo && targetBox && homeConfig.logoUrl) {
+                        loaderRing.classList.add('ring-hidden'); 
+                        const startRect = movingLogo.getBoundingClientRect();
+                        const targetRect = targetBox.getBoundingClientRect();
+
+                        movingLogo.style.transition = 'none';
+                        movingLogo.style.position = 'fixed';
+                        movingLogo.style.left = startRect.left + 'px';
+                        movingLogo.style.top = startRect.top + 'px';
+                        movingLogo.style.width = startRect.width + 'px';
+                        movingLogo.style.height = startRect.height + 'px';
+                        movingLogo.style.margin = '0';
+                        movingLogo.offsetHeight; 
+
+                        movingLogo.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+                        requestAnimationFrame(() => {
+                            movingLogo.style.left = targetRect.left + 'px';
+                            movingLogo.style.top = targetRect.top + 'px';
+                            movingLogo.style.width = targetRect.width + 'px';
+                            movingLogo.style.height = targetRect.height + 'px';
+                            movingLogo.style.borderRadius = '24px'; 
+                            movingLogo.style.boxShadow = 'none';
+                        });
+
+                        setTimeout(() => {
+                            targetBox.innerHTML = `<img src="${homeConfig.logoUrl}" class="w-full h-full object-cover rounded-3xl animate-fade-in shadow-md border border-slate-100" alt="Logo">`;
+                            loaderScreen.style.opacity = '0'; 
+                            setTimeout(() => loaderScreen.remove(), 500);
+                        }, 800); 
+                    } else {
+                        if(targetBox && homeConfig.logoUrl) {
+                            targetBox.innerHTML = `<img src="${homeConfig.logoUrl}" class="w-full h-full object-cover rounded-3xl animate-fade-in shadow-md border border-slate-100" alt="Logo">`;
+                        }
+                        loaderScreen.style.opacity = '0';
+                        setTimeout(() => loaderScreen.remove(), 500);
+                    }
+                    isSplashDone = true;
+                }, 1000); 
+            }
+        };
+
+        function applyConfigToUI(config) {
+            let fName = (config.festName1 || "") + (config.festName2 ? " " + config.festName2 : "");
+            if(!fName) fName = "Fest Portal";
+            
+            document.getElementById('header-fest-name').innerText = fName;
+            document.getElementById('footer-fest-name').innerText = config.festName1 || fName;
+
+            if (config.logoUrl) {
+                const headLogo = document.getElementById('header-logo-img');
+                if(headLogo) { headLogo.src = config.logoUrl; headLogo.onload = () => headLogo.classList.add('loaded'); }
+                if(!isSplashDone) {
+                    const loaderImg = document.getElementById('loader-img-tag');
+                    if(loaderImg) { loaderImg.src = config.logoUrl; loaderImg.classList.add('loaded'); }
+                }
+            }
+            const s = config.social || {};
+            const sDiv = document.getElementById('social-links');
+            if(sDiv) {
+                let sHtml = '';
+                if(s.wa) sHtml += `<a href="${s.wa}"><i class="fab fa-whatsapp"></i></a>`;
+                if(s.ig) sHtml += `<a href="${s.ig}"><i class="fab fa-instagram"></i></a>`;
+                if(s.fb) sHtml += `<a href="${s.fb}"><i class="fab fa-facebook"></i></a>`;
+                if(s.yt) sHtml += `<a href="${s.yt}"><i class="fab fa-youtube"></i></a>`;
+                if(s.tg) sHtml += `<a href="${s.tg}"><i class="fab fa-telegram"></i></a>`;
+                sDiv.innerHTML = sHtml;
+            }
+        }
+
+        const showToast = (msg, type='success') => {
+            const c = document.getElementById('toast-container'); const d = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-slate-900' : 'bg-red-600';
+            d.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-fade-in mx-auto`;
+            d.innerHTML = `<i data-lucide="${type==='success'?'check':'alert-circle'}" class="w-4 h-4"></i><span class="text-xs font-bold">${msg}</span>`;
+            c.appendChild(d); setTimeout(()=>d.remove(),3000); lucide.createIcons();
+        };
+        
+        window.attemptLogin = () => {
+            const t = document.getElementById('login-team-select').value;
+            const enteredPass = document.getElementById('login-passcode').value.trim();
+            if(!t) return showToast('Please select a team', 'error');
+            const correctPass = teamPasscodes[t];
+            if (correctPass && correctPass !== enteredPass) return showToast('Incorrect Team Passcode', 'error');
+
+            currentTeam = t;
+            document.getElementById('header-team-name').innerText = t;
+            document.getElementById('print-team-name').innerText = t;
+            
+            document.getElementById('main-header').classList.add('visible');
+            const layout = document.getElementById('app-layout');
+            layout.classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('login-screen').classList.add('hide');
+            
+            window.renderDashboard();
+            window.renderTeamEvents(); 
+            window.renderStudentRegs(); 
+            window.subscribeNotifications();
+        };
+
+        window.logout = () => {
+            if(!confirm("Logout from team portal?")) return;
+            currentTeam = '';
+            document.getElementById('login-team-select').value = '';
+            document.getElementById('login-passcode').value = '';
+            document.getElementById('login-screen').classList.remove('hide');
+            document.getElementById('main-header').classList.remove('visible');
+            const layout = document.getElementById('app-layout');
+            layout.classList.add('opacity-0', 'pointer-events-none');
+            menuBtn.classList.remove("active"); popupMenu.classList.remove("open"); overlay.classList.remove("show");
+        };
+
+        window.subscribeNotifications = () => {
+             onSnapshot(collection(db, "notifications"), (snap) => {
+                const allNotifs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                notifications = allNotifs.filter(n => n.team === 'All' || n.team === currentTeam).sort((a,b)=>b.timestamp-a.timestamp);
+                window.updateNotifBadge(); 
+                window.renderNotifications(); 
+                window.renderDashboard();
+             });
+        };
+
+        window.updateNotifBadge = () => { 
+            const lastRead = localStorage.getItem(`team_last_read_${currentTeam}`) || 0;
+            const newCount = notifications.filter(n => n.timestamp > lastRead).length;
+            const b = document.getElementById('notif-badge'); 
+            if(newCount > 0) { b.classList.remove('hidden'); b.innerText = newCount > 9 ? '9+' : newCount; } 
+            else { b.classList.add('hidden'); }
+        };
+
+        window.filterNotifs = (filterType) => {
+            activeNotifFilter = filterType;
+            ['all', 'alert', 'result'].forEach(t => {
+                const btn = document.getElementById(`n-btn-${t}`);
+                if(t === filterType) { btn.classList.remove('bg-slate-100', 'text-slate-500'); btn.classList.add('bg-red-600', 'text-white'); } 
+                else { btn.classList.add('bg-slate-100', 'text-slate-500'); btn.classList.remove('bg-red-600', 'text-white'); }
+            });
+            window.renderNotifications();
+        };
+
+        window.renderNotifications = () => {
+            const list = document.getElementById('notif-list');
+            let filtered = notifications;
+            if(activeNotifFilter === 'alert') filtered = notifications.filter(n => n.type !== 'success' && n.type !== 'result');
+            else if (activeNotifFilter === 'result') filtered = notifications.filter(n => n.type === 'success' || n.type === 'result');
+
+            if(filtered.length === 0) { list.innerHTML = `<div class="text-center py-10 text-slate-400 text-sm italic">No notifications found</div>`; return; }
+            
+            list.innerHTML = filtered.map(n => {
+                const isResult = n.type === 'success' || n.type === 'result';
+                const icon = isResult ? 'trophy' : 'alert-circle';
+                const iconColor = isResult ? 'text-yellow-600 bg-yellow-50' : 'text-red-500 bg-red-50';
+                
+                return `
+                <div onclick="handleNotificationClick('${n.eventId}', '${n.title}', '${n.type}')" class="p-3 bg-white rounded-xl border border-slate-100 flex items-start gap-3 transition cursor-pointer hover:bg-blue-50">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${iconColor}">
+                        <i data-lucide="${icon}" class="w-4 h-4"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-slate-800 truncate">${n.title}</p>
+                        <p class="text-[10px] text-slate-500 leading-relaxed line-clamp-2">${n.message}</p>
+                        <span class="text-[9px] text-slate-400 font-bold uppercase mt-1 block">${new Date(n.timestamp).toLocaleDateString()}</span>
+                    </div>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        };
+
+        window.handleNotificationClick = (eventId, eventName, type) => {
+            if(!eventId) return;
+            const isResult = type === 'success' || type === 'result' || (eventName && eventName.toLowerCase().includes('result'));
+            
+            if (isResult) {
+                window.open(`index.html?search=${eventId}`, '_blank');
+            } else {
+                const popup = document.getElementById('notif-popup');
+                const overlay = document.getElementById('overlay');
+                popup.classList.remove('open');
+                overlay.classList.remove('show');
+                setTeamSubTab('available');
+                setTimeout(() => {
+                    const card = document.getElementById(`event-card-${eventId}`);
+                    if(card) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        card.classList.add('card-highlight');
+                        setTimeout(() => card.classList.remove('card-highlight'), 2000);
+                    } else {
+                        showToast('Event details not found', 'info');
+                    }
+                }, 300);
+            }
+        };
+
+        window.toggleNotifications = () => {
+            const popup = document.getElementById('notif-popup');
+            const overlay = document.getElementById('overlay');
+            
+            if(popup.classList.contains('open')) {
+                popup.classList.remove('open');
+                overlay.classList.remove('show');
+            } else {
+                localStorage.setItem(`team_last_read_${currentTeam}`, Date.now());
+                window.updateNotifBadge();
+                popup.classList.add('open');
+                overlay.classList.add('show');
+                document.getElementById('menuBtn').classList.remove('active');
+                document.getElementById('popupMenu').classList.remove('open');
+            }
+        };
+        
+        window.confirmAction = (msg = 'Are you sure?') => {
+            return new Promise((res) => {
+                const m = document.getElementById('confirm-modal'); document.getElementById('confirm-msg').innerText = msg; m.classList.remove('hidden');
+                const y = () => { clean(); res(true); }; const n = () => { clean(); res(false); };
+                const clean = () => { document.getElementById('confirm-ok').removeEventListener('click', y); document.getElementById('confirm-cancel').removeEventListener('click', n); m.classList.add('hidden'); };
+                document.getElementById('confirm-ok').addEventListener('click', y); document.getElementById('confirm-cancel').addEventListener('click', n);
+            });
+        };
+
+        window.renderDropdowns = () => {
+            const teamOpts = teams.map(t => `<option value="${t}">${t}</option>`).join('');
+            const catOpts = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.querySelectorAll('.select-team').forEach(s => { const old = s.value; s.innerHTML = '<option value="">Select Your Team</option>' + teamOpts; if(teams.includes(old)) s.value=old; });
+            document.querySelectorAll('.select-cat-filter').forEach(s => { const old = s.value; s.innerHTML = '<option value="">All Categories</option><option value="General" class="font-bold text-blue-600">General</option>' + catOpts; if(categories.includes(old) || old==='General') s.value = old; });
+            document.querySelectorAll('.select-cat').forEach(s => { const old = s.value; s.innerHTML = '<option value="">Select Category</option><option value="General" class="font-bold text-blue-600">General</option>' + catOpts; if(categories.includes(old)) s.value=old; });
+        };
+
+        window.setTeamSubTab = (t) => {
+            currentTab = t;
+            document.querySelectorAll('.tab-view').forEach(e => e.classList.add('hidden'));
+            document.getElementById('tview-'+t).classList.remove('hidden');
+            
+            menuBtn.classList.remove("active"); popupMenu.classList.remove("open"); overlay.classList.remove("show");
+            document.getElementById('notif-popup').classList.remove('open');
+            document.querySelectorAll('.popup-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-'+t).classList.add('active');
+            
+            document.getElementById('page-title').innerText = { 'dashboard': 'Dashboard', 'available': 'Events', 'myreg': 'My Registrations', 'report': 'Reports' }[t];
+            if(t === 'dashboard') window.renderDashboard();
+        };
+
+        // --- DASHBOARD LOGIC ---
+        window.renderDashboard = () => {
+            if(!currentTeam) return;
+
+            let teamScores = {}; teams.forEach(t => teamScores[t] = 0);
+            let firstPts = 0, secondPts = 0, thirdPts = 0;
+            let firstCnt = 0, secondCnt = 0, thirdCnt = 0;
+
+            results.forEach(r => {
+                ['first', 'second', 'third'].forEach(place => {
+                    const winners = r.winners[place];
+                    const pts = r.points[place];
+                    if(!winners || !pts) return;
+                    const arr = Array.isArray(winners) ? winners : [winners];
+                    arr.forEach(w => {
+                        let tName = null;
+                        if(r.type === 'Group') tName = w; 
+                        else { const s = students.find(std => std.id === w); if(s) tName = s.team; }
+                        if(tName && teamScores[tName] !== undefined) teamScores[tName] += parseInt(pts);
+                        
+                        if(tName === currentTeam) {
+                            if(place === 'first') { firstCnt++; firstPts += parseInt(pts); }
+                            if(place === 'second') { secondCnt++; secondPts += parseInt(pts); }
+                            if(place === 'third') { thirdCnt++; thirdPts += parseInt(pts); }
+                        }
+                    });
+                });
+            });
+
+            const myPoints = teamScores[currentTeam] || 0;
+            const sortedTeams = Object.entries(teamScores).sort((a,b) => b[1] - a[1]);
+            const myRank = sortedTeams.findIndex(item => item[0] === currentTeam) + 1;
+
+            document.getElementById('dash-points').innerText = myPoints;
+            document.getElementById('dash-rank').innerText = `# ${myRank}`;
+
+            const myStudents = students.filter(s => s.team === currentTeam);
+            const myRegs = registrations.filter(r => r.team === currentTeam);
+            const uniqueParticipating = new Set(myRegs.flatMap(r => r.studentIds)).size;
+            
+            document.getElementById('dash-std-total').innerText = myStudents.length;
+            document.getElementById('dash-std-reg').innerText = uniqueParticipating;
+
+            const allCats = [...categories, 'General'];
+            let tableHtml = '';
+            
+            allCats.forEach(cat => {
+                const catEvents = events.filter(e => e.category === cat);
+                if(catEvents.length === 0) return;
+                
+                let participatedCount = 0;
+                catEvents.forEach(e => {
+                    const hasReg = registrations.some(r => r.eventId === e.id && r.team === currentTeam);
+                    if(hasReg) participatedCount++;
+                });
+                
+                const pendingCount = catEvents.length - participatedCount;
+                tableHtml += `<tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition"><td class="px-4 py-3 font-bold text-slate-700">${cat}</td><td class="px-4 py-3 text-center text-slate-500">${catEvents.length}</td><td class="px-4 py-3 text-center text-emerald-600 font-bold">${participatedCount}</td><td class="px-4 py-3 text-center text-orange-500 font-bold">${pendingCount}</td></tr>`;
+            });
+            document.getElementById('dash-cat-table').innerHTML = tableHtml || `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">No Data</td></tr>`;
+
+            document.getElementById('dash-first').innerText = `${firstCnt}`;
+            document.getElementById('dash-first-pts').innerText = `(${firstPts} pts)`;
+            document.getElementById('dash-second').innerText = `${secondCnt}`;
+            document.getElementById('dash-second-pts').innerText = `(${secondPts} pts)`;
+            document.getElementById('dash-third').innerText = `${thirdCnt}`;
+            document.getElementById('dash-third-pts').innerText = `(${thirdPts} pts)`;
+
+            const notifHtml = notifications.slice(0, 3).map(n => 
+                `<div onclick="handleNotificationClick('${n.eventId}', '${n.title}', '${n.type}')" class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-3 cursor-pointer hover:bg-blue-50 transition"><div class="w-2 h-2 mt-1.5 rounded-full bg-blue-500 shrink-0"></div><div class="min-w-0"><p class="text-sm font-bold text-slate-800 truncate">${n.title}</p><p class="text-xs text-slate-500 truncate">${n.message}</p></div></div>`
+            ).join('');
+            document.getElementById('dash-notif-preview').innerHTML = notifHtml || '<p class="text-xs text-slate-400 italic">No recent alerts</p>';
+        };
+
+        window.renderTeamEvents = () => {
+            if(!currentTeam) return;
+            const filter = document.getElementById('filter-event-cat').value;
+            const stageFilter = document.getElementById('filter-event-stage').value;
+            const grid = document.getElementById('team-events-grid');
+            
+            let list = events;
+            if(filter && filter!=='All') list=list.filter(e => e.category === filter || e.category === 'General' || e.category === 'All');
+            if(stageFilter) list = list.filter(e => e.stage === stageFilter);
+            
+            if(list.length===0){ grid.innerHTML='<div class="col-span-full text-center text-slate-400 italic py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">No events found</div>'; return; }
+            grid.innerHTML=list.map(e=>{
+                let slotsHtml='';
+                for(let i=1;i<=e.limit;i++){
+                    const r=registrations.find(x=>x.eventId===e.id&&x.team===currentTeam&&x.slotIndex===i);
+                    const count=r?r.studentIds.length:0;
+                    const isFull=(e.type==='Group')?count>=e.groupSize:count>=1;
+                    const style=count>0?(isFull?'bg-emerald-50 border-emerald-200 text-emerald-700':'bg-amber-50 border-amber-200 text-amber-700'):'bg-slate-50 border-slate-100 text-slate-400';
+                    const icon=count>0?'check-circle':'circle';
+                    slotsHtml+=`<button onclick="openRegModal('${e.id}',${i})" class="w-full flex justify-between items-center p-3 rounded-xl border ${style} mb-2 transition hover:shadow-sm active:scale-[0.99]"><div class="flex flex-col text-left"><span class="text-xs font-bold uppercase tracking-wider">Entry ${i}</span><span class="text-[10px] opacity-80 font-medium">${count} Participants</span></div><i data-lucide="${icon}" class="w-5 h-5"></i></button>`;
+                }
+                const catBadge = e.category === 'General' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500';
+                const stageBadge = e.stage === 'On-Stage' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700';
+                return `<div id="event-card-${e.id}" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition duration-300"><div class="flex justify-between items-start mb-4"><div class="flex-1 mr-2"><h4 class="font-bold text-slate-800 leading-snug text-lg">${e.name}</h4><div class="flex gap-2 mt-1 flex-wrap"><span class="text-[10px] ${catBadge} px-2 py-0.5 rounded font-bold uppercase">${e.category}</span><span class="text-[10px] ${stageBadge} px-2 py-0.5 rounded font-bold uppercase">${e.stage || 'Off-Stage'}</span></div></div></div><div class="space-y-1">${slotsHtml}</div></div>`;
+            }).join('');
+            lucide.createIcons();
+        };
+
+        window.renderStudentRegs = () => {
+            if(!currentTeam) return;
+            const search = document.getElementById('myreg-search').value.toLowerCase();
+            const cat = document.getElementById('myreg-cat-filter').value;
+            let list = students.filter(s => s.team === currentTeam);
+            if(cat && cat !== 'All') list = list.filter(s => s.category === cat);
+            if(search) list = list.filter(s => s.name.toLowerCase().includes(search));
+            list.sort((a,b) => (parseInt(a.chestNo)||0) - (parseInt(b.chestNo)||0));
+            const grid = document.getElementById('myreg-student-grid');
+            if(list.length === 0) { grid.innerHTML = `<div class="col-span-full text-center text-slate-400 italic py-10">No students found</div>`; return; }
+            grid.innerHTML = list.map(s => {
+                const myRegs = registrations.filter(r => r.studentIds.includes(s.id));
+                const count = myRegs.length;
+                const activeClass = count > 0 ? 'border-blue-200 bg-blue-50/50' : 'border-slate-100 bg-white';
+                return `<div onclick="openStudentDetails('${s.id}')" class="p-4 rounded-xl border ${activeClass} flex justify-between items-center cursor-pointer hover:shadow-md transition"><div><h4 class="font-bold text-slate-700">${s.name}</h4><p class="text-[10px] text-slate-400 font-bold uppercase">${s.category} • ${s.chestNo || '-'}</p></div><div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-blue-600 shadow-sm">${count}</div></div>`;
+            }).join('');
+        };
+
+        window.openStudentDetails = (sid) => {
+            const s = students.find(x => x.id === sid);
+            if(!s) return;
+            const myRegs = registrations.filter(r => r.studentIds.includes(sid));
+            document.getElementById('std-events-name').innerText = s.name;
+            document.getElementById('std-events-info').innerText = `Chest No: ${s.chestNo || '-'} • ${s.category}`;
+            const listEl = document.getElementById('std-events-list');
+            if(myRegs.length === 0) { listEl.innerHTML = `<p class="text-sm text-slate-400 text-center italic py-4">Not registered in any events.</p>`; }
+            else {
+                listEl.innerHTML = myRegs.map(r => {
+                    const e = events.find(ev => ev.id === r.eventId);
+                    if(!e) return '';
+                    return `<div onclick="goToEventRegistration('${e.id}', ${r.slotIndex})" class="bg-white p-3 rounded-xl border border-slate-100 flex items-center justify-between shadow-sm cursor-pointer hover:bg-slate-50 transition group"><div><h4 class="text-sm font-bold text-slate-700">${e.name}</h4><p class="text-[10px] text-slate-400 font-bold uppercase">Entry ${r.slotIndex} • ${e.stage||'Off-Stage'}</p></div><div class="text-blue-300 group-hover:text-blue-600 transition"><i data-lucide="external-link" class="w-4 h-4"></i></div></div>`;
+                }).join('');
+                lucide.createIcons();
+            }
+            document.getElementById('std-events-modal').classList.remove('hidden');
+        };
+
+        window.goToEventRegistration = (eid, slot) => {
+            document.getElementById('std-events-modal').classList.add('hidden');
+            window.openRegModal(eid, slot);
+        };
+
+        window.closeStdEventsModal = () => document.getElementById('std-events-modal').classList.add('hidden');
+
+        window.renderReportTable = () => {
+            const cat = document.getElementById('report-cat-select').value;
+            const table = document.getElementById('report-table-content');
+            if (!cat) { table.innerHTML = '<tr><td class="p-8 text-center text-slate-400 italic">Select a category to generate report</td></tr>'; return; }
+            let allEvents = events.filter(e => e.category === cat || e.category === 'General');
+            const offStageEvents = allEvents.filter(e => !e.stage || e.stage === 'Off-Stage');
+            const onStageEvents = allEvents.filter(e => e.stage === 'On-Stage');
+            const reportEvents = [...offStageEvents, ...onStageEvents];
+            const reportStudents = students.filter(s => s.team === currentTeam && s.category === cat).sort((a,b)=>(parseInt(a.chestNo)||0)-(parseInt(b.chestNo)||0));
+            if(reportStudents.length === 0) { table.innerHTML = '<tr><td class="p-8 text-center text-slate-400 italic">No students found in this category</td></tr>'; return; }
+
+            let header1 = `<tr class="bg-slate-50 text-slate-600 text-xs font-bold uppercase border-b border-slate-200"><th rowspan="2" class="w-10 border-r">Sl</th><th rowspan="2" class="w-16 border-r">Chest</th><th rowspan="2" class="w-48 text-left border-r px-4">Name</th>`;
+            if (offStageEvents.length > 0) header1 += `<th colspan="${offStageEvents.length}" class="bg-orange-50 text-orange-700 border-r border-b">Off-Stage Items</th>`;
+            if (onStageEvents.length > 0) header1 += `<th colspan="${onStageEvents.length}" class="bg-purple-50 text-purple-700 border-r border-b">On-Stage Items</th>`;
+            header1 += `<th colspan="3" class="bg-slate-100 text-slate-700 border-b">Total</th></tr>`;
+
+            let header2 = `<tr class="bg-slate-50 text-xs text-slate-500 font-medium">`;
+            reportEvents.forEach(e => { let badge = e.category === 'General' ? '(General)' : ''; header2 += `<th class="rotate border-r border-b"><div><span>${e.name} ${badge}</span></div></th>`; });
+            header2 += `<th class="w-10 bg-blue-50 border-r border-b border-blue-100 text-blue-700">Sgl</th><th class="w-10 bg-purple-50 border-r border-b border-purple-100 text-purple-700">Grp</th><th class="w-10 bg-slate-100 border-b text-slate-700">Gen</th></tr>`;
+
+            let bodyHTML = `<tbody>`;
+            reportStudents.forEach((s, index) => {
+                let singleCount = 0; let groupCount = 0; let generalCount = 0; let rowCells = '';
+                reportEvents.forEach(e => {
+                    const reg = registrations.find(r => r.eventId === e.id && r.studentIds.includes(s.id) && r.team === currentTeam);
+                    if (reg) {
+                        rowCells += `<td class="text-emerald-600 font-bold bg-emerald-50 border-r border-slate-100">✓</td>`;
+                        if(e.category === 'General') generalCount++;
+                        else if(e.type === 'Group') groupCount++;
+                        else singleCount++;
+                    } else { rowCells += `<td class="border-r border-slate-100"></td>`; }
+                });
+                bodyHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="font-mono text-slate-500 border-r">${index + 1}</td><td class="font-mono font-bold text-blue-600 border-r">${s.chestNo || '-'}</td><td class="text-left font-bold text-slate-700 whitespace-nowrap border-r px-4">${s.name}</td>${rowCells}<td class="font-bold bg-blue-50 text-blue-700 border-r border-blue-100">${singleCount || ''}</td><td class="font-bold bg-purple-50 text-purple-700 border-r border-purple-100">${groupCount || ''}</td><td class="font-bold bg-slate-100 text-slate-700">${generalCount || ''}</td></tr>`;
+            });
+            bodyHTML += `</tbody>`;
+            table.innerHTML = `<thead>${header1}${header2}</thead>` + bodyHTML;
+        };
+
+        window.downloadReportPDF = () => {
+            const table = document.getElementById('report-print-area');
+            const cat = document.getElementById('report-cat-select').value;
+            if(!cat || document.getElementById('report-table-content').rows.length === 0) return showToast('Generate report first', 'error');
+            const opt = { margin: 0.5, filename: `Report_${currentTeam}_${cat}_${new Date().getTime()}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } };
+            document.querySelector('.print-header').classList.remove('hidden');
+            showToast('Generating PDF...', 'info');
+            html2pdf().from(table).set(opt).save().then(() => { document.querySelector('.print-header').classList.add('hidden'); showToast('PDF Downloaded'); });
+        };
+
+        window.downloadReportExcel = () => {
+            const table = document.getElementById('report-table-content');
+            if(!table.rows.length) return showToast('Generate report first', 'error');
+            const wb = XLSX.utils.table_to_book(table, {sheet: "Report"});
+            XLSX.writeFile(wb, `Report_${currentTeam}.xlsx`);
+        };
+
+        // UPDATED REGISTRATION MODAL FUNCTIONS
+        window.openRegModal = (eid, slot) => {
+            const e = events.find(ev => ev.id === eid);
+            const r = registrations.find(x => x.eventId === eid && x.team === currentTeam && x.slotIndex === slot);
+            const ids = r ? r.studentIds : [];
+            const limit = (e.type === 'Group') ? parseInt(e.groupSize) : 1;
+            
+            regModalData = { eid, slot, team: currentTeam, limit, regId: r?.id };
+            
+            document.getElementById('reg-modal-title').innerText = e.name;
+            document.getElementById('reg-modal-slot').innerText = `Entry ${slot}`;
+            document.getElementById('reg-modal-limit').innerText = `Max: ${limit}`;
+            
+            let eligible = students.filter(s => s.team === currentTeam);
+            if (e.category !== 'General' && e.category !== 'All') {
+                eligible = eligible.filter(s => s.category === e.category);
+            }
+            
+            const listEl = document.getElementById('reg-student-list');
+            if (eligible.length === 0) {
+                listEl.innerHTML = `<p class="text-sm text-red-500 text-center py-4">No students found in category: ${e.category}</p>`;
+            } else {
+                // COMPACT LIST STYLE
+                listEl.innerHTML = eligible
+                    .sort((a, b) => (parseInt(a.chestNo) || 0) - (parseInt(b.chestNo) || 0))
+                    .map(s => `
+                        <label class="flex items-center gap-3 p-2.5 rounded-xl border border-slate-100 hover:bg-blue-50 cursor-pointer transition active:scale-[0.98]">
+                            <input type="checkbox" value="${s.id}" class="reg-chk w-4 h-4 rounded text-blue-600 border-gray-300" ${ids.includes(s.id) ? 'checked' : ''} onchange="checkRegLimit()">
+                            <div class="flex-1">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-slate-700 text-xs">${s.name}</span>
+                                    <span class="text-[10px] font-bold bg-slate-100 px-1 py-0.5 rounded text-slate-600 font-mono">${s.chestNo || '-'}</span>
+                                </div>
+                                <div class="text-[9px] text-slate-400 uppercase font-bold">${s.category}</div>
+                            </div>
+                        </label>
+                    `).join('');
+            }
+            
+            updateRegCounter();
+            const modal = document.getElementById('reg-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('show');
+            setTimeout(() => {
+                document.getElementById('reg-panel').classList.add('open');
+            }, 10);
+        };
+        
+        window.closeRegModal = () => {
+            document.getElementById('reg-panel').classList.remove('open');
+            setTimeout(() => {
+                const modal = document.getElementById('reg-modal');
+                modal.classList.remove('show');
+                modal.classList.add('hidden');
+            }, 250);
+        };
+        
+        window.checkRegLimit = () => {
+            const checkedCount = document.querySelectorAll('.reg-chk:checked').length;
+            if (checkedCount > regModalData.limit) {
+                event.target.checked = false;
+                showToast(`Maximum ${regModalData.limit} student(s) allowed`, 'error');
+            }
+            updateRegCounter();
+        };
+        
+        function updateRegCounter() {
+            const checkedCount = document.querySelectorAll('.reg-chk:checked').length;
+            document.getElementById('reg-counter').innerText = `${checkedCount}/${regModalData.limit}`;
+        }
+        
+        window.submitRegistration = async () => {
+            const ids = Array.from(document.querySelectorAll('.reg-chk:checked')).map(c => c.value);
+            const { eid, slot, team, regId } = regModalData;
+            
+            if (ids.length === 0) {
+                if (regId) {
+                    if (await window.confirmAction('Remove this registration?')) {
+                        await deleteDoc(doc(db, "registrations", regId));
+                        showToast('Registration Cancelled', 'error');
+                        closeRegModal();
+                    }
+                } else {
+                    showToast('Please select at least one student', 'error');
+                }
+                return;
+            }
+            
+            const otherRegs = registrations.filter(r => r.eventId === eid && !(r.team === team && r.slotIndex === slot));
+            const busy = otherRegs.flatMap(r => r.studentIds);
+            const conflict = ids.find(id => busy.includes(id));
+            
+            if (conflict) {
+                const s = students.find(x => x.id === conflict);
+                showToast(`${s.name} is already registered in another slot!`, 'error');
+                return;
+            }
+            
+            const d = { eventId: eid, team, slotIndex: slot, studentIds: ids };
+            
+            try {
+                if (regId) {
+                    await updateDoc(doc(db, "registrations", regId), d);
+                } else {
+                    await addDoc(collection(db, "registrations"), d);
+                }
+                showToast('Registration Updated Successfully');
+                closeRegModal();
+            } catch (error) {
+                console.error("Registration error:", error);
+                showToast('Error updating registration', 'error');
+            }
+        };
+
+        // LOAD HOME CONFIG TO GET LOGO & FEST NAME
+        const loadHomeConfig = async () => {
+            try {
+                const snap = await getDoc(doc(db, "settings", "home_config"));
+                if(snap.exists()) {
+                    homeConfig = snap.data();
+                    localStorage.setItem('fest_home_config', JSON.stringify(homeConfig));
+                    applyConfigToUI(homeConfig);
+                }
+            } catch (e) {
+                console.log("Config load error", e);
+            } finally {
+                // ALWAYS run animation to remove loader
+                runSplashAnimation();
+            }
+        };
+
+        signInAnonymously(auth).catch(e => console.error("Auth Error", e));
+        
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('app-loader').classList.add('hide');
+                loadHomeConfig();
+                
+                onSnapshot(doc(db, "settings", "general"), (d) => { 
+                    if (d.exists()) { 
+                        const data = d.data(); 
+                        categories = data.categories || []; 
+                        teams = data.teams || []; 
+                        teamPasscodes = data.teamPasscodes || {};
+                        window.renderDropdowns(); 
+                    } 
+                });
+
+                onSnapshot(collection(db, "students"), (snap) => { 
+                    students = snap.docs.map(d => ({ id: d.id, ...d.data() })); 
+                    if(currentTeam) window.renderDashboard(); 
+                });
+                onSnapshot(collection(db, "events"), (snap) => { 
+                    events = snap.docs.map(d => ({ id: d.id, ...d.data() })); 
+                    if(currentTeam) { 
+                        window.renderTeamEvents(); 
+                        window.renderDashboard(); 
+                    } 
+                });
+                onSnapshot(collection(db, "registrations"), (snap) => { 
+                    registrations = snap.docs.map(d => ({ id: d.id, ...d.data() })); 
+                    if(currentTeam) { 
+                        window.renderTeamEvents(); 
+                        window.renderStudentRegs(); 
+                        window.renderDashboard(); 
+                    } 
+                });
+                onSnapshot(collection(db, "results"), (snap) => { 
+                    results = snap.docs.map(d => ({ eventId: d.id, ...d.data() })); 
+                    if(currentTeam) window.renderDashboard(); 
+                });
+                
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fest Public Portal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Manjari:wght@100;400;700&family=Saira:wght@700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans+Malayalam:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Image Generation Library -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <style>
+        /* Base Styles & Optimization */
+        body { 
+            font-family: 'Inter', 'Noto Sans Malayalam', sans-serif; 
+            background-color: #f8fafc; 
+            color: #0f172a; 
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+            text-rendering: optimizeLegibility;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        button, a, .clickable { touch-action: manipulation; cursor: pointer; }
+        .hide { display: none !important; }
+
+        /* --- HEADER STYLES --- */
+        .header-wrap { 
+            position: fixed; 
+            top: 12px; 
+            left: 0; 
+            right: 0; 
+            display: flex; 
+            justify-content: center; 
+            z-index: 50; 
+            padding: 0 16px; 
+            pointer-events: none; 
+            opacity: 0; 
+            transition: opacity 0.8s ease; 
+            will-change: opacity;
+            transform: translateZ(0); 
+        }
+        .header-wrap.visible { opacity: 1; pointer-events: auto; }
+
+        .app-header { 
+            pointer-events: auto; 
+            width: 100%; 
+            max-width: 600px; 
+            height: 58px; 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px; 
+            padding: 0 16px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06); 
+            position: relative; 
+            border: 1px solid rgba(255,255,255,0.5); 
+            overflow: hidden;
+        }
+
+        #header-logo-container {
+            width: 32px;
+            height: 32px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 20; 
+            will-change: transform, opacity;
+        }
+
+        #header-fest-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1e293b;
+            font-family: 'Saira', sans-serif;
+            letter-spacing: -0.02em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-left: 12px;
+            flex: 1;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform-origin: left center;
+        }
+        
+        .app-header.search-mode #header-fest-name {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        #header-search-container {
+            position: absolute;
+            left: 56px; 
+            right: 52px; 
+            top: 50%;
+            transform: translateY(-50%) scaleX(0); 
+            transform-origin: right center; 
+            height: 36px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 10;
+        }
+
+        .app-header.search-mode #header-search-container {
+            transform: translateY(-50%) scaleX(1); 
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #global-search-input {
+            width: 100%;
+            height: 100%;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 99px;
+            padding-left: 36px;
+            padding-right: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #334155;
+            outline: none;
+            transition: all 0.2s;
+        }
+        #global-search-input:focus {
+            background: #fff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        #header-action-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #f8fafc;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            z-index: 20;
+            margin-left: auto; 
+        }
+        #header-action-btn:active { transform: scale(0.9); background: #e2e8f0; }
+
+        /* --- LOADER --- */
+        .loader-screen { position: fixed; inset: 0; background: #ffffff; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s ease; will-change: opacity; }
+        .loader-wrapper { position: relative; width: 120px; height: 120px; display: flex; justify-content: center; align-items: center; }
+        .loader-ring { position: absolute; inset: -4px; border-radius: 50%; border: 4px solid #f1f5f9; border-top-color: #2563eb; animation: spin 1s linear infinite; z-index: 1; opacity: 1; transition: opacity 0.3s ease; }
+        .loader-logo-circle { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: #fff; overflow: hidden; z-index: 2; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); will-change: transform, left, top, width, height; }
+        .loader-logo-circle img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.2s; }
+        .loader-logo-circle img.loaded { opacity: 1; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .ring-hidden { opacity: 0; }
+
+        /* --- FOOTER STYLES --- */
+        footer { background: #f9f9f9; padding: 24px 16px; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-bottom: 100px; }
+        .follow { text-align: center; }
+        .follow h4 { font-size: 13px; margin-bottom: 10px; letter-spacing: .5px; font-family: Arial, sans-serif; font-weight: bold; color: #333; }
+        .socials { display: flex; justify-content: center; gap: 14px; }
+        .socials a { color: #333; font-size: 20px; transition: transform .2s ease, opacity .2s ease; }
+        .socials a:hover { transform: translateY(-2px) scale(1.05); opacity: .7; }
+        .footer-bottom { text-align: center; font-size: 12px; margin-top: 14px; color: #777; line-height: 1.5; font-family: Arial, sans-serif; }
+        .footer-bottom a { color: #555; text-decoration: none; }
+        .footer-bottom a:hover { text-decoration: underline; }
+
+        /* --- TAB & UI STYLES --- */
+        .tab-content { 
+            display: none; 
+            opacity: 0; 
+            transform: translateY(10px) translateZ(0); 
+            transition: opacity 0.3s ease, transform 0.3s ease; 
+            will-change: opacity, transform;
+        }
+        .tab-content.active { 
+            display: block; 
+            opacity: 1; 
+            transform: translateY(0) translateZ(0); 
+        }
+
+        /* --- BOTTOM NAV UPDATED --- */
+        .bottom-nav-container { position: fixed; bottom: 20px; left: 76px; right: 76px; display: flex; justify-content: center; z-index: 1000; pointer-events: none; }
+        .bottom-nav { pointer-events: auto; height: 64px; background: #ffffff; border: 1px solid #d7ccc8; border-radius: 20px; display: flex; justify-content: space-evenly; align-items: center; width: 100%; box-shadow: 0 8px 24px rgba(93, 64, 55, 0.15); padding: 0 8px; transform: translateZ(0); }
+        .nav-item { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; color: #7B3F00; }
+        .nav-item.active { background: #7B3F00; color: #ffffff; transform: translateY(-8px); box-shadow: 0 8px 20px rgba(123, 63, 0, 0.4); }
+        .nav-locked { pointer-events: none; opacity: 0.8; }
+        @media (max-width: 420px) { .bottom-nav-container { left: 40px; right: 40px; bottom: 16px; } }
+
+        /* Other UI Components */
+        .rank-card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; margin-top: 20px; }
+        .dt-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .dt-table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
+        .dt-thead th { text-align: left; color: #94a3b8; font-size: 11px; font-weight: 800; padding: 0 12px 12px 12px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #f1f5f9; }
+        .dt-tbody td { padding: 16px 12px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+        .dt-rank-circle { width: 28px; height: 28px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .rank-1 { background: linear-gradient(135deg, #fbbf24, #d97706); }
+        .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); }
+        .rank-3 { background: linear-gradient(135deg, #fdba74, #ea580c); }
+        .rank-other { background: #f1f5f9; color: #64748b; font-weight: 700; }
+        .dt-badge { height: 26px; padding: 0 10px; border-radius: 99px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; min-width: 32px; }
+        .bg-cat-0 { background: #eff6ff; color: #2563eb; } .bg-cat-1 { background: #fdf2f8; color: #db2777; } .bg-cat-2 { background: #f0fdf4; color: #16a34a; } .bg-cat-3 { background: #fff7ed; color: #ea580c; } .bg-cat-gen { background: #f1f5f9; color: #475569; }
+        .dt-progress-ring { position: relative; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 10px; color: #2563eb; }
+        .dt-progress-ring::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: white; z-index: 0; }
+        .dt-progress-text { position: relative; z-index: 1; }
+        
+        .glass-filter-header {
+            top: 0;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            margin-top: 0; 
+            padding-top: 10px;
+        }
+
+        .cat-btn { 
+            padding: 8px 16px; 
+            border-radius: 99px; 
+            font-size: 12px; 
+            font-weight: 700; 
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            background: rgba(255, 255, 255, 0.8); 
+            color: #64748b; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer; 
+            flex-shrink: 0; 
+            user-select: none;
+            backdrop-filter: blur(4px);
+        }
+        .cat-btn.active { 
+            background: #2563eb; 
+            color: white; 
+            border-color: #2563eb; 
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            transform: translateY(-1px);
+        }
+        .cat-btn:active { transform: scale(0.95); }
+
+        .animate-popup { animation: popup 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes popup { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .rank-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; color: #1e293b; letter-spacing: -0.02em; }
+        .rank-subtitle { color: #64748b; font-size: 13px; margin-bottom: 24px; font-weight: 500; }
+        .dt-tbody tr:last-child td { border-bottom: none; }
+        .dt-rank-cell { width: 60px; }
+        .dt-team { font-weight: 800; color: #0f172a; font-size: 14px; }
+        .dt-total { font-weight: 900; font-size: 16px; color: #0f172a; }
+        .skeleton { background: #e2e8f0; animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .touch-target { min-height: 44px; }
+        
+        .hidden-el { opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+        .visible-el { opacity: 1; pointer-events: auto; }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden bg-slate-50 selection:bg-blue-100 selection:text-blue-700">
+
+    <!-- INSTANT CACHE LOADER SCRIPT -->
+    <script>
+        try {
+            const cachedConfig = localStorage.getItem('fest_home_config');
+            if (cachedConfig) {
+                const data = JSON.parse(cachedConfig);
+                if (data.logoUrl) {
+                    document.write(`<style>#loader-img-tag { content: url("${data.logoUrl}"); opacity: 1 !important; }</style>`);
+                }
+            }
+        } catch (e) {}
+    </script>
+
+    <!-- MAIN APP LOADER -->
+    <div class="loader-screen" id="loader-screen">
+        <div class="loader-wrapper" id="loader-wrapper">
+            <div class="loader-ring" id="loader-ring"></div>
+            <div class="loader-logo-circle" id="moving-logo">
+                 <img src="" id="loader-img-tag" alt="Fest Logo">
+            </div>
+        </div>
+    </div>
+
+    <!-- DYNAMIC HEADER -->
+    <div class="header-wrap" id="main-header">
+        <div class="app-header" id="app-header-el">
+            <div id="header-logo-container">
+                <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="header-logo-img" class="w-full h-full object-cover" alt="Logo">
+            </div>
+            <span id="header-fest-name">Fest Results</span>
+            <div id="header-search-container">
+                 <div class="relative w-full h-full">
+                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                     <input type="text" id="global-search-input" class="w-full h-full" placeholder="Search..." autocomplete="off">
+                 </div>
+            </div>
+            <div id="header-action-btn" onclick="handleHeaderAction()">
+                <i data-lucide="search" class="w-5 h-5"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto pt-20 pb-32 scroll-smooth no-scrollbar relative" id="main-scroll">
+        
+        <!-- 1. RESULTS TAB -->
+        <div id="tab-result" class="tab-content active pt-2">
+            <!-- STICKY GLASSMORPHIC CATEGORY FILTER -->
+            <div class="sticky z-30 glass-filter-header pb-3 mb-4 transition-all" id="result-filter-header">
+                 <div id="cat-filters" class="flex flex-wrap justify-center gap-2 px-4">
+                    <!-- Buttons will be injected here via JS -->
+                    <div class="w-16 h-8 bg-slate-200 rounded-full animate-pulse"></div>
+                    <div class="w-20 h-8 bg-slate-200 rounded-full animate-pulse"></div>
+                 </div>
+            </div>
+            
+            <div id="results-container" class="space-y-4 px-4 md:px-6 pb-4">
+                <!-- SKELETON LOADER FOR RESULTS -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 animate-pulse">
+                    <div class="h-5 w-3/4 bg-slate-200 rounded mb-4"></div>
+                    <div class="space-y-3">
+                        <div class="h-10 w-full bg-slate-100 rounded-xl"></div>
+                        <div class="h-10 w-full bg-slate-100 rounded-xl"></div>
+                        <div class="h-10 w-full bg-slate-100 rounded-xl"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. TEAMS TAB -->
+        <div id="tab-team" class="tab-content space-y-4 px-4 md:px-6 pt-6">
+            <h2 class="text-xl font-black text-slate-800 mb-4">Teams</h2>
+            <div class="space-y-3 relative" id="team-cards-container">
+                <!-- Team Progress Cards will be injected here -->
+            </div>
+            
+            <!-- DETAILED RANKINGS SECTION -->
+            <div class="rank-card">
+                <div class="rank-title">Detailed Rankings</div>
+                <div class="rank-subtitle">Complete scoreboard with detailed breakdown by category</div>
+                
+                <div class="dt-container">
+                    <table class="dt-table">
+                        <thead class="dt-thead">
+                            <tr id="dt-header-row">
+                                <!-- Dynamic Headers -->
+                            </tr>
+                        </thead>
+                        <tbody class="dt-tbody" id="dt-body">
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. TALENT TAB -->
+        <div id="tab-talent" class="tab-content space-y-6 px-4 md:px-6 pt-6">
+            <h2 class="text-xl font-black text-slate-800 mb-4">Top Talents</h2>
+            <div id="talent-container" class="space-y-6 pb-4">
+                <!-- Talent Cards -->
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer>
+            <div class="follow">
+                <h4>FOLLOW US</h4>
+                <div class="socials" id="social-links">
+                    <div class="flex gap-2 opacity-50"><div class="w-6 h-6 bg-slate-300 rounded-full"></div></div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2025 <span id="footer-fest-name"></span> media team. All Rights Reserved.<br>
+                <a href="https://www.instagram.com/muhammed_sanjide_p" target="_blank">Powered by hadi mahiri faizy</a>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- FLOATING BOTTOM NAVIGATION -->
+    <div class="bottom-nav-container">
+        <nav class="bottom-nav" id="bottom-nav-bar">
+            <a href="home.html" class="nav-item" id="nav-home"><i data-lucide="layout-grid"></i></a>
+            <div onclick="switchTab('result')" class="nav-item active" id="nav-result"><i data-lucide="list-checks"></i></div>
+            <div onclick="switchTab('team')" class="nav-item" id="nav-team"><i data-lucide="trophy"></i></div>
+            <div onclick="switchTab('talent')" class="nav-item" id="nav-talent"><i data-lucide="sparkles"></i></div>
+        </nav>
+    </div>
+
+    <!-- MODALS -->
+    <div id="modal-talent" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeModal('modal-talent')"></div>
+        <div class="bg-white w-full max-w-md rounded-3xl relative z-10 flex flex-col max-h-[85vh] shadow-2xl animate-popup">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
+                <div>
+                    <h3 class="font-bold text-lg text-slate-800" id="modal-talent-title">Top Talents</h3>
+                    <p class="text-xs text-slate-400 font-bold uppercase">Full Leaderboard</p>
+                </div>
+                <button onclick="closeModal('modal-talent')" class="bg-white border border-slate-200 p-2 rounded-full hover:bg-slate-50 transition"><i data-lucide="x" class="w-5 h-5 text-slate-500"></i></button>
+            </div>
+            <div id="modal-talent-content" class="p-4 overflow-y-auto space-y-3 bg-white flex-1"></div>
+        </div>
+    </div>
+    
+    <div id="modal-student-details" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeModal('modal-student-details')"></div>
+        <div class="bg-white w-full max-w-md rounded-3xl relative z-10 flex flex-col max-h-[85vh] shadow-2xl animate-popup">
+            <div class="p-6 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-t-3xl relative overflow-hidden shrink-0">
+                <div class="relative z-10">
+                    <h3 class="font-black text-2xl" id="std-modal-name">Student Name</h3>
+                    <div class="flex items-center gap-2 mt-2 opacity-90">
+                        <span id="std-modal-chest" class="bg-white/20 px-2 py-0.5 rounded text-xs font-bold">Chest: 000</span>
+                        <span id="std-modal-team" class="text-xs font-bold">Team Name</span>
+                    </div>
+                    <div class="mt-4 flex items-center gap-2">
+                         <span class="text-xs font-bold uppercase tracking-wider opacity-75">Total Score</span>
+                         <span id="std-modal-score" class="text-2xl font-black leading-none">0</span>
+                    </div>
+                </div>
+                <i data-lucide="medal" class="absolute -right-4 -bottom-4 w-32 h-32 text-white opacity-10 rotate-12 stroke-[1px]"></i>
+                <button onclick="closeModal('modal-student-details')" class="absolute top-4 right-4 bg-black/20 p-2 rounded-full hover:bg-black/30 transition z-20 text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-4 bg-slate-50 flex-1 overflow-y-auto">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">Winning Events</p>
+                <div id="std-modal-content" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-team" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeModal('modal-team')"></div>
+        <div class="bg-white w-full max-w-md rounded-3xl relative z-10 flex flex-col max-h-[85vh] shadow-2xl animate-popup">
+            <div class="p-6 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-t-3xl relative overflow-hidden shrink-0">
+                <h3 class="font-black text-3xl relative z-10" id="modal-team-name">Team Name</h3>
+                <p class="text-blue-100 text-sm font-medium relative z-10 mt-1 flex gap-3 opacity-90">
+                    <span id="modal-team-rank" class="bg-white/20 px-2 py-0.5 rounded backdrop-blur-md">Rank #1</span> 
+                    <span id="modal-team-points" class="bg-white/20 px-2 py-0.5 rounded backdrop-blur-md">0 Pts</span>
+                </p>
+                <i data-lucide="shield" class="absolute -right-6 -bottom-6 w-40 h-40 text-white opacity-10 rotate-12 stroke-[1px]"></i>
+                <button onclick="closeModal('modal-team')" class="absolute top-4 right-4 bg-black/20 p-2 rounded-full hover:bg-black/30 transition z-20 text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Performance History</h4>
+                <span class="text-[10px] font-bold text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full" id="modal-win-count">0 Wins</span>
+            </div>
+            <div id="modal-team-content" class="p-4 overflow-y-auto space-y-3 bg-white flex-1"></div>
+        </div>
+    </div>
+
+    <!-- POSTER GENERATOR -->
+    <div id="poster-generator" class="fixed -left-[9999px] top-0 w-[600px] h-[750px] bg-slate-50 flex flex-col pointer-events-none"></div>
+
+    <script type="module">
+        import { db, auth } from './firebase-config.js';
+        import { collection, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        let students = [], events = [], results = [], teams = [], categories = [];
+        // Look-up Maps for O(1) Access - Performance Optimization
+        let studentMap = {};
+        let eventMap = {};
+        
+        let teamScores = {}, studentScores = {}, teamCounts = {};
+        window.currentCat = '';
+        window.currentTab = 'result';
+        window.isSearchOpen = false;
+        let homeConfig = {};
+        let isSplashDone = false;
+        let isAnimating = false;
+
+        const debounce = (func, wait) => {
+            let timeout;
+            return (...args) => {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        };
+
+        // --- SEARCH OPTIMIZATION (DEBOUNCE) ---
+        const handleSearchInput = debounce((e) => {
+            renderResults();
+        }, 300);
+        document.getElementById('global-search-input').addEventListener('input', handleSearchInput);
+
+        const loadScript = (src) => {
+            return new Promise((resolve, reject) => {
+                if (document.querySelector(`script[src="${src}"]`)) return resolve();
+                const script = document.createElement('script'); script.src = src; script.onload = resolve; script.onerror = reject; document.head.appendChild(script);
+            });
+        };
+
+        function applyConfigToUI(config) {
+            let fName = '';
+            if (config.festName1) fName += config.festName1;
+            if (config.festName2) fName += ' ' + config.festName2;
+            const finalName = fName || "Sadaye Madeena 2k25";
+            
+            const headerName = document.getElementById('header-fest-name');
+            if(headerName) headerName.innerText = finalName;
+            const footerNameEl = document.getElementById('footer-fest-name');
+            if(footerNameEl) footerNameEl.innerText = config.festName1 || finalName;
+            
+            if (config.logoUrl) {
+                const headLogo = document.getElementById('header-logo-img');
+                if(headLogo) headLogo.src = config.logoUrl;
+                if(!isSplashDone) {
+                    const loaderImg = document.getElementById('loader-img-tag');
+                    if(loaderImg) { loaderImg.src = config.logoUrl; loaderImg.classList.add('loaded'); }
+                }
+            }
+
+            const s = config.social || {};
+            const sDiv = document.getElementById('social-links');
+            if(sDiv) {
+                let sHtml = '';
+                if(s.wa) sHtml += `<a href="${s.wa}" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
+                if(s.ig) sHtml += `<a href="${s.ig}" aria-label="Instagram"><i class="fab fa-instagram"></i></a>`;
+                if(s.fb) sHtml += `<a href="${s.fb}" aria-label="Facebook"><i class="fab fa-facebook"></i></a>`;
+                if(s.yt) sHtml += `<a href="${s.yt}" aria-label="YouTube"><i class="fab fa-youtube"></i></a>`;
+                if(s.tg) sHtml += `<a href="${s.tg}" aria-label="Telegram"><i class="fab fa-telegram"></i></a>`;
+                sDiv.innerHTML = sHtml;
+            }
+        }
+
+        const runSplashAnimation = () => {
+            const loaderScreen = document.getElementById('loader-screen');
+            if(loaderScreen && !isSplashDone) {
+                setTimeout(() => {
+                    document.getElementById('main-header').classList.add('visible');
+                    const movingLogo = document.getElementById('moving-logo');
+                    const targetBox = document.getElementById('header-logo-container'); 
+                    const loaderRing = document.getElementById('loader-ring');
+
+                    if(movingLogo && targetBox && homeConfig.logoUrl) {
+                        loaderRing.classList.add('ring-hidden'); 
+                        const startRect = movingLogo.getBoundingClientRect();
+                        const targetRect = targetBox.getBoundingClientRect();
+
+                        movingLogo.style.transition = 'none';
+                        movingLogo.style.position = 'fixed';
+                        movingLogo.style.left = startRect.left + 'px';
+                        movingLogo.style.top = startRect.top + 'px';
+                        movingLogo.style.width = startRect.width + 'px';
+                        movingLogo.style.height = startRect.height + 'px';
+                        movingLogo.style.margin = '0';
+                        movingLogo.offsetHeight; 
+
+                        movingLogo.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+                        requestAnimationFrame(() => {
+                            movingLogo.style.left = targetRect.left + 'px';
+                            movingLogo.style.top = targetRect.top + 'px';
+                            movingLogo.style.width = targetRect.width + 'px';
+                            movingLogo.style.height = targetRect.height + 'px';
+                            movingLogo.style.borderRadius = '8px';
+                            movingLogo.style.boxShadow = 'none';
+                        });
+
+                        setTimeout(() => {
+                            loaderScreen.style.opacity = '0'; 
+                            setTimeout(() => loaderScreen.remove(), 500);
+                        }, 800); 
+                    } else {
+                        loaderScreen.style.opacity = '0';
+                        setTimeout(() => loaderScreen.remove(), 500);
+                    }
+                    isSplashDone = true;
+                }, 1000); 
+            }
+        };
+
+        window.handleHeaderAction = () => {
+            if (window.currentTab !== 'result') return;
+
+            const headerEl = document.getElementById('app-header-el');
+            const actionBtn = document.getElementById('header-action-btn');
+            const searchInput = document.getElementById('global-search-input');
+
+            window.isSearchOpen = !window.isSearchOpen;
+
+            if (window.isSearchOpen) {
+                headerEl.classList.add('search-mode');
+                actionBtn.innerHTML = '<i data-lucide="x" class="w-5 h-5 text-slate-800"></i>';
+                actionBtn.style.backgroundColor = '#e2e8f0';
+                setTimeout(() => searchInput.focus(), 300); 
+            } else {
+                headerEl.classList.remove('search-mode');
+                actionBtn.innerHTML = '<i data-lucide="search" class="w-5 h-5 text-slate-500"></i>';
+                actionBtn.style.backgroundColor = '#f8fafc';
+                searchInput.value = '';
+                renderResults(); 
+            }
+            lucide.createIcons();
+        };
+
+        window.updateHeaderIcon = () => {
+             const btn = document.getElementById('header-action-btn');
+             const headerEl = document.getElementById('app-header-el');
+             
+             window.isSearchOpen = false;
+             headerEl.classList.remove('search-mode');
+             btn.style.backgroundColor = '#f8fafc';
+             
+             if (window.currentTab === 'result') {
+                 btn.innerHTML = '<i data-lucide="search" class="w-5 h-5 text-slate-500"></i>';
+                 btn.classList.remove('opacity-0', 'pointer-events-none');
+             } else if (window.currentTab === 'team') {
+                 btn.innerHTML = '<i data-lucide="trophy" class="w-5 h-5 text-yellow-500"></i>';
+             } else if (window.currentTab === 'talent') {
+                 btn.innerHTML = '<i data-lucide="sparkles" class="w-5 h-5 text-blue-500"></i>';
+             }
+             lucide.createIcons();
+        };
+
+        window.switchTab = (tab) => {
+            if (isAnimating) return; // Prevent switching while animating
+
+            window.currentTab = tab;
+            ['modal-talent', 'modal-student-details', 'modal-team'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.add('hidden'); });
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const navBtn = document.getElementById('nav-' + tab);
+            if(navBtn) navBtn.classList.add('active');
+            
+            updateHeaderIcon();
+            
+            if (tab === 'result') {
+                window.currentCat = '';
+                renderCategoryButtons();
+                const globalInput = document.getElementById('global-search-input');
+                if(globalInput) globalInput.value = '';
+                renderResults();
+            }
+
+            if (tab === 'team') renderTeams(true); // Trigger Animation
+            else renderTeams(false); // Just update data
+            
+            // Fix Layout shift jump
+            requestAnimationFrame(() => {
+                document.getElementById('main-scroll').scrollTop = 0;
+            });
+        };
+        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+
+        const processData = debounce(() => {
+            teamScores = {}; studentScores = {}; teamCounts = {};
+            
+            // Create Look-up Maps (Performance Boost)
+            studentMap = {}; students.forEach(s => studentMap[s.id] = s);
+            eventMap = {}; events.forEach(e => eventMap[e.id] = e);
+
+            teams.forEach(t => { teamScores[t] = 0; teamCounts[t] = {1:0, 2:0, 3:0}; });
+            students.forEach(s => { studentScores[s.id] = { ...s, score: 0 }; });
+
+            results.forEach(r => {
+                if (r.status && r.status !== 'published') return;
+                const processWinner = (val, pts, place) => {
+                    if (!val) return;
+                    const list = Array.isArray(val) ? val : [val];
+                    list.forEach(w => {
+                        let teamName = null;
+                        if (r.type === 'Group') teamName = w;
+                        else {
+                            // FAST LOOKUP
+                            const s = studentMap[w];
+                            if (s) {
+                                teamName = s.team;
+                                if (!studentScores[s.id]) studentScores[s.id] = { ...s, score: 0 };
+                                studentScores[s.id].score += pts;
+                            }
+                        }
+                        if (teamName && teamScores[teamName] !== undefined) {
+                            teamScores[teamName] += pts;
+                            if(teamCounts[teamName]) teamCounts[teamName][place]++;
+                        }
+                    });
+                };
+                processWinner(r.winners.first, r.points.first, 1);
+                processWinner(r.winners.second, r.points.second, 2);
+                processWinner(r.winners.third, r.points.third, 3);
+            });
+
+            requestAnimationFrame(() => {
+                renderCategoryButtons();
+                renderResults();
+                if(window.currentTab === 'team') renderTeams(false); 
+                renderTalent();
+                lucide.createIcons();
+                
+                // CHECK FOR REDIRECT PARAMS (NEW)
+                const urlParams = new URLSearchParams(window.location.search);
+                const searchParam = urlParams.get('search');
+                // NEW: CHECK FOR TEAM SCORE TAB PARAM
+                const tabParam = urlParams.get('tab');
+
+                if(tabParam === 'team') {
+                    window.switchTab('team');
+                } else if(searchParam && !window.handledSearchParam) {
+                    window.handledSearchParam = true;
+                    // Trigger search
+                    window.isSearchOpen = true;
+                    const headerEl = document.getElementById('app-header-el');
+                    const actionBtn = document.getElementById('header-action-btn');
+                    const globalInput = document.getElementById('global-search-input');
+                    
+                    if(headerEl) headerEl.classList.add('search-mode');
+                    if(actionBtn) {
+                        actionBtn.innerHTML = '<i data-lucide="x" class="w-5 h-5 text-slate-800"></i>';
+                        actionBtn.style.backgroundColor = '#e2e8f0';
+                    }
+                    if(globalInput) {
+                        globalInput.value = decodeURIComponent(searchParam);
+                        renderResults();
+                        // Switch to result tab if not already
+                        if(window.currentTab !== 'result') switchTab('result');
+                    }
+                }
+            });
+        }, 150);
+
+        window.renderCategoryButtons = () => {
+            const container = document.getElementById('cat-filters');
+            if(!container) return;
+            const allCats = ['All', 'General', ...categories.filter(c => c !== 'General')];
+            container.innerHTML = allCats.map(c => {
+                const isActive = (window.currentCat === '' && c === 'All') || (window.currentCat === c);
+                const filterVal = c === 'All' ? '' : c;
+                return `<button onclick="filterCategory('${filterVal}')" class="cat-btn ${isActive ? 'active' : ''}">${c}</button>`;
+            }).join('');
+        };
+        window.filterCategory = (cat) => { 
+            window.currentCat = cat; 
+            renderCategoryButtons(); 
+            renderResults(); 
+        };
+
+        window.renderResults = () => {
+            const container = document.getElementById('results-container');
+            const cat = window.currentCat;
+            const search = document.getElementById('global-search-input').value.toLowerCase();
+            
+            let filtered = results.filter(r => {
+                if (r.status && r.status !== 'published') return false;
+                // FAST LOOKUP
+                const e = eventMap[r.eventId];
+                const name = (e ? e.name : r.eventName).toLowerCase();
+                const c = e ? e.category : r.category;
+                
+                // Enhanced Search Logic
+                let match = false;
+                if (!search) match = true;
+                else {
+                    if(name.includes(search)) match = true;
+                    
+                    if(!match) {
+                        const checkWinner = (val) => {
+                            if(!val) return false;
+                            const arr = Array.isArray(val) ? val : [val];
+                            return arr.some(w => {
+                                if(r.type === 'Group') {
+                                    return w.toLowerCase().includes(search); 
+                                } else {
+                                    // FAST LOOKUP
+                                    const s = studentMap[w];
+                                    if(s) {
+                                        return s.name.toLowerCase().includes(search) || 
+                                               (s.chestNo && s.chestNo.toString().includes(search)) ||
+                                               s.team.toLowerCase().includes(search);
+                                    }
+                                    return false;
+                                }
+                            });
+                        };
+                        
+                        if(checkWinner(r.winners.first) || checkWinner(r.winners.second) || checkWinner(r.winners.third)) match = true;
+                    }
+                }
+
+                return (!cat || c === cat) && match;
+            }).sort((a,b) => b.timestamp - a.timestamp);
+
+            if(filtered.length === 0) { 
+                container.innerHTML = `<div class="text-center py-12 text-slate-400 italic text-sm flex flex-col items-center gap-2">
+                    <i data-lucide="search-x" class="w-8 h-8 opacity-50"></i>No results found
+                </div>`; 
+                lucide.createIcons(); 
+                return; 
+            }
+
+            // Using DocumentFragment for cleaner DOM insertion
+            const frag = document.createDocumentFragment();
+            filtered.forEach(r => {
+                 const e = eventMap[r.eventId];
+                 const name = e ? e.name : r.eventName;
+                 const c = e ? e.category : r.category;
+
+                 const getW = (p, val) => {
+                    if(!val) return '';
+                    const arr = Array.isArray(val) ? val : [val];
+                    
+                    const colors = {
+                        1: { fill: 'fill-yellow-400', stroke: 'text-yellow-600', bg: 'bg-yellow-50' },
+                        2: { fill: 'fill-slate-300', stroke: 'text-slate-500', bg: 'bg-slate-50' },
+                        3: { fill: 'fill-orange-300', stroke: 'text-orange-600', bg: 'bg-orange-50' }
+                    }[p];
+
+                    return arr.map(id => {
+                        let displayName, detail;
+                        if(r.type === 'Group') {
+                            displayName = id;
+                            detail = 'Group Item';
+                        } else {
+                            // FAST LOOKUP
+                            const s = studentMap[id];
+                            if(s) {
+                                displayName = s.name;
+                                detail = `${s.team} • Chest ${s.chestNo || '-'}`;
+                            } else {
+                                displayName = 'Unknown'; detail = '-';
+                            }
+                        }
+                        
+                        let pts = 0;
+                        if(p===1) pts=r.points.first; else if(p===2) pts=r.points.second; else if(p===3) pts=r.points.third;
+
+                        return `
+                        <div class="flex items-center gap-3 p-2 rounded-xl ${colors.bg} border border-transparent">
+                            <div class="w-8 h-8 flex items-center justify-center shrink-0">
+                                <i data-lucide="medal" class="w-6 h-6 ${colors.stroke} ${colors.fill}"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-bold text-slate-800 leading-tight truncate">${displayName}</p>
+                                <p class="text-[10px] font-bold opacity-60 uppercase tracking-wide mt-0.5">${detail}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="block font-black text-slate-800 leading-none">${pts}</span>
+                                <span class="text-[9px] font-bold text-slate-400">Pts</span>
+                            </div>
+                        </div>`;
+                    }).join('');
+                };
+
+                const div = document.createElement('div');
+                div.className = "bg-white rounded-2xl border border-slate-200 shadow-sm p-5 relative overflow-hidden transition hover:shadow-md";
+                div.innerHTML = `
+                    <div class="mb-4 pr-10">
+                        <h4 class="font-black text-slate-800 text-lg leading-tight mb-1">${name}</h4>
+                        <div class="flex gap-2">
+                             <span class="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-100 uppercase tracking-wider">${c}</span>
+                        </div>
+                    </div>
+                    <button onclick="downloadPoster('${r.eventId}', this)" class="absolute top-4 right-4 p-2 text-green-500 hover:text-green-600 hover:bg-green-50 rounded-full transition" title="Download Poster">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                    </button>
+                    <div class="space-y-2 relative z-10">
+                        ${getW(1, r.winners.first)}
+                        ${getW(2, r.winners.second)}
+                        ${getW(3, r.winners.third)}
+                    </div>`;
+                frag.appendChild(div);
+            });
+            
+            container.innerHTML = '';
+            container.appendChild(frag);
+            lucide.createIcons();
+        };
+
+        // --- UPDATED DOWNLOAD FUNCTION ---
+        window.downloadPoster = async (eventId, btn) => {
+            const r = results.find(res => res.eventId === eventId);
+            const e = eventMap[eventId]; // FAST LOOKUP
+            if(!r || !e) return;
+            
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>`;
+            btn.classList.add('pointer-events-none', 'opacity-70');
+            lucide.createIcons();
+
+            window.showToast = (msg) => {
+                const t = document.createElement('div');
+                t.className = "fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg z-[100] animate-bounce";
+                t.innerText = msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 3000);
+            };
+            
+            showToast('Generating Poster...');
+            
+            try {
+                await loadScript("https://html2canvas.hertzen.com/dist/html2canvas.min.js");
+            } catch (err) {
+                console.error("Failed to load html2canvas", err);
+                showToast("Network Error: Could not load generator");
+                btn.innerHTML = originalIcon;
+                btn.classList.remove('pointer-events-none', 'opacity-70');
+                lucide.createIcons();
+                return;
+            }
+
+            const container = document.getElementById('poster-generator');
+            
+            const getPosterRow = (p, val) => {
+                if(!val) return '';
+                const arr = Array.isArray(val) ? val : [val];
+                const colors = { 
+                    1: {t:'text-yellow-600', bg:'bg-yellow-50', b:'border-yellow-400', icon: 'fill-yellow-400 text-yellow-600'}, 
+                    2: {t:'text-slate-600', bg:'bg-slate-50', b:'border-slate-400', icon: 'fill-slate-300 text-slate-500'}, 
+                    3: {t:'text-orange-600', bg:'bg-orange-50', b:'border-orange-400', icon: 'fill-orange-300 text-orange-500'} 
+                }[p];
+                
+                return arr.map(id => {
+                    let name, det;
+                    if(r.type==='Group'){ name=id; det='Group Item'; }
+                    else{ 
+                        const s=studentMap[id]; // FAST LOOKUP
+                        if(s){ name=s.name; det=`${s.team} • Chest ${s.chestNo}`; } else { name='Unknown'; det='-'; } 
+                    }
+                    
+                    return `
+                    <div class="flex items-center gap-4 p-4 mb-3 rounded-2xl ${colors.bg} border-l-4 ${colors.b}">
+                        <div class="w-12 h-12 flex items-center justify-center">
+                             <i data-lucide="medal" class="w-10 h-10 ${colors.icon}"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800 leading-none mb-1">${name}</h2>
+                            <p class="text-lg font-bold text-slate-600 uppercase tracking-wide opacity-80">${det}</p>
+                        </div>
+                    </div>`;
+                }).join('');
+            };
+
+            container.innerHTML = `
+                <div class="w-full h-full bg-slate-50 relative overflow-hidden flex flex-col p-8">
+                    <div class="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div class="absolute bottom-0 left-0 w-[300px] h-[300px] bg-indigo-600/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+                    
+                    <div class="text-center mb-8 relative z-10">
+                        <h1 class="text-3xl font-black text-slate-900 tracking-tighter uppercase mb-2">Arts Fest <span class="text-blue-600">'25</span></h1>
+                        <div class="h-1 w-20 bg-blue-600 mx-auto rounded-full"></div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl shadow-lg border border-slate-100 mb-8 text-center relative z-10">
+                        <span class="inline-block bg-blue-50 text-blue-600 text-sm font-bold px-3 py-1 rounded-full border border-blue-100 uppercase tracking-wider mb-2">${e.category} Category</span>
+                        <h2 class="text-4xl font-black text-slate-800 leading-tight">${e.name}</h2>
+                    </div>
+
+                    <div class="flex-1 relative z-10">
+                        ${getPosterRow(1, r.winners.first)}
+                        ${getPosterRow(2, r.winners.second)}
+                        ${getPosterRow(3, r.winners.third)}
+                    </div>
+
+                    <div class="text-center mt-auto opacity-40">
+                        <p class="text-sm font-bold uppercase tracking-[0.2em]">Official Results</p>
+                    </div>
+                </div>
+            `;
+            
+            lucide.createIcons();
+
+            setTimeout(async () => {
+                try {
+                    const canvas = await html2canvas(container, { scale: 2, useCORS: true });
+                    const link = document.createElement('a');
+                    link.download = `Result_${e.name.replace(/\s+/g,'_')}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    btn.innerHTML = `<i data-lucide="check" class="w-5 h-5"></i>`;
+                    lucide.createIcons();
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = originalIcon;
+                        btn.classList.remove('pointer-events-none', 'opacity-70');
+                        lucide.createIcons();
+                    }, 2000);
+
+                } catch(err) {
+                    console.error(err);
+                    showToast('Error generating poster');
+                    btn.innerHTML = originalIcon;
+                    btn.classList.remove('pointer-events-none', 'opacity-70');
+                    lucide.createIcons();
+                }
+            }, 500);
+        };
+
+        const createTeamCardElement = (t, i, maxScore, animate) => {
+            const percent = maxScore > 0 ? ((t[1] / maxScore) * 100).toFixed(0) : 0;
+            const counts = teamCounts[t[0]] || {1:0, 2:0, 3:0};
+            const rank = i + 1;
+
+            let theme = {
+                bg: 'bg-white',
+                border: 'border-slate-200',
+                text: 'text-slate-800',
+                badge: 'bg-slate-900',
+                iconColor: 'text-slate-200',
+                progressBg: 'bg-slate-100',
+                barColor: 'bg-gradient-to-r from-emerald-500 to-green-600'
+            };
+            
+            let statusBadge = '';
+
+            if (rank === 1) {
+                theme.bg = 'bg-gradient-to-br from-yellow-50 via-orange-50 to-white';
+                theme.border = 'border-yellow-300';
+                theme.text = 'text-yellow-900';
+                theme.badge = 'bg-gradient-to-br from-yellow-400 to-orange-500';
+                theme.iconColor = 'text-yellow-200';
+                theme.progressBg = 'bg-yellow-100';
+                statusBadge = `<div class="flex items-center gap-1.5 bg-green-100 text-green-700 px-2.5 py-1 rounded-full border border-green-200 shadow-sm animate-pulse"><i data-lucide="trophy" class="w-3 h-3"></i><span class="text-[10px] font-black uppercase tracking-wider">Champion</span></div>`;
+            } else if (rank === 2) {
+                theme.bg = 'bg-gradient-to-br from-slate-50 via-blue-50 to-white';
+                theme.border = 'border-blue-200';
+                theme.text = 'text-slate-800';
+                theme.badge = 'bg-gradient-to-br from-slate-400 to-slate-600';
+                theme.iconColor = 'text-slate-200';
+                theme.progressBg = 'bg-slate-100';
+                statusBadge = `<div class="flex items-center gap-1.5 bg-red-50 text-red-600 px-2.5 py-1 rounded-full border border-red-100"><i data-lucide="trending-up" class="w-3 h-3"></i><span class="text-[10px] font-black uppercase tracking-wider">Runner Up</span></div>`;
+            } else {
+                theme.badge = 'bg-gradient-to-br from-blue-500 to-indigo-600';
+                statusBadge = `<div class="flex items-center gap-1.5 bg-red-50 text-red-600 px-2.5 py-1 rounded-full border border-red-100"><span class="text-[10px] font-bold uppercase tracking-wider">#${rank} Place</span></div>`;
+            }
+
+            const getMedalSVG = (type, count, idx) => {
+                 let colorClass = '';
+                 if (type === 'gold') colorClass = 'fill-yellow-400 text-yellow-600';
+                 else if (type === 'silver') colorClass = 'fill-slate-300 text-slate-500';
+                 else if (type === 'bronze') colorClass = 'fill-orange-300 text-orange-600';
+                 
+                 return `<div class="flex items-center gap-1.5 bg-white/50 px-2 py-1 rounded-lg border border-white/50 shadow-sm"><i data-lucide="medal" class="w-4 h-4 ${colorClass}"></i><span class="text-xs font-black ${theme.text}">${count}</span></div>`;
+            };
+
+            const div = document.createElement('div');
+            div.className = `${theme.bg} p-5 rounded-2xl border ${theme.border} shadow-sm active:scale-[0.98] transition cursor-pointer relative overflow-hidden group mb-3 team-card`;
+            div.onclick = () => showTeamDetails(t[0], t[1], rank);
+            
+            const initialRankText = animate ? '#' : `#${rank}`;
+            const visibleStatus = animate 
+                ? `<div class="flex items-center gap-1.5 bg-green-50 text-green-600 px-2.5 py-1 rounded-full border border-green-100"><i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i><span class="text-[10px] font-bold uppercase tracking-wider">Updating</span></div>` 
+                : statusBadge;
+
+            const medalsContent = animate
+                ? `<div class="text-[10px] font-bold text-green-600 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-lg border border-green-100"><i data-lucide="activity" class="w-3 h-3 animate-pulse"></i> Counting...</div>`
+                : `${getMedalSVG('gold', counts[1], i)}${getMedalSVG('silver', counts[2], i)}${getMedalSVG('bronze', counts[3], i)}`;
+
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-4 relative z-10">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 flex items-center justify-center ${theme.badge} text-white rounded-xl font-black text-xl shadow-lg transform rotate-3 ring-2 ring-white rank-badge">${initialRankText}</div>
+                        <div>
+                            <h4 class="font-black ${theme.text} text-xl leading-none mb-2 tracking-tight">${t[0]}</h4>
+                            <div class="status-container transition-all duration-500">${visibleStatus}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-4xl font-black ${theme.text} leading-none tracking-tighter drop-shadow-sm count-up" data-target="${t[1]}">${animate ? '0' : t[1]}</span>
+                        <span class="text-[10px] font-bold opacity-60 uppercase tracking-widest">Points</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 mb-5 relative z-10 medals-container transition-all duration-500">
+                    ${medalsContent}
+                </div>
+                <div class="relative z-10">
+                    <div class="flex justify-between text-[11px] font-black ${theme.text} mb-1.5 opacity-80"><span>Performance</span><span>${percent}%</span></div>
+                    <div class="w-full ${theme.progressBg} h-3 rounded-full overflow-hidden shadow-inner border border-black/5">
+                        <div class="h-full ${theme.barColor} rounded-full transition-all duration-1000 ease-out shadow-sm progress-bar" style="width: ${animate ? '0%' : percent + '%'}"></div>
+                    </div>
+                </div>
+                <i data-lucide="bar-chart-2" class="absolute -right-4 -bottom-4 w-36 h-36 ${theme.iconColor} opacity-20 rotate-12 stroke-[1.5px]"></i>
+            `;
+            return div;
+        };
+
+        const renderTeams = (animate = false) => {
+            const sortedDesc = Object.entries(teamScores).sort((a,b) => b[1] - a[1]);
+            const container = document.getElementById('team-cards-container');
+            const navBar = document.getElementById('bottom-nav-bar');
+            if(sortedDesc.length === 0) return;
+            
+            if (animate) {
+                isAnimating = true;
+                if(navBar) navBar.classList.add('nav-locked');
+
+                container.innerHTML = '';
+                const sortedAsc = [...sortedDesc].reverse(); 
+                const cardMap = new Map();
+
+                sortedAsc.forEach((t) => {
+                    const realRankIndex = sortedDesc.findIndex(x => x[0] === t[0]); 
+                    const maxScore = sortedDesc[0][1] || 100;
+                    const card = createTeamCardElement(t, realRankIndex, maxScore, true); 
+                    container.appendChild(card);
+                    cardMap.set(t[0], card);
+                });
+
+                cardMap.forEach((card, teamName) => {
+                    const targetPoints = teamScores[teamName];
+                    const maxScore = sortedDesc[0][1] || 100;
+                    const percent = maxScore > 0 ? ((targetPoints / maxScore) * 100).toFixed(0) : 0;
+
+                    const counter = card.querySelector('.count-up');
+                    const duration = 2000; 
+                    const increment = targetPoints / (duration / 16);
+                    let current = 0;
+                    
+                    const updateCount = () => {
+                        current += increment;
+                        if(current < targetPoints) {
+                            counter.innerText = Math.ceil(current);
+                            requestAnimationFrame(updateCount);
+                        } else {
+                            counter.innerText = targetPoints;
+                        }
+                    };
+                    updateCount();
+
+                    const bar = card.querySelector('.progress-bar');
+                    setTimeout(() => { bar.style.width = `${percent}%`; }, 100);
+                });
+
+                setTimeout(() => {
+                    const firstPositions = new Map();
+                    cardMap.forEach((card, name) => {
+                        firstPositions.set(name, card.getBoundingClientRect());
+                    });
+
+                    sortedDesc.forEach(t => {
+                        const card = cardMap.get(t[0]);
+                        container.appendChild(card);
+                    });
+
+                    cardMap.forEach((card, name) => {
+                        const first = firstPositions.get(name);
+                        const last = card.getBoundingClientRect();
+                        const dy = first.top - last.top;
+                        card.style.transform = `translateY(${dy}px)`;
+                        card.style.transition = 'none';
+                    });
+
+                    container.offsetHeight; 
+
+                    cardMap.forEach((card, name) => {
+                        card.style.transform = '';
+                        card.style.transition = 'transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'; 
+                        
+                        const rankIndex = sortedDesc.findIndex(x => x[0] === name);
+                        const rankBadge = card.querySelector('.rank-badge');
+                        const statusContainer = card.querySelector('.status-container');
+                        const medalsContainer = card.querySelector('.medals-container');
+
+                        if(rankBadge) {
+                            rankBadge.style.transition = 'transform 0.3s ease';
+                            rankBadge.style.transform = 'scale(0) rotate(-180deg)';
+                            setTimeout(() => {
+                                rankBadge.innerText = `#${rankIndex + 1}`;
+                                rankBadge.style.transform = 'scale(1) rotate(3deg)';
+                            }, 300);
+                        }
+
+                        setTimeout(() => {
+                            const counts = teamCounts[name] || {1:0, 2:0, 3:0};
+                            let themeText = 'text-slate-800';
+                            if (rankIndex + 1 === 1) themeText = 'text-yellow-900';
+                            
+                            if(medalsContainer) {
+                                medalsContainer.innerHTML = `
+                                <div class="flex items-center gap-1.5 bg-white/50 px-2 py-1 rounded-lg border border-white/50 shadow-sm"><i data-lucide="medal" class="w-4 h-4 fill-yellow-400 text-yellow-600"></i><span class="text-xs font-black ${themeText}">${counts[1]}</span></div>
+                                <div class="flex items-center gap-1.5 bg-white/50 px-2 py-1 rounded-lg border border-white/50 shadow-sm"><i data-lucide="medal" class="w-4 h-4 fill-slate-300 text-slate-500"></i><span class="text-xs font-black ${themeText}">${counts[2]}</span></div>
+                                <div class="flex items-center gap-1.5 bg-white/50 px-2 py-1 rounded-lg border border-white/50 shadow-sm"><i data-lucide="medal" class="w-4 h-4 fill-orange-300 text-orange-600"></i><span class="text-xs font-black ${themeText}">${counts[3]}</span></div>
+                                `;
+                            }
+                            
+                            if(statusContainer) {
+                                let statusBadge = '';
+                                const rank = rankIndex + 1;
+                                if (rank === 1) statusBadge = `<div class="flex items-center gap-1.5 bg-green-100 text-green-700 px-2.5 py-1 rounded-full border border-green-200 shadow-sm animate-pulse"><i data-lucide="trophy" class="w-3 h-3"></i><span class="text-[10px] font-black uppercase tracking-wider">Champion</span></div>`;
+                                else if (rank === 2) statusBadge = `<div class="flex items-center gap-1.5 bg-red-50 text-red-600 px-2.5 py-1 rounded-full border border-red-100"><i data-lucide="trending-up" class="w-3 h-3"></i><span class="text-[10px] font-black uppercase tracking-wider">Runner Up</span></div>`;
+                                else statusBadge = `<div class="flex items-center gap-1.5 bg-red-50 text-red-600 px-2.5 py-1 rounded-full border border-red-100"><span class="text-[10px] font-bold uppercase tracking-wider">#${rank} Place</span></div>`;
+                                
+                                statusContainer.innerHTML = statusBadge;
+                                lucide.createIcons();
+                            }
+                        }, 500);
+                    });
+
+                    setTimeout(() => {
+                        isAnimating = false;
+                        if(navBar) navBar.classList.remove('nav-locked');
+                    }, 1600); 
+
+                }, 2200); 
+
+            } else {
+                container.innerHTML = '';
+                const maxScore = sortedDesc[0][1] || 100;
+                sortedDesc.forEach((t, i) => {
+                    container.appendChild(createTeamCardElement(t, i, maxScore, false));
+                });
+            }
+            
+            renderDetailedRankings(sortedDesc);
+            lucide.createIcons();
+        };
+
+        const renderDetailedRankings = (sortedTeams) => {
+            const thead = document.getElementById('dt-header-row');
+            const tbody = document.getElementById('dt-body');
+            
+            if(sortedTeams.length === 0) { 
+                tbody.innerHTML = '<tr><td colspan="100%" class="text-center py-4 text-slate-400 italic">No Data</td></tr>'; 
+                return; 
+            }
+
+            const cats = ['General', ...categories]; 
+            const maxScore = sortedTeams[0][1] || 1;
+
+            let headers = `<th class="dt-rank-cell">Rank</th><th>Team</th>`;
+            cats.forEach(c => headers += `<th>${c}</th>`);
+            headers += `<th>Total</th><th>Progress</th>`;
+            thead.innerHTML = headers;
+
+            tbody.innerHTML = sortedTeams.map((t, i) => {
+                const teamName = t[0];
+                const total = t[1];
+                const rank = i + 1;
+                const pct = Math.round((total / maxScore) * 100);
+
+                let rankClass = 'rank-other';
+                if(rank === 1) rankClass = 'rank-1';
+                else if(rank === 2) rankClass = 'rank-2';
+                else if(rank === 3) rankClass = 'rank-3';
+
+                let catCells = '';
+                cats.forEach((c, idx) => {
+                    let catScore = 0;
+                    results.forEach(r => {
+                        if(r.status && r.status !== 'published') return;
+                        const ev = eventMap[r.eventId]; // FAST LOOKUP
+                        const rCat = ev ? ev.category : r.category;
+                        if(rCat !== c) return;
+
+                        const checkWin = (val, pts) => {
+                            if(!val) return;
+                            const list = Array.isArray(val) ? val : [val];
+                            list.forEach(w => {
+                                if(r.type === 'Group') { if(w === teamName) catScore += pts; }
+                                else { 
+                                    const s = studentMap[w]; // FAST LOOKUP
+                                    if(s && s.team === teamName) catScore += pts; 
+                                }
+                            });
+                        };
+                        checkWin(r.winners.first, r.points.first);
+                        checkWin(r.winners.second, r.points.second);
+                        checkWin(r.winners.third, r.points.third);
+                    });
+                    
+                    const badgeClass = c === 'General' ? 'bg-cat-gen' : `bg-cat-${idx % 4}`;
+                    catCells += `<td><div class="dt-badge ${badgeClass}">${catScore}</div></td>`;
+                });
+
+                return `
+                <tr>
+                    <td><div class="dt-rank"><div class="dt-rank-circle ${rankClass}">${rank}</div></div></td>
+                    <td class="dt-team">${teamName}</td>
+                    ${catCells}
+                    <td class="dt-total">${total}</td>
+                    <td>
+                        <div class="dt-progress-ring" style="background: radial-gradient(closest-side, white 79%, transparent 80% 100%), conic-gradient(#2563eb ${pct}%, #e2e8f0 0);">
+                            <span class="dt-progress-text">${pct}%</span>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        };
+
+        window.showTeamDetails = (teamName, points, rank) => {
+            document.getElementById('modal-team-name').innerText = teamName;
+            document.getElementById('modal-team-rank').innerText = `Rank #${rank}`;
+            document.getElementById('modal-team-points').innerText = `${points} Pts`;
+            
+            const teamResults = results.filter(r => {
+                if(r.status && r.status !== 'published') return false;
+                const checkWin = (val) => {
+                    if(!val) return false;
+                    const arr = Array.isArray(val) ? val : [val];
+                    if(r.type === 'Group') return arr.includes(teamName);
+                    return arr.some(sid => { const s = studentMap[sid]; return s && s.team === teamName; });
+                };
+                return checkWin(r.winners.first) || checkWin(r.winners.second) || checkWin(r.winners.third);
+            });
+
+            let firstCount = 0;
+            teamResults.forEach(r => {
+                const val = r.winners.first;
+                if(!val) return;
+                const arr = Array.isArray(val) ? val : [val];
+                let isFirst = false;
+                if(r.type === 'Group') {
+                    isFirst = arr.includes(teamName);
+                } else {
+                    isFirst = arr.some(sid => {
+                        const s = studentMap[sid];
+                        return s && s.team === teamName;
+                    });
+                }
+                if(isFirst) firstCount++;
+            });
+
+            document.getElementById('modal-win-count').innerText = `${firstCount} Wins`;
+
+            const content = document.getElementById('modal-team-content');
+            if(teamResults.length === 0) { content.innerHTML = `<div class="text-center py-12 text-slate-400 text-sm italic flex flex-col items-center gap-2"><i data-lucide="ghost" class="w-8 h-8 opacity-50"></i>No wins recorded yet</div>`; }
+            else {
+                content.innerHTML = teamResults.map(r => {
+                    const e = eventMap[r.eventId];
+                    let pos = ''; let color = ''; let bg = '';
+                    const checkWin = (val) => { if(!val) return false; const arr = Array.isArray(val) ? val : [val]; if(r.type === 'Group') return arr.includes(teamName); return arr.some(sid => { const s = studentMap[sid]; return s && s.team === teamName; }); };
+                    
+                    if(checkWin(r.winners.first)) { pos = 'First'; color = 'text-yellow-600'; bg = 'bg-yellow-50 border-yellow-100'; }
+                    else if(checkWin(r.winners.second)) { pos = 'Second'; color = 'text-slate-600'; bg = 'bg-slate-100 border-slate-200'; }
+                    else if(checkWin(r.winners.third)) { pos = 'Third'; color = 'text-orange-600'; bg = 'bg-orange-50 border-orange-100'; }
+
+                    return `<div class="bg-white border p-3 rounded-xl flex justify-between items-center shadow-sm ${bg}">
+                        <div class="min-w-0">
+                            <h4 class="text-sm font-bold text-slate-800 truncate">${e ? e.name : r.eventName}</h4>
+                            <p class="text-[10px] text-slate-500 uppercase font-bold">${e ? e.category : r.category}</p>
+                        </div>
+                        <span class="${color} text-[10px] font-bold uppercase tracking-wide bg-white px-2 py-1 rounded shadow-sm border border-black/5">${pos}</span>
+                    </div>`;
+                }).join('');
+            }
+            document.getElementById('modal-team').classList.remove('hidden');
+            lucide.createIcons();
+        };
+
+        const renderTalent = () => {
+            const container = document.getElementById('talent-container');
+            const studentList = Object.values(studentScores)
+                .filter(s => s.score > 0)
+                .sort((a,b) => b.score - a.score);
+            
+            const byCat = {};
+            categories.forEach(c => byCat[c] = studentList.filter(s => s.category === c));
+
+            let html = '';
+            for (const cat of categories) {
+                const list = byCat[cat] || [];
+                if(list.length === 0) continue;
+                
+                const top3 = list.slice(0, 3);
+                const cards = top3.map((s, i) => {
+                    let badge = ''; let border = 'border-slate-100'; let bg = 'bg-white';
+                    
+                    if(i === 0) {
+                        badge = `<div class="w-8 h-8 rounded-full bg-yellow-100 border border-yellow-200 flex items-center justify-center text-yellow-600 font-black text-xs shadow-sm">#1</div>`;
+                        border = 'border-yellow-200 ring-1 ring-yellow-100'; bg = 'bg-yellow-50/30';
+                    } else if (i === 1) {
+                        badge = `<div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 font-black text-xs shadow-sm">#2</div>`;
+                    } else if (i === 2) {
+                        badge = `<div class="w-8 h-8 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-content center text-orange-600 font-black text-xs shadow-sm">#3</div>`;
+                    }
+
+                    return `
+                    <div onclick="showStudentDetails('${s.id}')" class="${bg} p-4 rounded-2xl border ${border} shadow-sm active:scale-[0.98] transition cursor-pointer flex items-center gap-4 relative overflow-hidden">
+                        <div class="shrink-0 z-10">${badge}</div>
+                        <div class="flex-1 min-w-0 z-10">
+                            <h4 class="font-bold text-slate-800 text-sm truncate leading-tight mb-0.5">${s.name}</h4>
+                            <p class="text-[11px] text-slate-500 font-bold flex items-center gap-2 truncate">
+                                <span>${s.team}</span>
+                                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                <span class="font-mono text-indigo-500">Chest ${s.chestNo || '-'}</span>
+                            </p>
+                        </div>
+                        <div class="text-right z-10">
+                            <span class="block text-lg font-black text-slate-800 leading-none">${s.score}</span>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase">Pts</span>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                const totalInCat = Object.values(studentScores).filter(s => s.category === cat).length;
+                html += `
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center px-1">
+                        <h3 class="font-bold text-slate-700 flex items-center gap-2"><span class="w-1.5 h-4 bg-blue-500 rounded-full"></span> Top ${cat}</h3>
+                        ${totalInCat > 3 ? `<button onclick="showAllTalents('${cat}')" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100 hover:bg-blue-100 transition">View All</button>` : ''}
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">${cards}</div>
+                </div>`;
+            }
+            container.innerHTML = html || `<div class="text-center py-12 text-slate-400 italic bg-white rounded-2xl border border-dashed border-slate-200">No individual scores recorded yet.</div>`;
+        };
+
+        window.showAllTalents = (cat) => {
+            const list = Object.values(studentScores).filter(s => s.category === cat).sort((a,b) => b.score - a.score);
+            document.getElementById('modal-talent-title').innerText = `Top Talents - ${cat}`;
+            document.getElementById('modal-talent-content').innerHTML = list.map((s, i) => {
+                let badgeClass = 'bg-slate-50 text-slate-400';
+                if(i===0) badgeClass = 'bg-yellow-100 text-yellow-600';
+                else if(i===1) badgeClass = 'bg-slate-200 text-slate-600';
+                else if(i===2) badgeClass = 'bg-orange-100 text-orange-600';
+
+                return `
+                <div onclick="showStudentDetails('${s.id}')" class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 mb-2 shadow-sm cursor-pointer hover:border-blue-200 transition">
+                    <div class="flex items-center gap-3">
+                        <span class="${badgeClass} w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shadow-sm">#${i+1}</span>
+                        <div>
+                            <h4 class="font-bold text-slate-700 text-sm">${s.name}</h4>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase flex gap-2">
+                                <span>${s.team}</span>
+                                <span class="text-slate-300">•</span>
+                                <span class="text-indigo-500">Chest ${s.chestNo||'-'}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <span class="font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-sm">${s.score}</span>
+                </div>`;
+            }).join('');
+            document.getElementById('modal-talent').classList.remove('hidden');
+        };
+
+        window.showStudentDetails = (sid) => {
+            const s = studentScores[sid];
+            if(!s) return;
+            document.getElementById('std-modal-name').innerText = s.name;
+            document.getElementById('std-modal-team').innerText = s.team;
+            document.getElementById('std-modal-chest').innerText = `Chest: ${s.chestNo || '-'}`;
+            document.getElementById('std-modal-score').innerText = s.score;
+
+            const wins = results.filter(r => {
+                if(r.status && r.status !== 'published') return false;
+                const check = (val) => { if(!val) return false; const arr = Array.isArray(val) ? val : [val]; return arr.includes(sid); };
+                return check(r.winners.first) || check(r.winners.second) || check(r.winners.third);
+            });
+
+            const content = document.getElementById('std-modal-content');
+            if(wins.length === 0) {
+                 content.innerHTML = `<p class="text-center text-slate-400 text-xs italic py-4">No wins recorded</p>`;
+            } else {
+                content.innerHTML = wins.map(r => {
+                    const e = eventMap[r.eventId];
+                    let rank = ''; let pts = 0; let badgeColor = '';
+                    const check = (val) => { if(!val) return false; const arr = Array.isArray(val) ? val : [val]; return arr.includes(sid); };
+                    
+                    if(check(r.winners.first)) { rank = '1st Prize'; pts = r.points.first; badgeColor = 'bg-yellow-100 text-yellow-700 border-yellow-200'; }
+                    else if(check(r.winners.second)) { rank = '2nd Prize'; pts = r.points.second; badgeColor = 'bg-slate-100 text-slate-700 border-slate-200'; }
+                    else if(check(r.winners.third)) { rank = '3rd Prize'; pts = r.points.third; badgeColor = 'bg-orange-100 text-orange-700 border-orange-200'; }
+
+                    return `
+                    <div onclick="goToResultFromStudent('${r.eventId}')" class="bg-white border border-slate-200 p-3 rounded-xl flex items-center justify-between shadow-sm cursor-pointer hover:bg-slate-50 active:scale-[0.98] transition">
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">${e ? e.name : r.eventName}</h4>
+                            <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${badgeColor}">${rank}</span>
+                        </div>
+                        <div class="text-right">
+                             <span class="block font-black text-slate-800 text-lg leading-none">${pts}</span>
+                             <span class="text-[9px] font-bold text-slate-400">Pts</span>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+            document.getElementById('modal-student-details').classList.remove('hidden');
+        };
+
+        window.goToResultFromStudent = (eventId) => {
+            closeModal('modal-student-details');
+            closeModal('modal-talent');
+            switchTab('result');
+            
+            setTimeout(() => {
+                const e = eventMap[eventId];
+                if(e) {
+                    // Activate Search Mode
+                    const headerEl = document.getElementById('app-header-el');
+                    const actionBtn = document.getElementById('header-action-btn');
+                    const globalInput = document.getElementById('global-search-input');
+                    
+                    if(headerEl && actionBtn && globalInput) {
+                        window.isSearchOpen = true;
+                        headerEl.classList.add('search-mode');
+                        actionBtn.innerHTML = '<i data-lucide="x" class="w-5 h-5 text-slate-800"></i>';
+                        actionBtn.style.backgroundColor = '#e2e8f0';
+                        
+                        globalInput.value = e.name;
+                        renderResults();
+                        lucide.createIcons();
+                    }
+                }
+            }, 300); // Slight delay to allow tab switch animation
+        };
+
+        // --- FIREBASE INIT ---
+        signInAnonymously(auth).catch(console.error);
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Fetch config
+                const configSnap = await getDoc(doc(db, "settings", "home_config"));
+                if(configSnap.exists()) {
+                    homeConfig = configSnap.data();
+                    localStorage.setItem('fest_home_config', JSON.stringify(homeConfig));
+                    applyConfigToUI(homeConfig);
+                    runSplashAnimation();
+                } else {
+                    document.getElementById('loader-screen').style.display = 'none';
+                }
+                
+                onSnapshot(doc(db, "settings", "general"), d => { 
+                    if(d.exists()) { 
+                        const data = d.data(); 
+                        teams = data.teams || []; 
+                        categories = data.categories || []; 
+                        renderCategoryButtons(); 
+                        processData(); 
+                    } 
+                });
+                onSnapshot(collection(db, "students"), s => { students = s.docs.map(d=>({id:d.id, ...d.data()})); processData(); });
+                onSnapshot(collection(db, "events"), s => { events = s.docs.map(d=>({id:d.id, ...d.data()})); processData(); });
+                onSnapshot(collection(db, "results"), s => { results = s.docs.map(d=>({eventId:d.id, ...d.data()})); processData(); });
+            }
+        });
+    </script>
+</body>
+</html>

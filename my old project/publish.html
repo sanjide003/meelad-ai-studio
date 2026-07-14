@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fest Publishing Desk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manjari:wght@100;400;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans+Malayalam:wght@400;700&family=Saira:wght@700&display=swap" rel="stylesheet">
+    
+    <!-- ICONS -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Font Awesome for Footer Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body { font-family: 'Inter', 'Noto Sans Malayalam', sans-serif; background-color: #f8fafc; color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
+        .hide { display: none !important; }
+        .touch-target { min-height: 40px; }
+        
+        select { -webkit-appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%232563eb' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.2em 1.2em; padding-right: 2rem; }
+        
+        /* --- HEADER STYLES (MATCHING HOME.HTML) --- */
+        .header-wrap { 
+            position: fixed; 
+            top: 12px; 
+            left: 0; 
+            right: 0; 
+            display: flex; 
+            justify-content: center; 
+            z-index: 50; 
+            padding: 0 16px; 
+            pointer-events: none; 
+            opacity: 0; 
+            transition: opacity 0.6s ease; 
+            will-change: opacity, transform;
+            transform: translate3d(0, 0, 0);
+        }
+        .header-wrap.visible { opacity: 1; pointer-events: auto; }
+
+        .app-header { 
+            pointer-events: auto; 
+            width: 100%; 
+            max-width: 800px; /* Slightly wider for admin tools */
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px; 
+            padding: 10px 16px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06); 
+            position: relative; 
+            border: 1px solid rgba(255,255,255,0.6); 
+        }
+
+        .header-title { margin-left: 12px; font-size: 16px; font-weight: 700; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Saira', sans-serif; }
+
+        /* HAMBURGER */
+        .menu-btn { width: 24px; height: 24px; position: relative; cursor: pointer; z-index: 60; display: flex; align-items: center; justify-content: center; }
+        .menu-btn span { position: absolute; height: 2px; width: 18px; background: #1e293b; border-radius: 4px; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .menu-btn span:nth-child(1) { transform: translateY(-6px); }
+        .menu-btn span:nth-child(2) { }
+        .menu-btn span:nth-child(3) { transform: translateY(6px); }
+        .menu-btn.active span:nth-child(1) { transform: rotate(45deg); top: 50%; margin-top: -1px; }
+        .menu-btn.active span:nth-child(2) { opacity: 0; }
+        .menu-btn.active span:nth-child(3) { transform: rotate(-45deg); top: 50%; margin-top: -1px; }
+
+        /* DROPDOWN MENU */
+        .dropdown-menu { 
+            position: absolute; 
+            top: 60px; 
+            right: 0; 
+            width: 220px;
+            background: white; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.15); 
+            border: 1px solid #f1f5f9;
+            padding: 8px; 
+            opacity: 0; 
+            transform: translateY(-10px) scale(0.95); 
+            pointer-events: none; 
+            transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
+            z-index: 55;
+            transform-origin: top right;
+        }
+        .dropdown-menu.open { 
+            opacity: 1; 
+            transform: translateY(0) scale(1); 
+            pointer-events: auto; 
+        }
+        
+        .nav-link { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 12px 16px; 
+            font-size: 14px; 
+            font-weight: 600; 
+            color: #475569; 
+            text-decoration: none; 
+            border-radius: 10px; 
+            transition: all 0.2s;
+        }
+        .nav-link:hover { background: #f8fafc; color: #2563eb; }
+        .nav-link.active { background: #eff6ff; color: #2563eb; }
+        .nav-link.danger { color: #ef4444; }
+        .nav-link.danger:hover { background: #fef2f2; }
+
+        .menu-overlay { position: fixed; inset: 0; z-index: 40; display: none; }
+        .menu-overlay.active { display: block; }
+
+        /* --- LOADER STYLES --- */
+        .loader-screen { position: fixed; inset: 0; background: #ffffff; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s ease; will-change: opacity; }
+        .loader-wrapper { position: relative; width: 120px; height: 120px; display: flex; justify-content: center; align-items: center; }
+        .loader-ring { position: absolute; inset: -4px; border-radius: 50%; border: 4px solid #f1f5f9; border-top-color: #2563eb; animation: spin 1s linear infinite; z-index: 1; opacity: 1; transition: opacity 0.3s ease; }
+        .loader-logo-circle { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: #fff; overflow: hidden; z-index: 2; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); will-change: transform, left, top, width, height; }
+        .loader-logo-circle img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
+        .loader-logo-circle img.loaded { opacity: 1; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .ring-hidden { opacity: 0; }
+        
+        .fade-img { opacity: 0; transition: opacity 0.5s ease-in-out; }
+        .fade-img.loaded { opacity: 1; }
+
+        /* --- FOOTER --- */
+        footer { background: #f9f9f9; padding: 24px 16px; margin-top: auto; border-top: 1px solid #e2e8f0; padding-bottom: 40px; }
+        .follow { text-align: center; }
+        .follow h4 { font-size: 13px; margin-bottom: 10px; letter-spacing: .5px; font-family: Arial, sans-serif; font-weight: bold; color: #333; }
+        .socials { display: flex; justify-content: center; gap: 14px; }
+        .socials a { color: #333; font-size: 20px; transition: transform .2s ease, opacity .2s ease; }
+        .socials a:hover { transform: translateY(-2px) scale(1.05); opacity: .7; }
+        .footer-bottom { text-align: center; font-size: 12px; margin-top: 14px; color: #777; line-height: 1.5; font-family: Arial, sans-serif; }
+        .footer-bottom a { color: #555; text-decoration: none; }
+        .footer-bottom a:hover { text-decoration: underline; }
+
+        /* Existing Styles Preserved */
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .compact-input { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; outline: none; transition: border-color 0.2s; }
+        .compact-input:focus { border-color: #2563eb; ring: 1px solid #2563eb; }
+        
+        .pending-item { cursor: pointer; transition: all 0.2s; }
+        .pending-item:active { transform: scale(0.98); }
+        
+        #search-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 50; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: none; }
+        .suggestion-item { padding: 8px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
+        .suggestion-item:hover { background-color: #f8fafc; color: #2563eb; }
+        
+        .ticker-container { overflow-x: auto; white-space: nowrap; -ms-overflow-style: none; scrollbar-width: none; mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); }
+        .ticker-container::-webkit-scrollbar { display: none; }
+        
+        .main-container { padding-top: 86px; }
+    </style>
+</head>
+<body class="text-slate-900 text-base flex flex-col min-h-screen">
+
+    <!-- INSTANT CACHE LOADER SCRIPT -->
+    <script>
+        try {
+            const cachedConfig = localStorage.getItem('fest_home_config');
+            if (cachedConfig) {
+                const data = JSON.parse(cachedConfig);
+                if (data.logoUrl) {
+                    document.write(`<style>#loader-img-tag { content: url("${data.logoUrl}"); opacity: 1 !important; }</style>`);
+                }
+            }
+        } catch (e) {}
+    </script>
+
+    <!-- SPLASH LOADER -->
+    <div class="loader-screen" id="loader-screen">
+        <div class="loader-wrapper" id="loader-wrapper">
+            <div class="loader-ring" id="loader-ring"></div>
+            <div class="loader-logo-circle" id="moving-logo">
+                 <img src="" id="loader-img-tag" alt="Fest Logo">
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+
+    <!-- INTERNAL APP LOADER (SPINNER) -->
+    <div id="app-loader" class="fixed inset-0 bg-white z-[1000] flex flex-col items-center justify-center hide">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-4 border-blue-600 mb-4"></div>
+        <p class="text-blue-600 font-bold animate-pulse text-sm">Processing...</p>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-6 right-6 left-6 md:left-auto z-[200] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- HEADER (NEW STYLE) -->
+    <div class="header-wrap" id="main-header">
+        <div class="app-header">
+            <div class="flex items-center gap-3 overflow-hidden">
+                <div id="header-logo-target" class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center overflow-hidden border border-slate-200 shrink-0">
+                    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="header-logo-img" class="w-full h-full object-cover fade-img" alt="Logo">
+                </div>
+                <div class="flex flex-col overflow-hidden">
+                    <span class="header-title" id="page-title">New Result Entry</span>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wide ml-3 leading-none truncate">Publishing Desk</span>
+                </div>
+            </div>
+            
+            <div class="relative">
+                <div class="menu-btn" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <div class="flex flex-col gap-1">
+                        <div onclick="switchTab('entry')" id="nav-entry" class="nav-link active cursor-pointer"><i data-lucide="award"></i> New Entry</div>
+                        <div onclick="switchTab('list')" id="nav-list" class="nav-link cursor-pointer"><i data-lucide="list-checks"></i> Published</div>
+                        <div onclick="switchTab('archive')" id="nav-archive" class="nav-link cursor-pointer"><i data-lucide="archive"></i> Archive</div>
+                        <div class="h-px bg-slate-100 my-1"></div>
+                        <a href="admin.html" class="nav-link danger"><i data-lucide="arrow-left"></i> Exit to Admin</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 lg:p-8 relative scroll-smooth max-w-5xl mx-auto w-full main-container">
+        
+        <!-- CONFIRM MODAL -->
+        <div id="confirm-modal" class="fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5 transform scale-100 transition-all">
+                <h3 class="text-lg font-bold text-slate-800 mb-2 text-center">Confirm Action</h3>
+                <p class="text-slate-500 text-sm mb-5 text-center" id="confirm-msg">Are you sure?</p>
+                <div class="flex gap-3">
+                    <button id="confirm-cancel" class="px-4 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-bold transition flex-1">Cancel</button>
+                    <button id="confirm-ok" class="px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 shadow-lg shadow-red-500/30 transition flex-1">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIMULATION MODAL -->
+        <div id="sim-modal" class="fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md flex flex-col max-h-[85vh] animate-fade-in relative overflow-hidden">
+                <div class="p-4 bg-gradient-to-br from-indigo-600 to-violet-700 text-white shrink-0 flex justify-between items-center">
+                    <div><h3 class="text-lg font-black leading-none">Standings</h3><p class="text-indigo-200 text-xs font-medium mt-1">Projected Simulation</p></div>
+                    <div class="flex items-center gap-2"><button onclick="publishSelected()" class="bg-green-500 text-white hover:bg-green-600 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1 border border-green-400"><i data-lucide="check-check" class="w-3 h-3"></i> Publish All</button><button onclick="closeSimModal()" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-full transition"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+                </div>
+                <div class="flex-1 overflow-y-auto p-0"><table class="w-full text-left text-xs"><thead class="bg-slate-50 text-slate-500 font-bold uppercase sticky top-0 z-10 shadow-sm"><tr><th class="px-4 py-3">Team</th><th class="px-4 py-3 text-center">Current</th><th class="px-4 py-3 text-right">New Total</th></tr></thead><tbody id="sim-table-body" class="divide-y divide-slate-100 font-medium"></tbody></table></div>
+                <div class="p-3 bg-indigo-50 border-t border-indigo-100 shrink-0 text-center"><p class="text-[10px] text-indigo-500 font-bold uppercase">Click 'Publish All' to apply.</p></div>
+            </div>
+        </div>
+
+        <!-- VIEW 1: NEW ENTRY -->
+        <div id="view-entry" class="tab-view max-w-3xl mx-auto space-y-6">
+            
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden sticky top-0 z-10">
+                <div class="p-4 bg-white">
+                    
+                    <!-- NEW: Status Switcher -->
+                    <div class="flex bg-slate-100 p-1 rounded-lg mb-4">
+                        <button id="filter-status-unpublished" onclick="setEntryStatusFilter('unpublished')" class="flex-1 py-2 rounded-md text-xs font-bold transition shadow-sm bg-white text-blue-700">For Publish</button>
+                        <button id="filter-status-published" onclick="setEntryStatusFilter('published')" class="flex-1 py-2 rounded-md text-xs font-bold transition text-slate-500 hover:text-slate-700">Archive / Published</button>
+                    </div>
+
+                    <!-- COMPACT SEARCH & FILTERS -->
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 mb-4 relative">
+                         <!-- Smart Search Box -->
+                         <div class="relative w-full">
+                            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                            <input type="text" id="entry-search" onkeyup="handleSearch(this.value)" placeholder="Search Event..." class="compact-input pl-9 bg-white" dir="auto" autocomplete="off">
+                            <!-- Suggestion List -->
+                            <div id="search-suggestions"></div>
+                        </div>
+
+                         <div class="grid grid-cols-2 gap-2">
+                             <select id="filter-cat" onchange="populateEvents()" class="compact-input bg-white"><option value="">All Categories</option></select>
+                             <select id="filter-stage" onchange="populateEvents()" class="compact-input bg-white"><option value="">All Stages</option><option value="On-Stage">On-Stage</option><option value="Off-Stage">Off-Stage</option></select>
+                         </div>
+                         
+                         <!-- Event Dropdown -->
+                         <select id="filter-event" onchange="loadEvent()" class="compact-input bg-white text-slate-700 font-bold border-indigo-200 focus:border-indigo-500">
+                             <option value="">Select Event (All)</option>
+                         </select>
+                    </div>
+                    
+                    <!-- ENTRY FORM -->
+                    <div id="entry-form" class="hidden space-y-4 animate-fade-in">
+                        <div id="existing-badge" class="hidden bg-orange-50 text-orange-800 text-[10px] font-bold px-3 py-2 rounded-lg border border-orange-100 flex items-center gap-2"><i data-lucide="alert-circle" class="w-3 h-3"></i> Updating Result</div>
+
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div><h4 class="font-bold text-slate-900 text-base leading-tight" id="lbl-ev-name">Event Name</h4><span class="text-[10px] font-bold text-blue-600 uppercase bg-white px-2 py-0.5 rounded border border-blue-100 mt-1 inline-block" id="lbl-ev-type">Single</span></div>
+                            <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border border-slate-200 shadow-sm"><span class="text-[10px] font-bold text-slate-400 uppercase px-1">Pts</span><input type="number" id="pt-1" class="w-8 text-center font-bold border rounded bg-slate-50 text-slate-700 text-xs h-7" value="5"><input type="number" id="pt-2" class="w-8 text-center font-bold border rounded bg-slate-50 text-slate-700 text-xs h-7" value="3"><input type="number" id="pt-3" class="w-8 text-center font-bold border rounded bg-slate-50 text-slate-700 text-xs h-7" value="1"></div>
+                        </div>
+                        
+                        <!-- WINNERS -->
+                        <div class="space-y-2.5">
+                            <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden"><div class="absolute left-0 top-0 bottom-0 w-1 bg-yellow-400"></div><div class="flex justify-between items-center mb-1"><h4 class="font-bold text-slate-800 flex items-center gap-2 text-sm"><div class="w-5 h-5 bg-yellow-400 text-white rounded-full flex items-center justify-center text-[10px] shadow-sm">1</div> First Prize</h4><button onclick="addWinnerRow('winner-container-1')" class="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-1 rounded hover:bg-blue-100 flex items-center gap-1 transition"><i data-lucide="plus" class="w-3 h-3"></i> Add</button></div><div id="winner-container-1" class="space-y-1.5"></div></div>
+                            <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden"><div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-400"></div><div class="flex justify-between items-center mb-1"><h4 class="font-bold text-slate-800 flex items-center gap-2 text-sm"><div class="w-5 h-5 bg-slate-400 text-white rounded-full flex items-center justify-center text-[10px] shadow-sm">2</div> Second Prize</h4><button onclick="addWinnerRow('winner-container-2')" class="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-1 rounded hover:bg-blue-100 flex items-center gap-1 transition"><i data-lucide="plus" class="w-3 h-3"></i> Add</button></div><div id="winner-container-2" class="space-y-1.5"></div></div>
+                            <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden"><div class="absolute left-0 top-0 bottom-0 w-1 bg-orange-400"></div><div class="flex justify-between items-center mb-1"><h4 class="font-bold text-slate-800 flex items-center gap-2 text-sm"><div class="w-5 h-5 bg-orange-400 text-white rounded-full flex items-center justify-center text-[10px] shadow-sm">3</div> Third Prize</h4><button onclick="addWinnerRow('winner-container-3')" class="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-1 rounded hover:bg-blue-100 flex items-center gap-1 transition"><i data-lucide="plus" class="w-3 h-3"></i> Add</button></div><div id="winner-container-3" class="space-y-1.5"></div></div>
+                        </div>
+                        
+                        <!-- ACTIONS -->
+                        <div class="grid grid-cols-2 gap-3 pt-1">
+                            <button id="btn-archive" onclick="saveResult('archived')" class="w-full py-3 bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-100 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs"><i data-lucide="archive" class="w-4 h-4"></i> Archive</button>
+                            <button id="btn-publish" onclick="saveResult('published')" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-md transition flex items-center justify-center gap-2 text-xs"><i data-lucide="send" class="w-4 h-4"></i> Publish</button>
+                        </div>
+                    </div>
+                    
+                    <div id="entry-empty" class="text-center py-8"><div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2 text-blue-300"><i data-lucide="mouse-pointer-click" class="w-5 h-5"></i></div><p class="text-slate-400 font-bold text-xs">Select event above or from list below</p></div>
+                </div>
+            </div>
+
+            <!-- PENDING LIST -->
+            <div>
+                <h3 class="font-bold text-slate-500 text-xs uppercase tracking-wider mb-3 px-1">Pending for Publication</h3>
+                <div id="pending-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+            </div>
+        </div>
+
+        <!-- LIST VIEW -->
+        <div id="view-list" class="tab-view hidden max-w-4xl mx-auto space-y-4 relative pb-28">
+            <div id="filter-bar" class="bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3 items-center sticky top-0 z-20">
+                <select id="list-filter-cat" onchange="renderCurrentList()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-600 outline-none w-full sm:w-auto"><option value="">Category: All</option></select>
+                <select id="list-filter-stage" onchange="renderCurrentList()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-600 outline-none w-full sm:w-auto">
+                    <option value="">Stage: All</option>
+                    <option value="On-Stage">On-Stage</option>
+                    <option value="Off-Stage">Off-Stage</option>
+                </select>
+                <div class="relative w-full sm:flex-1"><i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"></i><input type="text" id="list-search" onkeyup="renderCurrentList()" placeholder="Search..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:bg-white transition"></div>
+            </div>
+            
+            <div class="flex items-center gap-2 px-1 overflow-hidden">
+                 <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap shrink-0"><span id="count-results">0</span> Items</span>
+                 <div id="team-points-ticker" class="ticker-container flex items-center gap-2 text-[10px] font-bold text-slate-500 py-1 flex-1"></div>
+            </div>
+            
+            <div id="list-title-container" class="px-1 mt-1"><span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider" id="list-title">Results</span></div>
+            <div id="results-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            
+            <button id="fab-sim" onclick="runSimulation()" class="hidden fixed bottom-8 left-1/2 -translate-x-1/2 w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-2xl flex flex-col items-center justify-center transition-transform active:scale-95 z-50 group border-4 border-slate-50">
+                <i data-lucide="bar-chart-2" class="w-6 h-6 group-hover:-translate-y-0.5 transition-transform"></i>
+                <span id="fab-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-slate-900 hidden">0</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="follow">
+            <h4>FOLLOW US</h4>
+            <div class="socials" id="social-links">
+                <div class="flex gap-2 justify-center opacity-50"><div class="w-8 h-8 bg-slate-200 rounded-full"></div><div class="w-8 h-8 bg-slate-200 rounded-full"></div></div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 <span id="footer-fest-name">Fest Name</span> media team. All Rights Reserved.<br>
+            <a href="https://www.instagram.com/muhammed_sanjide_p" target="_blank">Powered by hadi mahiri faizy</a>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { db, auth } from './firebase-config.js';
+        import { collection, onSnapshot, doc, setDoc, addDoc, deleteDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        let students = [], events = [], registrations = [], categories = [], results = [], teams = [];
+        let currentEvent = null;
+        let participantOptionsHtml = ""; 
+        let currentTab = 'entry'; 
+        let entryStatusFilter = 'unpublished';
+        let homeConfig = {};
+        let isSplashDone = false;
+
+        // MENU TOGGLE
+        window.toggleMenu = () => {
+            document.querySelector('.menu-btn').classList.toggle('active');
+            document.getElementById('dropdownMenu').classList.toggle('open');
+            document.getElementById('menuOverlay').classList.toggle('active');
+        };
+        window.closeMenu = () => {
+            document.querySelector('.menu-btn').classList.remove('active');
+            document.getElementById('dropdownMenu').classList.remove('open');
+            document.getElementById('menuOverlay').classList.remove('active');
+        };
+
+        // LOAD CONFIG & FOOTER
+        function applyConfigToUI(config) {
+            let fName = (config.festName1 || "") + (config.festName2 ? " " + config.festName2 : "");
+            if(!fName) fName = "Sadaye Madeena 2k25";
+            
+            const footerNameEl = document.getElementById('footer-fest-name');
+            if(footerNameEl) footerNameEl.innerText = config.festName1 || fName;
+
+            if (config.logoUrl) {
+                const headLogo = document.getElementById('header-logo-img');
+                if(headLogo) {
+                    headLogo.src = config.logoUrl;
+                    headLogo.onload = () => headLogo.classList.add('loaded');
+                }
+                if(!isSplashDone) {
+                    const loaderImg = document.getElementById('loader-img-tag');
+                    if(loaderImg) { loaderImg.src = config.logoUrl; loaderImg.classList.add('loaded'); }
+                }
+            }
+
+            const s = config.social || {};
+            const sDiv = document.getElementById('social-links');
+            if(sDiv) {
+                let sHtml = '';
+                if(s.wa) sHtml += `<a href="${s.wa}" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
+                if(s.ig) sHtml += `<a href="${s.ig}" aria-label="Instagram"><i class="fab fa-instagram"></i></a>`;
+                if(s.fb) sHtml += `<a href="${s.fb}" aria-label="Facebook"><i class="fab fa-facebook"></i></a>`;
+                if(s.yt) sHtml += `<a href="${s.yt}" aria-label="YouTube"><i class="fab fa-youtube"></i></a>`;
+                if(s.tg) sHtml += `<a href="${s.tg}" aria-label="Telegram"><i class="fab fa-telegram"></i></a>`;
+                sDiv.innerHTML = sHtml;
+            }
+        }
+
+        const runSplashAnimation = () => {
+            const loaderScreen = document.getElementById('loader-screen');
+            if(loaderScreen && !isSplashDone) {
+                setTimeout(() => {
+                    document.getElementById('main-header').classList.add('visible');
+                    const movingLogo = document.getElementById('moving-logo');
+                    const targetBox = document.getElementById('header-logo-target'); 
+                    const loaderRing = document.getElementById('loader-ring');
+
+                    if(movingLogo && targetBox && homeConfig.logoUrl) {
+                        loaderRing.classList.add('ring-hidden'); 
+                        const startRect = movingLogo.getBoundingClientRect();
+                        const targetRect = targetBox.getBoundingClientRect();
+
+                        movingLogo.style.transition = 'none';
+                        movingLogo.style.position = 'fixed';
+                        movingLogo.style.left = startRect.left + 'px';
+                        movingLogo.style.top = startRect.top + 'px';
+                        movingLogo.style.width = startRect.width + 'px';
+                        movingLogo.style.height = startRect.height + 'px';
+                        movingLogo.style.margin = '0';
+                        movingLogo.offsetHeight; 
+
+                        movingLogo.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+                        requestAnimationFrame(() => {
+                            movingLogo.style.left = targetRect.left + 'px';
+                            movingLogo.style.top = targetRect.top + 'px';
+                            movingLogo.style.width = targetRect.width + 'px';
+                            movingLogo.style.height = targetRect.height + 'px';
+                            movingLogo.style.borderRadius = '8px';
+                            movingLogo.style.boxShadow = 'none';
+                        });
+
+                        setTimeout(() => {
+                            loaderScreen.style.opacity = '0'; 
+                            setTimeout(() => loaderScreen.remove(), 500);
+                        }, 800); 
+                    } else {
+                        loaderScreen.style.opacity = '0';
+                        setTimeout(() => loaderScreen.remove(), 500);
+                    }
+                    isSplashDone = true;
+                }, 1000); 
+            }
+        };
+
+        window.showToast = (msg, type='success') => {
+            const c = document.getElementById('toast-container'); const d = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-slate-900' : 'bg-red-600';
+            d.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-fade-in mx-auto`;
+            d.innerHTML = `<i data-lucide="${type==='success'?'check':'alert-circle'}" class="w-4 h-4"></i><span class="text-xs font-bold">${msg}</span>`;
+            c.appendChild(d); setTimeout(()=>d.remove(),3000); lucide.createIcons();
+        };
+
+        window.confirmAction = (msg) => {
+            return new Promise((res) => {
+                const m = document.getElementById('confirm-modal'); 
+                document.getElementById('confirm-msg').innerText = msg; m.classList.remove('hidden');
+                const y = () => { cleanup(); res(true); }; const n = () => { cleanup(); res(false); };
+                const cleanup = () => { document.getElementById('confirm-ok').removeEventListener('click', y); document.getElementById('confirm-cancel').removeEventListener('click', n); m.classList.add('hidden'); };
+                document.getElementById('confirm-ok').addEventListener('click', y); document.getElementById('confirm-cancel').addEventListener('click', n);
+            });
+        };
+
+        window.switchTab = (tab) => {
+            currentTab = tab;
+            document.querySelectorAll('.tab-view').forEach(e => e.classList.add('hidden'));
+            document.getElementById('fab-sim').classList.add('hidden');
+            if (tab === 'entry') { document.getElementById('view-entry').classList.remove('hidden'); renderPendingList(); } 
+            else { document.getElementById('view-list').classList.remove('hidden'); renderCurrentList(); }
+            
+            closeMenu();
+            
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            if(tab === 'entry') document.getElementById('nav-entry').classList.add('active');
+            if(tab === 'list') document.getElementById('nav-list').classList.add('active');
+            if(tab === 'archive') document.getElementById('nav-archive').classList.add('active');
+            document.getElementById('page-title').innerText = { 'entry': 'New Result Entry', 'list': 'Published Results', 'archive': 'Pending Results' }[tab];
+        };
+
+        window.setEntryStatusFilter = (status) => {
+            entryStatusFilter = status;
+            const btnUnpub = document.getElementById('filter-status-unpublished');
+            const btnPub = document.getElementById('filter-status-published');
+            if(status === 'unpublished') {
+                btnUnpub.classList.add('bg-white', 'text-blue-700', 'shadow-sm'); btnUnpub.classList.remove('text-slate-500');
+                btnPub.classList.remove('bg-white', 'text-blue-700', 'shadow-sm'); btnPub.classList.add('text-slate-500');
+            } else {
+                btnPub.classList.add('bg-white', 'text-blue-700', 'shadow-sm'); btnPub.classList.remove('text-slate-500');
+                btnUnpub.classList.remove('bg-white', 'text-blue-700', 'shadow-sm'); btnUnpub.classList.add('text-slate-500');
+            }
+            populateEvents();
+            document.getElementById('filter-event').value = ""; document.getElementById('entry-form').classList.add('hidden'); document.getElementById('entry-empty').classList.remove('hidden');
+        };
+
+        window.renderDropdowns = () => {
+            const catSelect = document.getElementById('filter-cat'); const listCatSelect = document.getElementById('list-filter-cat');
+            const catOpts = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            const openOpt = '<option value="General" class="font-bold text-blue-600">General</option>';
+            catSelect.innerHTML = '<option value="">All Categories</option>' + openOpt + catOpts;
+            listCatSelect.innerHTML = '<option value="">Category: All</option>' + openOpt + catOpts;
+        };
+
+        // --- SMART SEARCH ---
+        window.handleSearch = (val) => {
+            const list = document.getElementById('search-suggestions');
+            if(!val) { list.style.display = 'none'; populateEvents(); return; }
+            
+            // Get current valid events based on status
+            const statusFiltered = events.filter(e => {
+                if(entryStatusFilter === 'unpublished') return !results.some(r => r.eventId === e.id && r.status === 'published');
+                else return results.some(r => r.eventId === e.id && r.status === 'published');
+            });
+
+            const suggestions = statusFiltered.filter(e => e.name.toLowerCase().includes(val.toLowerCase()));
+            
+            if(suggestions.length > 0) {
+                list.innerHTML = suggestions.map(e => `<div class="suggestion-item" onclick="selectSuggestion('${e.id}')">${e.name} <span class="text-xs text-slate-400">(${e.category})</span></div>`).join('');
+                list.style.display = 'block';
+            } else {
+                list.style.display = 'none';
+            }
+            populateEvents();
+        };
+
+        window.selectSuggestion = (id) => {
+            document.getElementById('entry-search').value = "";
+            document.getElementById('search-suggestions').style.display = 'none';
+            document.getElementById('filter-cat').value = "";
+            document.getElementById('filter-stage').value = "";
+            populateEvents(); 
+            document.getElementById('filter-event').value = id;
+            loadEvent(id);
+        };
+
+        window.populateEvents = () => {
+            const cat = document.getElementById('filter-cat').value; 
+            const stage = document.getElementById('filter-stage').value;
+            const search = document.getElementById('entry-search').value.toLowerCase();
+            
+            let filtered = events;
+            if(entryStatusFilter === 'unpublished') filtered = filtered.filter(e => !results.some(r => r.eventId === e.id && r.status === 'published'));
+            else filtered = filtered.filter(e => results.some(r => r.eventId === e.id && r.status === 'published'));
+
+            if(cat && cat !== "") filtered = filtered.filter(e => e.category === cat);
+            if(stage && stage !== "") filtered = filtered.filter(e => e.stage === stage);
+            if(search && search !== "") filtered = filtered.filter(e => e.name.toLowerCase().includes(search));
+
+            filtered.sort((a,b) => a.name.localeCompare(b.name));
+            document.getElementById('filter-event').innerHTML = '<option value="">Select Event (All)</option>' + filtered.map(e => `<option value="${e.id}">${e.name} (${e.category})</option>`).join('');
+        };
+
+        window.loadEvent = (forceId = null) => {
+            const id = forceId || document.getElementById('filter-event').value; 
+            if(forceId) document.getElementById('filter-event').value = forceId;
+            
+            const form = document.getElementById('entry-form'); const empty = document.getElementById('entry-empty'); const badge = document.getElementById('existing-badge');
+            if(!id) { form.classList.add('hidden'); empty.classList.remove('hidden'); currentEvent = null; return; }
+            
+            document.querySelector('.tab-view').scrollIntoView({ behavior: 'smooth' });
+            const e = events.find(x => x.id === id); currentEvent = e;
+            document.getElementById('lbl-ev-name').innerText = e.name; document.getElementById('lbl-ev-type').innerText = `${e.type} • ${e.category} • ${e.stage || 'Off-Stage'}`;
+            
+            const existing = results.find(r => r.eventId === id);
+            document.getElementById('pt-1').value = existing ? existing.points.first : (e.type === 'Group' ? 10 : 5); 
+            document.getElementById('pt-2').value = existing ? existing.points.second : (e.type === 'Group' ? 7 : 3); 
+            document.getElementById('pt-3').value = existing ? existing.points.third : (e.type === 'Group' ? 5 : 1);
+            document.getElementById('btn-archive').innerHTML = existing ? '<i data-lucide="save" class="w-4 h-4"></i> Update Archive' : '<i data-lucide="archive" class="w-4 h-4"></i> Save to Archive';
+            document.getElementById('btn-publish').innerHTML = existing ? '<i data-lucide="refresh-cw" class="w-4 h-4"></i> Update & Publish' : '<i data-lucide="send" class="w-4 h-4"></i> Publish Now';
+            
+            if(existing) badge.classList.remove('hidden'); else badge.classList.add('hidden');
+            
+            const eventRegs = registrations.filter(r => r.eventId === id); 
+            let options = '<option value="">Select Participant...</option>';
+            if(eventRegs.length === 0) { options = '<option value="">No Registrations Found</option>'; } 
+            else if(e.type === 'Group') { const teamsList = [...new Set(eventRegs.map(r => r.team))].sort(); options += teamsList.map(t => `<option value="${t}">${t}</option>`).join(''); } 
+            else { 
+                let parts = []; eventRegs.forEach(r => { r.studentIds.forEach(sid => { const s = students.find(x => x.id === sid); if(s) parts.push({ ...s, chestNo: s.chestNo || 9999 }); }); }); 
+                parts.sort((a,b) => (parseInt(a.chestNo)||0) - (parseInt(b.chestNo)||0)); 
+                options += parts.map(s => `<option value="${s.id}">${s.chestNo} - ${s.name} (${s.team})</option>`).join(''); 
+            }
+            participantOptionsHtml = options;
+            
+            ['1','2','3'].forEach((p) => {
+                const containerId = `winner-container-${p}`; document.getElementById(containerId).innerHTML = ''; 
+                if(existing) {
+                    const placeKey = p === '1' ? 'first' : (p === '2' ? 'second' : 'third');
+                    const winners = Array.isArray(existing.winners[placeKey]) ? existing.winners[placeKey] : [existing.winners[placeKey]];
+                    if(winners.length > 0 && winners[0]) winners.forEach(w => addWinnerRow(containerId, w)); else addWinnerRow(containerId);
+                } else {
+                    addWinnerRow(containerId);
+                }
+            });
+            form.classList.remove('hidden'); empty.classList.add('hidden'); lucide.createIcons();
+        };
+
+        window.addWinnerRow = (containerId, selectedValue = null) => {
+            const container = document.getElementById(containerId); const div = document.createElement('div'); div.className = "flex gap-2 items-center animate-fade-in";
+            div.innerHTML = `<select class="winner-select touch-target w-full bg-white border border-slate-300 rounded-lg px-2 py-2 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">${participantOptionsHtml}</select>${container.children.length > 0 ? `<button onclick="this.parentElement.remove()" class="p-2 text-red-400 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-100 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}`;
+            container.appendChild(div); if(selectedValue) div.querySelector('select').value = selectedValue; lucide.createIcons();
+        };
+
+        window.saveResult = async (status) => {
+            if(!currentEvent) return;
+            const getValues = (cid) => { const selects = document.querySelectorAll(`#${cid} select`); const vals = []; selects.forEach(s => { if(s.value) vals.push(s.value); }); return vals; };
+            const w1 = getValues('winner-container-1'); const w2 = getValues('winner-container-2'); const w3 = getValues('winner-container-3');
+            if(w1.length === 0 && w2.length === 0 && w3.length === 0) return window.showToast('Select at least one winner', 'error');
+            
+            document.getElementById('app-loader').classList.remove('hide');
+            
+            const data = { 
+                eventId: currentEvent.id, eventName: currentEvent.name, category: currentEvent.category, type: currentEvent.type, 
+                timestamp: Date.now(), status: status,
+                points: { first: parseInt(document.getElementById('pt-1').value)||0, second: parseInt(document.getElementById('pt-2').value)||0, third: parseInt(document.getElementById('pt-3').value)||0 }, 
+                winners: { first: w1, second: w2, third: w3 } 
+            };
+            
+            try { await setDoc(doc(db, "results", currentEvent.id), data);
+                if(status === 'published') { await addDoc(collection(db, "notifications"), { team: 'All', title: 'Result Announced', message: `Results published for ${currentEvent.name}`, eventId: currentEvent.id, timestamp: Date.now(), type: 'success' }); window.showToast('Result Published!'); } else { window.showToast('Saved to Archive'); }
+                document.getElementById('filter-event').value = ''; document.getElementById('entry-form').classList.add('hidden'); document.getElementById('entry-empty').classList.remove('hidden'); document.getElementById('entry-search').value = "";
+                populateEvents(); renderPendingList();
+            } catch(e) { console.error(e); window.showToast('Error saving result', 'error'); }
+            document.getElementById('app-loader').classList.add('hide');
+        };
+
+        window.renderPendingList = () => {
+            const list = document.getElementById('pending-list');
+            let pendingEvents = events.filter(e => !results.some(r => r.eventId === e.id && r.status === 'published'));
+            const cat = document.getElementById('filter-cat').value;
+            const stage = document.getElementById('filter-stage').value;
+            if(cat) pendingEvents = pendingEvents.filter(e => e.category === cat);
+            if(stage) pendingEvents = pendingEvents.filter(e => e.stage === stage);
+            pendingEvents.sort((a,b) => a.name.localeCompare(b.name));
+
+            if(pendingEvents.length === 0) { list.innerHTML = `<div class="col-span-full text-center py-6 text-slate-400 italic text-xs">No pending events found</div>`; return; }
+
+            list.innerHTML = pendingEvents.map(e => {
+                const isArchived = results.some(r => r.eventId === e.id && r.status === 'archived');
+                const badge = isArchived ? `<span class="text-[9px] font-bold bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded ml-2">ARCHIVED</span>` : '';
+                const style = isArchived ? 'border-violet-200 bg-violet-50/30' : 'border-slate-100 bg-white';
+                return `<div onclick="loadEvent('${e.id}')" class="pending-item p-3 rounded-xl border ${style} shadow-sm hover:shadow-md flex justify-between items-center group"><div class="flex-1 min-w-0"><div class="flex items-center"><h4 class="font-bold text-slate-700 text-sm truncate">${e.name}</h4>${badge}</div><p class="text-[10px] text-slate-500 font-bold uppercase">${e.category} • ${e.stage || 'Off-Stage'}</p></div><div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-blue-50 group-hover:text-blue-500 transition"><i data-lucide="chevron-up" class="w-4 h-4"></i></div></div>`;
+            }).join('');
+            lucide.createIcons();
+        };
+
+        window.renderCurrentList = () => {
+            const isArchive = currentTab === 'archive'; const targetStatus = isArchive ? 'archived' : 'published';
+            const list = document.getElementById('results-list'); const catFilter = document.getElementById('list-filter-cat').value; const stageFilter = document.getElementById('list-filter-stage').value; const search = document.getElementById('list-search').value.toLowerCase();
+            const fab = document.getElementById('fab-sim'); if(isArchive) { fab.classList.remove('hidden'); window.updateSimCount(); } else fab.classList.add('hidden');
+            renderTeamPointsTicker();
+            let filteredResults = results.filter(r => {
+                const rStatus = r.status || 'published'; if (rStatus !== targetStatus) return false;
+                const e = events.find(x => x.id === r.eventId); const rCat = e ? e.category : r.category; const rStage = e ? e.stage : 'Off-Stage'; const rName = (e ? e.name : r.eventName).toLowerCase();
+                return (!catFilter || rCat === catFilter) && (!stageFilter || rStage === stageFilter) && (!search || rName.includes(search));
+            });
+            filteredResults.sort((a,b) => b.timestamp - a.timestamp); document.getElementById('count-results').innerText = filteredResults.length;
+            if(filteredResults.length === 0) { list.innerHTML = `<div class="col-span-full text-center py-10 text-slate-400 italic text-sm">No ${isArchive?'archived':'published'} results found</div>`; return; }
+            list.innerHTML = filteredResults.map(r => {
+                const e = events.find(x => x.id === r.eventId); const name = e ? e.name : r.eventName; const stage = e ? e.stage : 'Off-Stage'; const cat = e ? e.category : r.category;
+                const formatWinners = (val) => { if(!val) return ''; const arr = Array.isArray(val) ? val : [val]; if(arr.length === 0) return ''; return arr.map(v => { if(r.type === 'Group') return v; const s = students.find(x => x.id === v); return s ? s.name : 'Unknown'; }).join(', '); };
+                const checkboxHtml = isArchive ? `<div class="pr-3 border-r border-slate-100 flex items-center"><input type="checkbox" class="custom-checkbox archive-chk" value="${r.eventId}" onchange="updateSimCount()"></div>` : '';
+                const actionsHtml = isArchive ? `<button onclick="publishFromArchive('${r.eventId}')" class="p-2 text-green-600 bg-green-50 rounded hover:bg-green-100" title="Publish"><i data-lucide="send" class="w-3.5 h-3.5"></i></button><button onclick="editResult('${r.eventId}')" class="p-2 text-blue-600 bg-blue-50 rounded hover:bg-blue-100" title="Edit"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button><button onclick="deleteResult('${r.eventId}')" class="p-2 text-red-500 bg-red-50 rounded hover:bg-red-100" title="Delete"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : `<button onclick="moveToArchive('${r.eventId}')" class="p-2 text-violet-600 bg-violet-50 rounded hover:bg-violet-100" title="Archive"><i data-lucide="archive" class="w-3.5 h-3.5"></i></button><button onclick="editResult('${r.eventId}')" class="p-2 text-blue-600 bg-blue-50 rounded hover:bg-blue-100" title="Edit"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button><button onclick="deleteResult('${r.eventId}')" class="p-2 text-red-500 bg-red-50 rounded hover:bg-red-100" title="Delete"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>`;
+                return `<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 flex gap-3 animate-fade-in hover:border-blue-300 transition group">${checkboxHtml}<div class="flex-1 min-w-0"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-slate-800 text-sm truncate pr-2">${name}</h4><span class="text-[10px] font-bold uppercase bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200">${cat}</span></div><div class="text-[10px] text-slate-500 space-y-1 mb-2">${r.winners.first ? `<div class="flex gap-1"><span class="font-bold text-yellow-600 w-5">1st</span><span class="truncate text-slate-700 font-medium">${formatWinners(r.winners.first)}</span></div>` : ''}${r.winners.second ? `<div class="flex gap-1"><span class="font-bold text-slate-500 w-5">2nd</span><span class="truncate text-slate-700 font-medium">${formatWinners(r.winners.second)}</span></div>` : ''}${r.winners.third ? `<div class="flex gap-1"><span class="font-bold text-orange-600 w-5">3rd</span><span class="truncate text-slate-700 font-medium">${formatWinners(r.winners.third)}</span></div>` : ''}</div><div class="flex gap-2 justify-end border-t border-slate-50 pt-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">${actionsHtml}</div></div></div>`;
+            }).join(''); lucide.createIcons();
+        };
+
+        const renderTeamPointsTicker = () => {
+            let scores = {}; teams.forEach(t => scores[t] = 0);
+            const pubResults = results.filter(r => r.status === 'published' || !r.status);
+            calculatePoints(pubResults, scores);
+            const sorted = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+            const ticker = document.getElementById('team-points-ticker');
+            ticker.innerHTML = sorted.map((t, i) => `<div class="inline-flex items-center gap-2 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-sm mx-1"><span class="text-[10px] font-bold ${i===0?'text-green-600':'text-blue-600'}">#${i+1}</span><span class="text-[10px] font-bold text-slate-700">${t[0]}</span><span class="text-[10px] font-black text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded shadow-sm border border-slate-100">${t[1]}</span></div>`).join('');
+        };
+
+        window.updateSimCount = () => {
+            const cnt = document.querySelectorAll('.archive-chk:checked').length;
+            const badge = document.getElementById('fab-badge');
+            if(cnt > 0) { badge.classList.remove('hidden'); badge.innerText = cnt; } else { badge.classList.add('hidden'); }
+        };
+        
+        window.publishFromArchive = async (id) => {
+            if(await window.confirmAction("Publish this result now?")) {
+                const r = results.find(x => x.eventId === id);
+                await updateDoc(doc(db, "results", id), { status: 'published', timestamp: Date.now() });
+                await addDoc(collection(db, "notifications"), { team: 'All', title: 'Result Announced', message: `Results published for ${r.eventName}`, eventId: id, timestamp: Date.now(), type: 'success' });
+                window.showToast('Published Successfully');
+            }
+        };
+
+        window.moveToArchive = async (id) => { if(await window.confirmAction("Move to archive?")) { await updateDoc(doc(db, "results", id), { status: 'archived' }); window.showToast('Moved to Archive'); } };
+        window.deleteResult = async (id) => { if(await window.confirmAction("Delete result?")) { await deleteDoc(doc(db, "results", id)); window.showToast('Deleted'); } };
+
+        window.runSimulation = () => {
+            const selectedIds = Array.from(document.querySelectorAll('.archive-chk:checked')).map(cb => cb.value);
+            if(selectedIds.length === 0) return window.showToast('Select items first', 'error');
+            let currentScores = {}; teams.forEach(t => currentScores[t] = 0);
+            calculatePoints(results.filter(r => r.status === 'published' || !r.status), currentScores);
+            let newScores = {}; teams.forEach(t => newScores[t] = 0);
+            const combinedResults = results.filter(r => (r.status === 'published' || !r.status) || selectedIds.includes(r.eventId));
+            calculatePoints(combinedResults, newScores);
+            const sortedTeams = Object.entries(newScores).sort((a,b) => b[1] - a[1]);
+            const tbody = document.getElementById('sim-table-body');
+            tbody.innerHTML = sortedTeams.map((t, i) => {
+                const current = currentScores[t[0]] || 0;
+                const diff = t[1] - current;
+                const diffHtml = diff > 0 ? `<span class="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i data-lucide="trending-up" class="w-3 h-3"></i>+${diff}</span>` : '';
+                return `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="px-4 py-2 font-bold text-slate-800 text-xs flex items-center gap-2"><span class="text-slate-400 text-[10px]">#${i+1}</span> ${t[0]}</td><td class="px-4 py-2 text-center font-bold text-slate-500 text-xs">${current}</td><td class="px-4 py-2 text-right flex items-center justify-end gap-3"><span class="font-black text-slate-800 text-sm">${t[1]}</span>${diffHtml}</td></tr>`;
+            }).join('');
+            lucide.createIcons(); document.getElementById('sim-modal').classList.remove('hidden');
+        };
+
+        window.publishSelected = async () => {
+            const selectedIds = Array.from(document.querySelectorAll('.archive-chk:checked')).map(cb => cb.value);
+            if(selectedIds.length === 0) return;
+            document.getElementById('app-loader').classList.remove('hide');
+            const batchPromises = selectedIds.map(async (id) => {
+                const r = results.find(x => x.eventId === id);
+                await updateDoc(doc(db, "results", id), { status: 'published', timestamp: Date.now() });
+                await addDoc(collection(db, "notifications"), { team: 'All', title: 'Result Announced', message: `Results published for ${r.eventName}`, eventId: id, timestamp: Date.now(), type: 'success' });
+            });
+            await Promise.all(batchPromises);
+            window.closeSimModal(); window.showToast(`${selectedIds.length} Results Published!`);
+            document.getElementById('app-loader').classList.add('hide');
+        };
+
+        const calculatePoints = (resList, scoreMap) => {
+            resList.forEach(r => { ['first', 'second', 'third'].forEach(place => { const winners = r.winners[place]; const pts = r.points[place]; if(!winners || !pts) return; const arr = Array.isArray(winners) ? winners : [winners]; arr.forEach(w => { let tName = null; if(r.type === 'Group') tName = w; else { const s = students.find(std => std.id === w); if(s) tName = s.team; } if(tName && scoreMap[tName] !== undefined) scoreMap[tName] += parseInt(pts); }); }); });
+        };
+
+        window.closeSimModal = () => document.getElementById('sim-modal').classList.add('hidden');
+
+        window.editResult = (eventId) => {
+            const r = results.find(x => x.eventId === eventId);
+            if(!r) return;
+            window.switchTab('entry');
+            if(r.status === 'published' || !r.status) window.setEntryStatusFilter('published');
+            else window.setEntryStatusFilter('unpublished');
+            document.getElementById('filter-event').value = eventId;
+            window.loadEvent(); 
+            window.showToast('Editing Result...', 'info');
+        };
+
+        window.deleteResult = async (id) => { if(await window.confirmAction()) { await deleteDoc(doc(db, "results", id)); window.showToast('Deleted'); } };
+
+        signInAnonymously(auth).catch(e=>console.error(e));
+        onAuthStateChanged(auth, async (u) => {
+            if(u) {
+                // Fetch config
+                const configSnap = await getDoc(doc(db, "settings", "home_config"));
+                if(configSnap.exists()) {
+                    homeConfig = configSnap.data();
+                    localStorage.setItem('fest_home_config', JSON.stringify(homeConfig));
+                    applyConfigToUI(homeConfig);
+                    runSplashAnimation();
+                } else {
+                    document.getElementById('loader-screen').style.display = 'none';
+                }
+
+                onSnapshot(doc(db, "settings", "general"), d => { if(d.exists()) { const data = d.data(); categories=d.data().categories||[]; teams=d.data().teams||[]; window.renderDropdowns(); } });
+                onSnapshot(collection(db, "students"), s => { students = s.docs.map(d=>({id:d.id,...d.data()})); if(currentTab !== 'entry') renderCurrentList(); });
+                onSnapshot(collection(db, "events"), s => { events = s.docs.map(d=>({id:d.id,...d.data()})); if(currentTab === 'entry') { populateEvents(); renderPendingList(); } else renderCurrentList(); });
+                onSnapshot(collection(db, "registrations"), s => registrations = s.docs.map(d=>({id:d.id,...d.data()})));
+                onSnapshot(collection(db, "results"), s => { results = s.docs.map(d=>({eventId:d.id,...d.data()})); if(currentTab === 'entry') { populateEvents(); renderPendingList(); } else renderCurrentList(); });
+            }
+        });
+    </script>
+</body>
+</html>
