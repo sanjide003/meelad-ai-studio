@@ -5,10 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MeeladPulse - Public Portal</title>
   <link rel="stylesheet" href="/assets/css/main.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Malayalam:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', 'Noto Sans Malayalam', sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(16, 185, 129, 0.18), transparent 32rem),
+        radial-gradient(circle at top right, rgba(79, 70, 229, 0.16), transparent 30rem),
+        linear-gradient(180deg, #f8fafc 0%, #eef2ff 48%, #f8fafc 100%);
+    }
+    .glass-card {
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.72);
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.10);
+    }
+    .hero-grid {
+      background-image:
+        linear-gradient(rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+    .quick-tile {
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .quick-tile:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px rgba(79, 70, 229, .12);
+      border-color: rgba(99, 102, 241, .32);
+    }
+    .podium-glow {
+      box-shadow: 0 20px 60px rgba(79, 70, 229, .18);
     }
     .font-display {
       font-family: 'Space Grotesk', sans-serif;
@@ -31,14 +59,14 @@
     }
   </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
 
   <!-- Sticky Floating Header -->
-  <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 transition-all duration-200">
+  <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-xl border-b border-white/70 transition-all duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <!-- Branding logo -->
       <a href="/index.html" class="flex items-center space-x-2 group">
-        <div class="h-9 w-9 rounded-xl bg-slate-900 text-white font-extrabold flex items-center justify-center font-display shadow-sm group-hover:scale-105 transition duration-200">
+        <div class="h-10 w-10 rounded-2xl bg-gradient-to-br from-emerald-500 via-indigo-600 to-slate-950 text-white font-extrabold flex items-center justify-center font-display shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition duration-200">
           M
         </div>
         <div class="flex flex-col">
@@ -85,32 +113,34 @@
     <!-- Populated dynamically -->
   </div>
 
-  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-10">
 
     <!-- Hero / Festival Branding Section -->
-    <section class="bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden p-8 md:p-12 relative flex flex-col md:flex-row md:items-center justify-between gap-8">
-      <div class="space-y-4 max-w-xl">
+    <section class="glass-card hero-grid rounded-[2rem] overflow-hidden p-6 md:p-10 lg:p-12 relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+      <div class="absolute -top-24 -right-20 h-64 w-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-28 -left-20 h-72 w-72 bg-emerald-500/10 rounded-full blur-3xl"></div>
+      <div class="space-y-5 max-w-2xl relative z-10">
         <div class="inline-flex px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-extrabold text-indigo-700 uppercase tracking-widest font-mono">
-          🏆 Global Festival Standing Center
+          🏆 Official Public Festival Portal
         </div>
-        <h2 id="hero-title" class="text-3xl md:text-5xl font-extrabold text-slate-950 tracking-tight leading-tight font-display">
+        <h2 id="hero-title" class="text-4xl md:text-6xl font-black text-slate-950 tracking-tight leading-[0.95] font-display">
           Meelad Festival Standing
         </h2>
         <p id="hero-subtitle" class="text-xs md:text-sm text-slate-400 font-medium leading-relaxed">
-          Welcome to the official publication portal. View real-time standings, verify certificate keys, and track live podium race scores across Arts and Sports divisions.
+          A premium public home for live standings, latest results, announcements, schedules, and official festival updates — optimized for mobile viewers and GitHub Pages deployment.
         </p>
 
         <!-- Dynamic Summary Stats Cards -->
-        <div class="grid grid-cols-3 gap-3 pt-2">
-          <div class="bg-slate-50 border border-slate-100 p-3 rounded-2xl space-y-0.5 text-center">
+        <div class="grid grid-cols-3 gap-3 pt-3 max-w-xl">
+          <div class="bg-white/75 border border-white/80 p-3 rounded-2xl shadow-sm space-y-0.5 text-center">
             <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Published Events</span>
             <div id="stat-events" class="text-xl font-extrabold text-slate-900 font-mono">0</div>
           </div>
-          <div class="bg-slate-50 border border-slate-100 p-3 rounded-2xl space-y-0.5 text-center">
+          <div class="bg-white/75 border border-white/80 p-3 rounded-2xl shadow-sm space-y-0.5 text-center">
             <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Active Teams</span>
             <div id="stat-teams" class="text-xl font-extrabold text-slate-900 font-mono">0</div>
           </div>
-          <div class="bg-slate-50 border border-slate-100 p-3 rounded-2xl space-y-0.5 text-center">
+          <div class="bg-white/75 border border-white/80 p-3 rounded-2xl shadow-sm space-y-0.5 text-center">
             <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Points Awarded</span>
             <div id="stat-points" class="text-xl font-extrabold text-slate-900 font-mono">0</div>
           </div>
@@ -118,15 +148,17 @@
       </div>
 
       <!-- Quick Result Search Component -->
-      <div class="bg-slate-50 border border-slate-100 rounded-2xl p-6 max-w-sm w-full space-y-3 shadow-xs">
-        <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-wider font-display flex items-center space-x-1.5">
+      <div class="relative z-10 bg-slate-950 text-white rounded-[1.75rem] p-6 max-w-sm w-full space-y-4 shadow-2xl shadow-slate-950/20 overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,.32),transparent_45%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,.32),transparent_42%)]"></div>
+        <div class="relative space-y-4">
+        <h3 class="text-xs font-extrabold text-white uppercase tracking-wider font-display flex items-center space-x-1.5">
           <span>🔍 Quick Result Search</span>
         </h3>
-        <p class="text-[10px] text-slate-400 font-medium">Verify points instantly by entering Student Name, Chest Number, or Competition.</p>
+        <p class="text-[11px] text-slate-300 font-medium leading-relaxed">Verify points instantly by entering Student Name, Chest Number, or Competition.</p>
         
         <div class="relative">
-          <input id="search-input" type="text" class="w-full p-3 pr-10 text-xs border border-slate-200 bg-white rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium placeholder-slate-400" placeholder="e.g. 104, Muhammad, Oral...">
-          <button id="search-btn" class="absolute right-2 top-2 h-7 w-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition cursor-pointer">
+          <input id="search-input" type="text" class="w-full p-3 pr-10 text-xs border border-white/10 bg-white/95 text-slate-900 rounded-xl outline-none focus:ring-2 focus:ring-emerald-400 font-medium placeholder-slate-400" placeholder="e.g. 104, Muhammad, Oral...">
+          <button id="search-btn" class="absolute right-2 top-2 h-7 w-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-400 transition cursor-pointer">
             ➔
           </button>
         </div>
@@ -136,13 +168,38 @@
           <!-- Populated instantly -->
         </div>
       </div>
+      </div>
+    </section>
+
+    <!-- Old home inspired quick navigation tiles -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <a href="/public/latest-results.html" class="quick-tile bg-white/85 border border-white rounded-2xl p-4 shadow-sm">
+        <div class="text-2xl mb-2">📣</div>
+        <div class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Latest Results</div>
+        <p class="text-[10px] text-slate-400 mt-1">Declared winners and grades</p>
+      </a>
+      <a href="/public/overall-ranking.html" class="quick-tile bg-white/85 border border-white rounded-2xl p-4 shadow-sm">
+        <div class="text-2xl mb-2">🏆</div>
+        <div class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Team Ranking</div>
+        <p class="text-[10px] text-slate-400 mt-1">Overall championship race</p>
+      </a>
+      <a href="/public/schedule.html" class="quick-tile bg-white/85 border border-white rounded-2xl p-4 shadow-sm">
+        <div class="text-2xl mb-2">🗓️</div>
+        <div class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Schedule</div>
+        <p class="text-[10px] text-slate-400 mt-1">Stage and event timing</p>
+      </a>
+      <a href="/public/result-search.html" class="quick-tile bg-white/85 border border-white rounded-2xl p-4 shadow-sm">
+        <div class="text-2xl mb-2">🔎</div>
+        <div class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Search</div>
+        <p class="text-[10px] text-slate-400 mt-1">Find participant result fast</p>
+      </a>
     </section>
 
     <!-- Bento Grid Content Section -->
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
       <!-- Column 1: Live Standing Podium (Top Teams) -->
-      <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col space-y-4 lg:col-span-1">
+      <div class="bg-white/90 backdrop-blur rounded-[1.5rem] border border-white p-6 shadow-sm flex flex-col space-y-4 lg:col-span-1 podium-glow">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-widest font-display">🏆 Championship Race</h3>
           <a href="/public/live-scoreboard.html" class="text-[10px] font-bold text-indigo-600 hover:underline">Full Standings</a>
@@ -159,7 +216,7 @@
       </div>
 
       <!-- Column 2: Latest Declared Results -->
-      <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col space-y-4 lg:col-span-1">
+      <div class="bg-white/90 backdrop-blur rounded-[1.5rem] border border-white p-6 shadow-sm flex flex-col space-y-4 lg:col-span-1">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-widest font-display">📢 Latest Declared Results</h3>
           <a href="/public/latest-results.html" class="text-[10px] font-bold text-indigo-600 hover:underline">All Results</a>
@@ -174,7 +231,7 @@
       <div class="space-y-6 lg:col-span-1">
         
         <!-- Announcements box -->
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
+        <div class="bg-white/90 backdrop-blur rounded-[1.5rem] border border-white p-6 shadow-sm space-y-4">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-widest font-display">🔔 News & Announcements</h3>
             <a href="/public/announcements.html" class="text-[10px] font-bold text-indigo-600 hover:underline">View All</a>
@@ -186,7 +243,7 @@
         </div>
 
         <!-- Schedule summary box -->
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
+        <div class="bg-white/90 backdrop-blur rounded-[1.5rem] border border-white p-6 shadow-sm space-y-4">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-widest font-display">📅 Stage Schedules</h3>
           </div>
