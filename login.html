@@ -218,11 +218,13 @@
 
       try {
         let redirectPath;
+        const hasInstitutionScope = Boolean(localStorage.getItem('meeladpulse_selected_institution_id') && localStorage.getItem('meeladpulse_selected_fest_id'));
         try {
-          redirectPath = email.includes('@') ? await loginWithEmailAndPassword(email, password, rememberMe) : await loginWithUsernamePassword(email, password);
+          // Institution links include scope, so try manual institution login before Firebase Auth.
+          redirectPath = hasInstitutionScope ? await loginWithUsernamePassword(email, password) : (email.includes('@') ? await loginWithEmailAndPassword(email, password, rememberMe) : await loginWithUsernamePassword(email, password));
         } catch (primaryErr) {
-          // Institution admins may use an email-like username created by Super Admin.
-          if (!email.includes('@')) throw primaryErr;
+          // Super Admin uses Firebase Auth; institution admins may use email-like manual usernames.
+          if (hasInstitutionScope || !email.includes('@')) throw primaryErr;
           redirectPath = await loginWithUsernamePassword(email, password);
         }
         window.location.replace(redirectPath);

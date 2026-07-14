@@ -80,32 +80,57 @@ export async function loginWithUsernamePassword(username, password) {
   let institutionId = localStorage.getItem('meeladpulse_selected_institution_id');
   let festivalId = localStorage.getItem('meeladpulse_selected_fest_id');
   let profile = null;
+  let usernameFound = false;
 
-  // Institution admins log in before any scope is selected. Super Admin creates this index.
-  const indexSnap = await getDoc(doc(db, 'institutionLogins', usernameLower));
-  if (indexSnap.exists()) {
-    const indexedProfile = indexSnap.data();
-    if (indexedProfile.password === password) {
-      institutionId = indexedProfile.institutionId;
-      festivalId = indexedProfile.festivalId || indexedProfile.institutionId;
-      profile = { id: indexSnap.id, ...indexedProfile, institutionId, festivalId, manualAuth: true };
+  try {
+    // Scoped login links are the primary institution/team/judge login path.
+    if (institutionId && festivalId) {
+      const scopedQuery = query(collection(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`), where('usernameLower', '==', usernameLower));
+      const snap = await getDocs(scopedQuery);
+      if (!snap.empty) {
+        usernameFound = true;
+        const candidate = { id: snap.docs[0].id, institutionId, festivalId, ...snap.docs[0].data(), manualAuth: true };
+        if (candidate.password !== password) {
+          const err = new Error('Password is incorrect. Please check the password entered for this admin account.');
+          err.code = 'auth/manual-wrong-password';
+          throw err;
+        }
+        profile = candidate;
+      }
     }
-  }
 
-  // Scoped Team/Judge users log in from links that already include institution/festival scope.
-  if (!profile && institutionId && festivalId) {
-    const scopedQuery = query(collection(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`), where('usernameLower', '==', usernameLower), where('password', '==', password));
-    const snap = await getDocs(scopedQuery);
-    if (!snap.empty) profile = { id: snap.docs[0].id, institutionId, festivalId, ...snap.docs[0].data(), manualAuth: true };
+    // Institution admins can also log in without a selected scope through the Super Admin login index.
+    if (!profile) {
+      const indexSnap = await getDoc(doc(db, 'institutionLogins', usernameLower));
+      if (indexSnap.exists()) {
+        usernameFound = true;
+        const indexedProfile = indexSnap.data();
+        if (indexedProfile.password !== password) {
+          const err = new Error('Password is incorrect. Please check the password entered for this admin account.');
+          err.code = 'auth/manual-wrong-password';
+          throw err;
+        }
+        institutionId = indexedProfile.institutionId;
+        festivalId = indexedProfile.festivalId || indexedProfile.institutionId;
+        profile = { id: indexSnap.id, ...indexedProfile, institutionId, festivalId, manualAuth: true };
+      }
+    }
+  } catch (err) {
+    if (err.code === 'permission-denied') {
+      const permissionErr = new Error('Firebase permission denied. Deploy the latest Firestore rules, then try this institution admin login again.');
+      permissionErr.code = 'auth/manual-permission-denied';
+      throw permissionErr;
+    }
+    throw err;
   }
 
   if (!profile) {
-    const err = new Error('Invalid username or password.');
-    err.code = 'auth/manual-invalid';
+    const err = new Error(usernameFound ? 'Invalid manual login.' : 'Admin username/email was not found for this institution. Please check the admin username.');
+    err.code = usernameFound ? 'auth/manual-invalid' : 'auth/manual-user-not-found';
     throw err;
   }
   if (profile.active !== true) {
-    const err = new Error('Account Inactive: Your account access has been suspended by the administrator.');
+    const err = new Error('Account Inactive: This institution/admin login is suspended or expired.');
     err.code = 'auth/user-disabled';
     throw err;
   }
