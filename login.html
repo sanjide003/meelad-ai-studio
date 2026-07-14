@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
-  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="manifest" href="public/manifest.json">
   <meta name="theme-color" content="#0f172a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -63,7 +64,7 @@
         <div class="space-y-1.5">
           <div class="flex justify-between items-center">
             <label id="lbl-password" for="password" class="text-xs font-bold text-slate-700">Password</label>
-            <a id="lnk-forgot" href="/forgot-password.html" class="text-[10px] font-bold text-emerald-600 hover:text-emerald-500 transition">Forgot Password?</a>
+            <a id="lnk-forgot" href="forgot-password.html" class="text-[10px] font-bold text-emerald-600 hover:text-emerald-500 transition">Forgot Password?</a>
           </div>
           <div class="relative">
             <input type="password" id="password" required class="form-input pr-10" placeholder="••••••••">
@@ -100,7 +101,7 @@
 
   <!-- Module Core Auth Script -->
   <script type="module">
-    import { loginWithEmailAndPassword } from "/assets/js/auth.js";
+    import { loginWithEmailAndPassword } from "./assets/js/auth.js";
 
     // Simple dual translation database
     const t = {

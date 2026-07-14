@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MeeladPulse - Public Portal</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Malayalam:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -65,7 +66,7 @@
   <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-xl border-b border-white/70 transition-all duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <!-- Branding logo -->
-      <a href="/index.html" class="flex items-center space-x-2 group">
+      <a href="index.html" class="flex items-center space-x-2 group">
         <div class="h-10 w-10 rounded-2xl bg-gradient-to-br from-emerald-500 via-indigo-600 to-slate-950 text-white font-extrabold flex items-center justify-center font-display shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition duration-200">
           M
         </div>
@@ -77,17 +78,17 @@
 
       <!-- Desktop Navigation links -->
       <nav class="hidden md:flex items-center space-x-1">
-        <a href="/index.html" class="px-3 py-2 text-xs font-bold text-slate-900 hover:text-indigo-600 rounded-lg transition">Home</a>
-        <a href="/public/live-scoreboard.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Scoreboard</a>
-        <a href="/public/latest-results.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Latest Results</a>
-        <a href="/public/announcements.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Announcements</a>
+        <a href="index.html" class="px-3 py-2 text-xs font-bold text-slate-900 hover:text-indigo-600 rounded-lg transition">Home</a>
+        <a href="public/live-scoreboard.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Scoreboard</a>
+        <a href="public/latest-results.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Latest Results</a>
+        <a href="public/announcements.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Announcements</a>
       </nav>
 
       <!-- Right Side Actions (Dashboard / Auth) -->
       <div class="flex items-center space-x-2">
         <div id="auth-actions" class="flex items-center space-x-2">
           <!-- Populated dynamically via Auth states -->
-          <a href="/login.html" class="px-3.5 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition duration-200 font-display shadow-xs">
+          <a href="login.html" class="px-3.5 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition duration-200 font-display shadow-xs">
             Admin / Staff Login
           </a>
         </div>
@@ -101,10 +102,10 @@
 
     <!-- Mobile Dropdown Navigation Menu -->
     <div id="mobile-menu" class="hidden border-b border-slate-100 bg-white/95 backdrop-blur-md px-4 py-3 md:hidden space-y-1">
-      <a href="/index.html" class="block px-3 py-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-xl">Home</a>
-      <a href="/public/live-scoreboard.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Scoreboard</a>
-      <a href="/public/latest-results.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Latest Results</a>
-      <a href="/public/announcements.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Announcements</a>
+      <a href="index.html" class="block px-3 py-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-xl">Home</a>
+      <a href="public/live-scoreboard.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Scoreboard</a>
+      <a href="public/latest-results.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Latest Results</a>
+      <a href="public/announcements.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Announcements</a>
     </div>
   </header>
 
@@ -173,22 +174,22 @@
 
     <!-- Old home inspired quick navigation tiles -->
     <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <a href="/public/latest-results.html" class="quick-tile bg-white/85 border border-white rounded-2xl p-4 shadow-sm">
+      <a href="public/latest-results.html" class="quick-tile bg-white/85 border border-white rounded-2xl p-4 shadow-sm">
         <div class="text-2xl mb-2">📣</div>
         <div class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Latest Results</div>
         <p class="text-[10px] text-slate-400 mt-1">Declared winners and grades</p>
       </a>
-      <a href="/public/overall-ranking.html" class="quick-tile bg-white/85 border border-white rounded-2xl p-4 shadow-sm">
+      <a href="public/overall-ranking.html" class="quick-tile bg-white/85 border border-white rounded-2xl p-4 shadow-sm">
         <div class="text-2xl mb-2">🏆</div>
         <div class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Team Ranking</div>
         <p class="text-[10px] text-slate-400 mt-1">Overall championship race</p>
       </a>
-      <a href="/public/schedule.html" class="quick-tile bg-white/85 border border-white rounded-2xl p-4 shadow-sm">
+      <a href="public/schedule.html" class="quick-tile bg-white/85 border border-white rounded-2xl p-4 shadow-sm">
         <div class="text-2xl mb-2">🗓️</div>
         <div class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Schedule</div>
         <p class="text-[10px] text-slate-400 mt-1">Stage and event timing</p>
       </a>
-      <a href="/public/result-search.html" class="quick-tile bg-white/85 border border-white rounded-2xl p-4 shadow-sm">
+      <a href="public/result-search.html" class="quick-tile bg-white/85 border border-white rounded-2xl p-4 shadow-sm">
         <div class="text-2xl mb-2">🔎</div>
         <div class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Search</div>
         <p class="text-[10px] text-slate-400 mt-1">Find participant result fast</p>
@@ -202,7 +203,7 @@
       <div class="bg-white/90 backdrop-blur rounded-[1.5rem] border border-white p-6 shadow-sm flex flex-col space-y-4 lg:col-span-1 podium-glow">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-widest font-display">🏆 Championship Race</h3>
-          <a href="/public/live-scoreboard.html" class="text-[10px] font-bold text-indigo-600 hover:underline">Full Standings</a>
+          <a href="public/live-scoreboard.html" class="text-[10px] font-bold text-indigo-600 hover:underline">Full Standings</a>
         </div>
 
         <!-- Live Animated Podium Placement -->
@@ -219,7 +220,7 @@
       <div class="bg-white/90 backdrop-blur rounded-[1.5rem] border border-white p-6 shadow-sm flex flex-col space-y-4 lg:col-span-1">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-widest font-display">📢 Latest Declared Results</h3>
-          <a href="/public/latest-results.html" class="text-[10px] font-bold text-indigo-600 hover:underline">All Results</a>
+          <a href="public/latest-results.html" class="text-[10px] font-bold text-indigo-600 hover:underline">All Results</a>
         </div>
 
         <div id="latest-results-list" class="space-y-3 divide-y divide-slate-50 flex-grow">
@@ -234,7 +235,7 @@
         <div class="bg-white/90 backdrop-blur rounded-[1.5rem] border border-white p-6 shadow-sm space-y-4">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-widest font-display">🔔 News & Announcements</h3>
-            <a href="/public/announcements.html" class="text-[10px] font-bold text-indigo-600 hover:underline">View All</a>
+            <a href="public/announcements.html" class="text-[10px] font-bold text-indigo-600 hover:underline">View All</a>
           </div>
 
           <div id="announcements-list" class="space-y-3">
@@ -263,20 +264,20 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-400">
       <p>© MeeladPulse Standing Service. All rights reserved.</p>
       <div class="flex space-x-4">
-        <a href="/public/sw.js" class="hover:text-indigo-600 transition">Offline Sw Service</a>
-        <a href="/login.html" class="hover:text-indigo-600 transition">Portal Terminal</a>
+        <a href="public/sw.js" class="hover:text-indigo-600 transition">Offline Sw Service</a>
+        <a href="login.html" class="hover:text-indigo-600 transition">Portal Terminal</a>
       </div>
     </div>
   </footer>
 
   <script type="module">
-    import { auth, db } from "/assets/js/firebase-init.js";
+    import { auth, db } from "./assets/js/firebase-init.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    import { getActiveFestivalId, getPublicFestivalConfig } from "/assets/js/public-config-service.js";
-    import { subscribeLatestPublicResults, subscribePublicRankings, searchPublicResults } from "/assets/js/public-result-service.js";
-    import { subscribePublicAnnouncements, subscribePublicSchedule } from "/assets/js/public-home-service.js";
+    import { getActiveFestivalId, getPublicFestivalConfig } from "./assets/js/public-config-service.js";
+    import { subscribeLatestPublicResults, subscribePublicRankings, searchPublicResults } from "./assets/js/public-result-service.js";
+    import { subscribePublicAnnouncements, subscribePublicSchedule } from "./assets/js/public-home-service.js";
 
     const festId = getActiveFestivalId();
 
@@ -300,10 +301,10 @@
             const userSnap = await getDoc(doc(db, 'users', user.uid));
             if (userSnap.exists()) {
               const uData = userSnap.data();
-              let dashboardHref = '/login.html';
-              if (uData.role === 'admin') dashboardHref = '/admin/dashboard.html';
-              else if (uData.role === 'judge') dashboardHref = '/judge/dashboard.html';
-              else if (uData.role === 'teamLeader') dashboardHref = '/team/dashboard.html';
+              let dashboardHref = 'login.html';
+              if (uData.role === 'admin') dashboardHref = 'admin/dashboard.html';
+              else if (uData.role === 'judge') dashboardHref = 'judge/dashboard.html';
+              else if (uData.role === 'teamLeader') dashboardHref = 'team/dashboard.html';
 
               container.innerHTML = `
                 <a href="${dashboardHref}" class="px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100 text-xs font-bold rounded-xl transition font-display flex items-center space-x-1">
@@ -327,7 +328,7 @@
         
         // Default anonymous / logged out
         container.innerHTML = `
-          <a href="/login.html" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition duration-150 font-display shadow-xs">
+          <a href="login.html" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition duration-150 font-display shadow-xs">
             Admin / Staff Login
           </a>
         `;
