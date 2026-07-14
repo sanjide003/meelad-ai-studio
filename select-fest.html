@@ -39,6 +39,67 @@
     </div>
   </main>
 
+  <div id="institution-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 p-4">
+    <div class="w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-slate-100 overflow-hidden">
+      <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Super Admin Control</p>
+          <h2 id="institution-modal-title" class="text-xl font-extrabold text-slate-900 font-display">Create Institution</h2>
+          <p class="text-xs text-slate-500 mt-1">Create or update the customer institution, payment status, and admin login credentials.</p>
+        </div>
+        <button id="institution-modal-close" type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50">Close</button>
+      </div>
+      <form id="institution-form" class="space-y-5 px-6 py-5">
+        <input type="hidden" id="institution-edit-id">
+        <input type="hidden" id="institution-old-login">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label class="space-y-1 text-xs font-bold text-slate-600">Institution Name
+            <input id="institution-name" required class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="Institution name">
+          </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600">Workspace ID / Slug
+            <input id="institution-slug" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="auto-generated on create">
+          </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600">Admin Name
+            <input id="institution-admin-name" required class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="Institution admin name">
+          </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600">Admin Email / Username
+            <input id="institution-admin-login" required class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="email or username">
+          </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600">Admin Password
+            <input id="institution-admin-password" required class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="temporary password">
+          </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600">Plan
+            <select id="institution-plan" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
+              <option value="trial">Trial</option>
+              <option value="purchased">Purchased</option>
+              <option value="premium">Premium</option>
+            </select>
+          </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600">Subscription Status
+            <select id="institution-subscription" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
+              <option value="trial">Trial</option>
+              <option value="active">Active / Purchased</option>
+              <option value="payment_due">Payment Due</option>
+              <option value="expired">Expired</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </label>
+          <label class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600">
+            <input id="institution-active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-emerald-600" checked>
+            Institution active
+          </label>
+          <label class="space-y-1 text-xs font-bold text-slate-600 md:col-span-2">Purchase Notes
+            <textarea id="institution-purchase-notes" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800" rows="2" placeholder="Payment reference, validity, remarks"></textarea>
+          </label>
+        </div>
+        <div class="flex justify-end gap-3 border-t border-slate-100 pt-4">
+          <button id="institution-modal-cancel" type="button" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="btn btn-primary rounded-xl px-5 py-2 text-xs font-bold text-white">Save Institution</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <footer class="w-full text-center py-6 border-t border-slate-100 bg-white">
     <button class="logout-action-btn text-xs font-bold text-rose-600 hover:text-rose-500 transition cursor-pointer">
       Sign Out of Session
@@ -156,7 +217,7 @@
           <div id="super-admin-list" class="space-y-3"></div>
         </div>
       `;
-      document.getElementById('super-create-festival').onclick = createSuperAdminFestival;
+      document.getElementById('super-create-festival').onclick = () => openInstitutionModal();
       const list = document.getElementById('super-admin-list');
       list.innerHTML = festivals.length ? '' : '<p class="text-xs text-slate-400 text-center py-8">No institution workspaces created yet.</p>';
       festivals.forEach(festival => {
@@ -179,7 +240,7 @@
             <button class="delete-workspace btn bg-rose-600 text-white text-[10px] font-bold px-3 py-1.5">Delete</button>
           </div>
         `;
-        row.querySelector('.credentials-workspace').onclick = () => upsertInstitutionAdminLogin(festival);
+        row.querySelector('.credentials-workspace').onclick = () => openInstitutionModal(festival);
         row.querySelector('.share-login').onclick = async () => {
           const loginUrl = new URL('login.html', window.location.href);
           loginUrl.searchParams.set('institution', festival.id);
@@ -209,62 +270,118 @@ ${loginUrl.href}`);
       });
     }
 
-    async function createSuperAdminFestival() {
-      const title = prompt('Institution name');
-      if (!title) return;
-      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `workspace-${Date.now()}`;
-      const ownerName = prompt('Institution admin name', title + ' Admin') || `${title} Admin`;
-      const ownerLogin = (prompt('Institution admin email or username') || '').trim().toLowerCase();
-      if (!ownerLogin) return alert('Admin email/username is required.');
-      const ownerPassword = prompt('Temporary password for institution admin');
-      if (!ownerPassword) return alert('Temporary password is required.');
-      await setDoc(doc(db, 'institutions', slug), {
-        id: slug,
-        name: title,
-        slug,
-        active: true,
-        plan: 'trial',
-        subscriptionStatus: 'trial',
+    const modal = document.getElementById('institution-modal');
+    const institutionForm = document.getElementById('institution-form');
+    const modalTitle = document.getElementById('institution-modal-title');
+    const editIdInput = document.getElementById('institution-edit-id');
+    const oldLoginInput = document.getElementById('institution-old-login');
+
+    function slugify(value) {
+      return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `workspace-${Date.now()}`;
+    }
+
+    function setModalOpen(open) {
+      modal.classList.toggle('hidden', !open);
+      modal.classList.toggle('flex', open);
+    }
+
+    function openInstitutionModal(festival = null) {
+      const isEdit = Boolean(festival);
+      modalTitle.textContent = isEdit ? 'Edit Institution / Admin Login' : 'Create Institution + Admin Login';
+      editIdInput.value = festival?.id || '';
+      oldLoginInput.value = (festival?.ownerUsername || festival?.ownerEmail || '').toLowerCase();
+      document.getElementById('institution-name').value = festival?.title || festival?.name || '';
+      document.getElementById('institution-slug').value = festival?.id || '';
+      document.getElementById('institution-slug').disabled = isEdit;
+      document.getElementById('institution-admin-name').value = festival?.ownerName || `${festival?.name || festival?.title || ''} Admin`.trim();
+      document.getElementById('institution-admin-login').value = festival?.ownerUsername || festival?.ownerEmail || '';
+      document.getElementById('institution-admin-password').value = '';
+      document.getElementById('institution-admin-password').placeholder = isEdit ? 'enter new/updated password' : 'temporary password';
+      document.getElementById('institution-plan').value = festival?.plan || 'trial';
+      document.getElementById('institution-subscription').value = festival?.subscriptionStatus || 'trial';
+      document.getElementById('institution-active').checked = festival?.active !== false;
+      document.getElementById('institution-purchase-notes').value = festival?.purchaseNotes || '';
+      setModalOpen(true);
+    }
+
+    document.getElementById('institution-modal-close').onclick = () => setModalOpen(false);
+    document.getElementById('institution-modal-cancel').onclick = () => setModalOpen(false);
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) setModalOpen(false);
+    });
+
+    institutionForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const existingId = editIdInput.value;
+      const title = document.getElementById('institution-name').value.trim();
+      const institutionId = existingId || slugify(document.getElementById('institution-slug').value.trim() || title);
+      const ownerName = document.getElementById('institution-admin-name').value.trim();
+      const ownerLogin = document.getElementById('institution-admin-login').value.trim().toLowerCase();
+      const ownerPassword = document.getElementById('institution-admin-password').value.trim();
+      const plan = document.getElementById('institution-plan').value;
+      const subscriptionStatus = document.getElementById('institution-subscription').value;
+      const active = document.getElementById('institution-active').checked;
+      const purchaseNotes = document.getElementById('institution-purchase-notes').value.trim();
+
+      if (!title || !ownerName || !ownerLogin || !ownerPassword) {
+        alert('Institution name, admin name, login, and password are required.');
+        return;
+      }
+
+      await saveInstitutionWorkspace({
+        id: institutionId,
+        title,
         ownerName,
-        ownerEmail: ownerLogin.includes('@') ? ownerLogin : '',
-        ownerUsername: ownerLogin,
-        defaultFestivalId: slug,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-      await setDoc(doc(db, `institutions/${slug}/festivals`, slug), {
-        id: slug,
+        ownerLogin,
+        ownerPassword,
+        plan,
+        subscriptionStatus,
+        active,
+        purchaseNotes,
+        oldLogin: oldLoginInput.value
+      });
+      setModalOpen(false);
+      await renderSuperAdminPortal();
+    });
+
+    async function saveInstitutionWorkspace({ id, title, ownerName, ownerLogin, ownerPassword, plan, subscriptionStatus, active, purchaseNotes, oldLogin }) {
+      await setDoc(doc(db, 'institutions', id), {
+        id,
         title,
         name: title,
-        active: true,
-        plan: 'trial',
-        subscriptionStatus: 'trial',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-      await saveInstitutionAdminLogin({ id: slug, defaultFestivalId: slug, name: title }, ownerName, ownerLogin, ownerPassword, true);
-      await renderSuperAdminPortal();
-    }
-
-    async function upsertInstitutionAdminLogin(festival) {
-      const displayName = festival.title || festival.name || festival.id;
-      const ownerName = prompt('Institution admin name', festival.ownerName || `${displayName} Admin`);
-      if (!ownerName) return;
-      const ownerLogin = (prompt('Institution admin email or username', festival.ownerUsername || festival.ownerEmail || '') || '').trim().toLowerCase();
-      if (!ownerLogin) return alert('Admin email/username is required.');
-      const ownerPassword = prompt('Temporary password for institution admin');
-      if (!ownerPassword) return alert('Temporary password is required.');
-      await saveInstitutionAdminLogin(festival, ownerName, ownerLogin, ownerPassword, festival.active !== false);
-      await updateDoc(doc(db, 'institutions', festival.id), {
+        slug: id,
+        active,
+        plan,
+        subscriptionStatus,
+        purchaseNotes,
         ownerName,
         ownerEmail: ownerLogin.includes('@') ? ownerLogin : '',
         ownerUsername: ownerLogin,
-        updatedAt: serverTimestamp()
-      });
-      await renderSuperAdminPortal();
+        defaultFestivalId: id,
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      await setDoc(doc(db, `institutions/${id}/festivals`, id), {
+        id,
+        title,
+        name: title,
+        active,
+        plan,
+        subscriptionStatus,
+        purchaseNotes,
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      if (oldLogin && oldLogin !== ownerLogin) {
+        await deleteDoc(doc(db, 'institutionLogins', oldLogin));
+        await deleteDoc(doc(db, `institutions/${id}/festivals/${id}/manualUsers`, oldLogin));
+      }
+      await saveInstitutionAdminLogin({ id, defaultFestivalId: id, name: title, title }, ownerName, ownerLogin, ownerPassword, active, plan, subscriptionStatus);
     }
 
-    async function saveInstitutionAdminLogin(festival, ownerName, ownerLogin, ownerPassword, active) {
+    async function saveInstitutionAdminLogin(festival, ownerName, ownerLogin, ownerPassword, active, plan = 'trial', subscriptionStatus = 'trial') {
       const institutionId = festival.id;
       const festivalId = festival.defaultFestivalId || festival.id;
       const loginKey = ownerLogin.toLowerCase();
@@ -279,6 +396,8 @@ ${loginUrl.href}`);
         usernameLower: loginKey,
         email: ownerLogin.includes('@') ? ownerLogin : '',
         password: ownerPassword,
+        plan,
+        subscriptionStatus,
         active,
         updatedAt: serverTimestamp()
       };
