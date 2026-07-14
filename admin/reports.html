@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reports Terminal - Admin Portal</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
   <style>
     @media print {
       body {
@@ -173,12 +174,12 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getTeamTotals, getResults, getCompetitions, getTeams } from "/assets/js/firestore-service.js";
+    import { getTeamTotals, getResults, getCompetitions, getTeams } from "../assets/js/firestore-service.js";
 
     let activeFestId = null;
     let cachedTotals = [];
@@ -195,7 +196,7 @@
         activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
         if (!activeFestId) {
           alert("Please select a festival scope first.");
-          window.location.replace('/select-fest.html');
+          window.location.replace('../select-fest.html');
           return;
         }
 

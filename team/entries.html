@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your Team Entries - Team Leader Desk</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen animate-fade-in">
   
@@ -33,7 +34,7 @@
             <p class="text-xs text-slate-400 font-medium">Consolidated view of all active registrations for: <span id="auth-team-label" class="font-bold text-emerald-600 font-mono">Loading Team...</span></p>
           </div>
           <div class="flex items-center space-x-2 shrink-0">
-            <a href="/team/competitions.html" class="btn btn-primary py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm cursor-pointer">
+            <a href="../team/competitions.html" class="btn btn-primary py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm cursor-pointer">
               <span>Register New Entry</span>
             </a>
           </div>
@@ -72,12 +73,12 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { collection, query, where, getDocs, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getCompetitions, getCategories } from "/assets/js/firestore-service.js";
+    import { getCompetitions, getCategories } from "../assets/js/firestore-service.js";
 
     let leaderProfile = null;
     let assignedTeamId = null;
@@ -91,7 +92,7 @@
         assignedTeamId = leaderProfile.teamId;
 
         if (!assignedTeamId) {
-          window.location.replace('/unauthorized.html?reason=no_team_id');
+          window.location.replace('../unauthorized.html?reason=no_team_id');
           return;
         }
 

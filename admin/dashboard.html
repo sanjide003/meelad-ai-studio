@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -38,7 +39,7 @@
             <p class="text-xs text-slate-400 font-medium">Head Administrator Terminal • Connected Festival Workspace</p>
           </div>
           <div class="flex items-center space-x-2 shrink-0">
-            <a href="/admin/user-invitations.html" class="btn btn-accent py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm">
+            <a href="../admin/user-invitations.html" class="btn btn-accent py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
               <span>Invite New User</span>
             </a>
@@ -95,11 +96,11 @@
             Welcome to the MeeladPulse system terminal. Use the left sidebar panel to browse active rosters, modify user activation keys, or issue fresh cryptographic invitations. Restrict access parameters strictly to authorized festival nodes.
           </p>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            <a href="/admin/users.html" class="block p-4 border border-slate-100 hover:border-slate-300 rounded-xl transition-all">
+            <a href="../admin/users.html" class="block p-4 border border-slate-100 hover:border-slate-300 rounded-xl transition-all">
               <span class="text-xs font-bold text-slate-800 block">Manage Active Accounts</span>
               <span class="text-[11px] text-slate-400 mt-1 block">Toggle activation keys, audit profile parameters, and modify user states.</span>
             </a>
-            <a href="/admin/user-invitations.html" class="block p-4 border border-slate-100 hover:border-slate-300 rounded-xl transition-all">
+            <a href="../admin/user-invitations.html" class="block p-4 border border-slate-100 hover:border-slate-300 rounded-xl transition-all">
               <span class="text-xs font-bold text-slate-800 block">Cryptographic User Invitations</span>
               <span class="text-[11px] text-slate-400 mt-1 block">Generate 32-byte secure activation tokens, hash them, and invite Judges or Team Leaders.</span>
             </a>
@@ -111,10 +112,10 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     async function initDashboard() {

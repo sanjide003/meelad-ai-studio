@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Result Review & Approval - Admin Console</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -29,7 +30,7 @@
         <!-- Header Controls -->
         <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="space-y-1">
-            <a href="/admin/provisional-results.html" class="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-600 mb-1.5 transition">
+            <a href="../admin/provisional-results.html" class="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-600 mb-1.5 transition">
               ← Back to Provisional Results
             </a>
             <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Result Review & Approval</h1>
@@ -151,13 +152,13 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getJudgeSafeCompetition } from "/assets/js/judge-service.js";
-    import { tabulateCompetitionResult, approveCompetitionResult } from "/assets/js/result-engine.js";
+    import { getJudgeSafeCompetition } from "../assets/js/judge-service.js";
+    import { tabulateCompetitionResult, approveCompetitionResult } from "../assets/js/result-engine.js";
 
     let adminProfile = null;
     let selectedComp = null;
@@ -178,7 +179,7 @@
         const compId = urlParams.get('compId');
 
         if (!compId) {
-          window.location.replace("/admin/provisional-results.html");
+          window.location.replace("../admin/provisional-results.html");
           return;
         }
 
@@ -507,7 +508,7 @@
         try {
           await approveCompetitionResult(selectedComp.id, manualOverrides, resolvedTies, appliedPenalties);
           alert("Results approved successfully!");
-          window.location.href = "/admin/provisional-results.html?compId=" + selectedComp.id;
+          window.location.href = "../admin/provisional-results.html?compId=" + selectedComp.id;
         } catch (err) {
           alert("Approval failed: " + err.message);
           approveBtn.disabled = false;

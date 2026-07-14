@@ -3,6 +3,10 @@ import { auth, db } from "./firebase-init.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+function appUrl(path) {
+  return new URL(path.replace(/^\//, ""), new URL("../../", import.meta.url)).href;
+}
+
 export function initializeNavigation() {
   // 1. Mobile Hamburger Menu Setup
   const hamburgerBtn = document.getElementById('mobile-hamburger-btn');
@@ -103,7 +107,7 @@ export function initializeNavigation() {
         await signOut(auth);
         localStorage.removeItem('meeladpulse_selected_fest_id');
         localStorage.removeItem('meeladpulse_selected_fest_title');
-        window.location.replace('/login.html');
+        window.location.replace(appUrl('login.html'));
       } catch (err) {
         console.error("Sign out process error:", err);
       }
@@ -151,7 +155,7 @@ export async function initializePublicNavigation() {
   // Load components dynamically if containers exist
   if (headerContainer) {
     try {
-      const res = await fetch('/components/public-header.html');
+      const res = await fetch(appUrl('components/public-header.html'));
       if (res.ok) {
         headerContainer.innerHTML = await res.text();
       }
@@ -162,7 +166,7 @@ export async function initializePublicNavigation() {
 
   if (footerContainer) {
     try {
-      const res = await fetch('/components/public-footer.html');
+      const res = await fetch(appUrl('components/public-footer.html'));
       if (res.ok) {
         footerContainer.innerHTML = await res.text();
       }
@@ -177,7 +181,7 @@ export async function initializePublicNavigation() {
   
   navLinks.forEach(link => {
     const href = link.getAttribute('href');
-    if (href && (currentPath === href || currentPath.endsWith(href) || (href !== '/index.html' && currentPath.includes(href.replace('.html', ''))))) {
+    if (href && (currentPath === href || currentPath.endsWith(href) || (href !== 'index.html' && href !== '../index.html' && currentPath.includes(href.replace('.html', ''))))) {
       link.classList.add('bg-indigo-50/70', 'text-indigo-600');
       link.classList.remove('text-slate-500', 'text-slate-600');
     }

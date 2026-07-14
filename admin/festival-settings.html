@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Festival Settings - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -33,7 +34,7 @@
             <p class="text-xs text-slate-400 font-medium">Configure festival-specific security controls and registration authorities.</p>
           </div>
           <div class="flex items-center space-x-2 shrink-0">
-            <a href="/admin/dashboard.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold">
+            <a href="../admin/dashboard.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold">
               Back to Dashboard
             </a>
           </div>
@@ -190,10 +191,10 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { getFestivalSettings, updateFestivalSettings } from "/assets/js/student-service.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { getFestivalSettings, updateFestivalSettings } from "../assets/js/student-service.js";
 
     const RULE_DEFS = [
       { key: 'totalPoints', name: 'Total Championship Points', nameMl: 'ആകെ പോയിന്റുകൾ', defaultPriority: 1 },
@@ -267,7 +268,7 @@
         activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
         if (!activeFestId) {
           alert("Please select a festival scope first.");
-          window.location.replace('/select-fest.html');
+          window.location.replace('../select-fest.html');
           return;
         }
 

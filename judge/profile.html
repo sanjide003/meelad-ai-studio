@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Authorised Station Profile - Judge Panel</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -83,13 +84,13 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { getAssignmentsForJudge } from "/assets/js/judge-service.js";
-    import { getJudgeMarksForCompetitionAndJudge } from "/assets/js/mark-service.js";
-    import { en } from "/assets/js/translations-en.js";
-    import { ml } from "/assets/js/translations-ml.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { getAssignmentsForJudge } from "../assets/js/judge-service.js";
+    import { getJudgeMarksForCompetitionAndJudge } from "../assets/js/mark-service.js";
+    import { en } from "../assets/js/translations-en.js";
+    import { ml } from "../assets/js/translations-ml.js";
 
     let judgeProfile = null;
     let currentLanguage = localStorage.getItem('meeladpulse_lang') || 'en';

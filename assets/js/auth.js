@@ -9,6 +9,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+function appPath(path) {
+  return new URL(path.replace(/^\//, ""), new URL("../../", import.meta.url)).pathname;
+}
+
 /**
  * Handles the secure login sequence following the 9-step exact flow.
  */
@@ -56,14 +60,14 @@ export async function loginWithEmailAndPassword(email, password, rememberMe) {
   let targetPath = "";
 
   if (role === "admin") {
-    targetPath = "/admin/dashboard.html";
+    targetPath = appPath("admin/dashboard.html");
   } else if (role === "judge") {
-    targetPath = "/judge/dashboard.html";
+    targetPath = appPath("judge/dashboard.html");
   } else if (role === "teamLeader") {
-    targetPath = "/team/dashboard.html";
+    targetPath = appPath("team/dashboard.html");
   } else {
     await auth.signOut();
-    targetPath = "/unauthorized.html?reason=invalid_role";
+    targetPath = appPath("unauthorized.html?reason=invalid_role");
   }
 
   return targetPath;

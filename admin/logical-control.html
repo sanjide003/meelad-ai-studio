@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Logical Controls Terminal - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -110,9 +111,9 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
     import { 
       getEntries, 
       getCompetitions, 
@@ -120,7 +121,7 @@
       getStudents, 
       getTeams,
       bypassAuditOverride 
-    } from "/assets/js/firestore-service.js";
+    } from "../assets/js/firestore-service.js";
     import { 
       checkGenderEligibility, 
       checkCategoryEligibility, 
@@ -128,7 +129,7 @@
       checkGroupSize, 
       checkDuplicateParticipant, 
       checkScheduleConflict 
-    } from "/assets/js/validation.js";
+    } from "../assets/js/validation.js";
 
     let currentLang = localStorage.getItem('meeladpulse_lang') || 'en';
 

@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Latest Declared Results - Public Portal</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     body {
@@ -23,7 +24,7 @@
   <!-- Sticky Floating Header -->
   <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <a href="/index.html" class="flex items-center space-x-2">
+      <a href="../index.html" class="flex items-center space-x-2">
         <div class="h-9 w-9 rounded-xl bg-slate-950 text-white font-extrabold flex items-center justify-center font-display shadow-sm">
           M
         </div>
@@ -35,15 +36,15 @@
 
       <!-- Desktop Links -->
       <nav class="hidden md:flex items-center space-x-1">
-        <a href="/index.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Home</a>
-        <a href="/public/live-scoreboard.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Scoreboard</a>
-        <a href="/public/latest-results.html" class="px-3 py-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-lg">Latest Results</a>
-        <a href="/public/announcements.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Announcements</a>
+        <a href="../index.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Home</a>
+        <a href="../public/live-scoreboard.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Scoreboard</a>
+        <a href="../public/latest-results.html" class="px-3 py-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-lg">Latest Results</a>
+        <a href="../public/announcements.html" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 rounded-lg transition">Announcements</a>
       </nav>
 
       <div class="flex items-center space-x-2">
         <div id="auth-actions">
-          <a href="/login.html" class="px-3.5 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition font-display">
+          <a href="../login.html" class="px-3.5 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition font-display">
             Admin / Staff Login
           </a>
         </div>
@@ -55,10 +56,10 @@
 
     <!-- Mobile Dropdown Navigation Menu -->
     <div id="mobile-menu" class="hidden border-b border-slate-100 bg-white px-4 py-3 md:hidden space-y-1">
-      <a href="/index.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl">Home</a>
-      <a href="/public/live-scoreboard.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Scoreboard</a>
-      <a href="/public/latest-results.html" class="block px-3 py-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-xl">Latest Results</a>
-      <a href="/public/announcements.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Announcements</a>
+      <a href="../index.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl">Home</a>
+      <a href="../public/live-scoreboard.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Scoreboard</a>
+      <a href="../public/latest-results.html" class="block px-3 py-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-xl">Latest Results</a>
+      <a href="../public/announcements.html" class="block px-3 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl transition">Announcements</a>
     </div>
   </header>
 
@@ -132,12 +133,12 @@
   </footer>
 
   <script type="module">
-    import { auth, db } from "/assets/js/firebase-init.js";
+    import { auth, db } from "../assets/js/firebase-init.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    import { getActiveFestivalId, getPublicFestivalConfig } from "/assets/js/public-config-service.js";
-    import { subscribeLatestPublicResults } from "/assets/js/public-result-service.js";
+    import { getActiveFestivalId, getPublicFestivalConfig } from "../assets/js/public-config-service.js";
+    import { subscribeLatestPublicResults } from "../assets/js/public-result-service.js";
 
     const festId = getActiveFestivalId();
     let publishedResults = [];
@@ -168,10 +169,10 @@
             const userSnap = await getDoc(doc(db, 'users', user.uid));
             if (userSnap.exists()) {
               const uData = userSnap.data();
-              let dashboardHref = '/login.html';
-              if (uData.role === 'admin') dashboardHref = '/admin/dashboard.html';
-              else if (uData.role === 'judge') dashboardHref = '/judge/dashboard.html';
-              else if (uData.role === 'teamLeader') dashboardHref = '/team/dashboard.html';
+              let dashboardHref = '../login.html';
+              if (uData.role === 'admin') dashboardHref = '../admin/dashboard.html';
+              else if (uData.role === 'judge') dashboardHref = '../judge/dashboard.html';
+              else if (uData.role === 'teamLeader') dashboardHref = '../team/dashboard.html';
 
               authActions.innerHTML = `
                 <a href="${dashboardHref}" class="px-3.5 py-2 bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100 text-xs font-bold rounded-xl transition font-display">
@@ -185,7 +186,7 @@
           }
         }
         authActions.innerHTML = `
-          <a href="/login.html" class="px-3.5 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition font-display">
+          <a href="../login.html" class="px-3.5 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition font-display">
             Admin / Staff Login
           </a>
         `;

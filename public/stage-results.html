@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stage Results - Public Portal</title>
-  <link class="main-stylesheet" rel="stylesheet" href="/assets/css/main.css">
+  <link class="main-stylesheet" rel="stylesheet" href="../assets/css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     body {
@@ -75,10 +75,10 @@
   <footer id="public-footer" class="bg-white border-t border-slate-100 py-8"></footer>
 
   <script type="module">
-    import { getActiveFestivalId } from "/assets/js/public-config-service.js";
-    import { getPublicResultsOneTime } from "/assets/js/public-result-service.js";
-    import { initializePublicNavigation } from "/assets/js/navigation.js";
-    import { isStageResult } from "/assets/js/public-data-normalizer.js";
+    import { getActiveFestivalId } from "../assets/js/public-config-service.js";
+    import { getPublicResultsOneTime } from "../assets/js/public-result-service.js";
+    import { initializePublicNavigation } from "../assets/js/navigation.js";
+    import { isStageResult } from "../assets/js/public-data-normalizer.js";
 
     const festId = getActiveFestivalId();
     let publishedResults = [];

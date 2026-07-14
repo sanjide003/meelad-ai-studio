@@ -14,7 +14,7 @@ export async function loadComponent(containerId, filePath) {
 
 export async function loadPortalLayout(role) {
   await Promise.all([
-    loadComponent('portal-header', `/components/${role}-header.html`),
-    loadComponent('portal-sidebar', `/components/${role}-sidebar.html`)
+    loadComponent('portal-header', new URL(`../components/${role}-header.html`, window.location.href).href),
+    loadComponent('portal-sidebar', new URL(`../components/${role}-sidebar.html`, window.location.href).href)
   ]);
 }

@@ -3,6 +3,10 @@ import { auth, db } from "./firebase-init.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+function appUrl(path) {
+  return new URL(path.replace(/^\//, ""), new URL("../../", import.meta.url)).href;
+}
+
 // Initially hide elements or display a clean loading overlay
 if (document.getElementById('global-page-loader')) {
   document.getElementById('global-page-loader').classList.remove('hidden');
@@ -15,7 +19,7 @@ export async function verifyUserRole(allowedRoles) {
       unsubscribe();
       
       if (!user) {
-        window.location.replace('/login.html');
+        window.location.replace(appUrl('login.html'));
         return reject('Not authenticated');
       }
 
@@ -25,7 +29,7 @@ export async function verifyUserRole(allowedRoles) {
 
         if (!userDoc.exists()) {
           await signOut(auth);
-          window.location.replace('/unauthorized.html?reason=no_profile');
+          window.location.replace(appUrl('unauthorized.html?reason=no_profile'));
           return reject('No profile');
         }
 
@@ -33,12 +37,12 @@ export async function verifyUserRole(allowedRoles) {
 
         if (userData.active !== true) {
           await signOut(auth);
-          window.location.replace('/unauthorized.html?reason=inactive');
+          window.location.replace(appUrl('unauthorized.html?reason=inactive'));
           return reject('Inactive account');
         }
 
         if (!allowedRoles.includes(userData.role)) {
-          window.location.replace('/unauthorized.html?reason=access_denied');
+          window.location.replace(appUrl('unauthorized.html?reason=access_denied'));
           return reject('Role unauthorized');
         }
 
@@ -50,7 +54,7 @@ export async function verifyUserRole(allowedRoles) {
         if (!currentPath.includes('select-fest.html') && !currentPath.includes('unauthorized.html')) {
           const selectedFestId = localStorage.getItem('meeladpulse_selected_fest_id');
           if (!selectedFestId) {
-            window.location.replace('/select-fest.html');
+            window.location.replace(appUrl('select-fest.html'));
             return reject('No festival selected');
           }
         }
@@ -64,7 +68,7 @@ export async function verifyUserRole(allowedRoles) {
       } catch (error) {
         console.error("Auth security verification error:", error);
         await signOut(auth);
-        window.location.replace('/unauthorized.html?reason=verification_failed');
+        window.location.replace(appUrl('unauthorized.html?reason=verification_failed'));
         reject(error);
       }
     });

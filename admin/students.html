@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Roster - Admin Terminal</title>
-  <link class="main-css" rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link class="main-css" rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -34,7 +35,7 @@
           </div>
           <div class="flex items-center space-x-2 shrink-0">
             <!-- Normal Register Button (Hidden/Disabled under teamLeadersOnly mode) -->
-            <a href="/admin/student-create.html" id="register-student-btn" class="btn btn-primary py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm">
+            <a href="../admin/student-create.html" id="register-student-btn" class="btn btn-primary py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
               <span>Register New Student</span>
             </a>
@@ -139,10 +140,10 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { getFestivalSettings, getAllFestivalStudents, approveStudent, rejectStudent } from "/assets/js/student-service.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { getFestivalSettings, getAllFestivalStudents, approveStudent, rejectStudent } from "../assets/js/student-service.js";
 
     let activeFestId = null;
     let festivalSettings = null;
@@ -157,7 +158,7 @@
         activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
         if (!activeFestId) {
           alert("Please select a festival scope first.");
-          window.location.replace('/select-fest.html');
+          window.location.replace('../select-fest.html');
           return;
         }
 
@@ -247,7 +248,7 @@
           const editURL = `/admin/student-edit.html?id=${s.id}`;
           actionHTML = `
             <div class="flex items-center justify-end space-x-2">
-              <a href="/admin/student-details.html?id=${s.id}" class="text-xs font-bold text-slate-500 hover:text-slate-700 hover:underline">View</a>
+              <a href="../admin/student-details.html?id=${s.id}" class="text-xs font-bold text-slate-500 hover:text-slate-700 hover:underline">View</a>
               <a href="${editURL}" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">${festivalSettings.studentRegistrationMode === 'teamLeadersOnly' ? 'Override' : 'Edit'}</a>
             </div>
           `;

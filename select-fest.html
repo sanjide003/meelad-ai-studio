@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Select Festival - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col justify-between">
   
@@ -45,8 +46,8 @@
   </footer>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "./assets/js/role-guard.js";
+    import { db } from "./assets/js/firebase-init.js";
     import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const festivalsGrid = document.getElementById('festivals-grid');
@@ -102,10 +103,10 @@
             localStorage.setItem('meeladpulse_selected_fest_title', festival.title);
 
             // Redirect user to their custom dashboard
-            let redirectUrl = "/login.html";
-            if (userProfile.role === 'admin') redirectUrl = "/admin/dashboard.html";
-            else if (userProfile.role === 'judge') redirectUrl = "/judge/dashboard.html";
-            else if (userProfile.role === 'teamLeader') redirectUrl = "/team/dashboard.html";
+            let redirectUrl = "login.html";
+            if (userProfile.role === 'admin') redirectUrl = "admin/dashboard.html";
+            else if (userProfile.role === 'judge') redirectUrl = "judge/dashboard.html";
+            else if (userProfile.role === 'teamLeader') redirectUrl = "team/dashboard.html";
 
             window.location.replace(redirectUrl);
           });
@@ -125,7 +126,7 @@
     }
 
     // Initialize layout navigation controls (e.g. signout)
-    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { initializeNavigation } from "./assets/js/navigation.js";
     // We will call initializeNavigation once auth verification completes inside initializeFestivalSelection
     initializeFestivalSelection().then(() => {
       initializeNavigation();

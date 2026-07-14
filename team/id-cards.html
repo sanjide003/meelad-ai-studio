@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ID Cards Terminal - Team Leader Desk</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
-  <link rel="stylesheet" href="/assets/css/id-cards.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/id-cards.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -74,10 +75,10 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { getFestivalStudentsForCards, getVerificationUrl, getQrCodeImageUrl } from "/assets/js/id-card-service.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { getFestivalStudentsForCards, getVerificationUrl, getQrCodeImageUrl } from "../assets/js/id-card-service.js";
 
     let activeFestId = null;
     let leaderProfile = null;
@@ -92,7 +93,7 @@
         activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
         if (!activeFestId) {
           alert("Please select a festival scope first.");
-          window.location.replace('/select-fest.html');
+          window.location.replace('../select-fest.html');
           return;
         }
 
