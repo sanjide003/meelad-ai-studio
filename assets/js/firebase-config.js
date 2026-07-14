@@ -1,10 +1,10 @@
 // MeeladPulse Firebase Configuration
 export const firebaseConfig = {
-  apiKey: "AIzaSyDdUyk_yvZoQ1JI1pPLJTK51U91BVO0XSA",
-  authDomain: "bright-tube-p07pf.firebaseapp.com",
-  projectId: "bright-tube-p07pf",
-  storageBucket: "bright-tube-p07pf.firebasestorage.app",
-  messagingSenderId: "239455260650",
-  appId: "1:239455260650:web:5cfa4803e7fcad93cc6c93",
-  firestoreDatabaseId: "ai-studio-e05927b5-3953-4883-969d-1099cafe3237"
+  apiKey: "AIzaSyAfJSonmGHnf0t92B71ycuAZbc-CV3k7LE",
+  authDomain: "fest-dsd-003.firebaseapp.com",
+  projectId: "fest-dsd-003",
+  storageBucket: "fest-dsd-003.firebasestorage.app",
+  messagingSenderId: "409596394273",
+  appId: "1:409596394273:web:b930012ce0a845ddb45c60",
+  measurementId: "G-WSPJPQR032"
 };

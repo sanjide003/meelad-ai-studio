@@ -1,10 +1,9 @@
 {
-  "projectId": "remixed-project-id",
-  "appId": "remixed-app-id",
-  "apiKey": "remixed-api-key",
-  "authDomain": "remixed-auth-domain",
-  "firestoreDatabaseId": "remixed-firestore-database-id",
-  "storageBucket": "remixed-storage-bucket",
-  "messagingSenderId": "remixed-messaging-sender-id",
-  "measurementId": "remixed-measurement-id"
+  "projectId": "fest-dsd-003",
+  "appId": "1:409596394273:web:b930012ce0a845ddb45c60",
+  "apiKey": "AIzaSyAfJSonmGHnf0t92B71ycuAZbc-CV3k7LE",
+  "authDomain": "fest-dsd-003.firebaseapp.com",
+  "storageBucket": "fest-dsd-003.firebasestorage.app",
+  "messagingSenderId": "409596394273",
+  "measurementId": "G-WSPJPQR032"
 }
