@@ -108,10 +108,38 @@ export function initializeNavigation() {
     });
   });
 
-  // 4. Update dynamic user profile information
+
+  // 4. Fast internal navigation: keep static multi-page routing, but avoid loader flicker and warm the next page.
+  document.querySelectorAll('a[href]').forEach(link => {
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+
+    let url;
+    try {
+      url = new URL(href, window.location.href);
+    } catch (_) {
+      return;
+    }
+
+    if (url.origin !== window.location.origin || !url.pathname.endsWith('.html')) return;
+
+    link.addEventListener('pointerenter', () => {
+      if (document.head.querySelector(`link[rel="prefetch"][href="${url.href}"]`)) return;
+      const prefetch = document.createElement('link');
+      prefetch.rel = 'prefetch';
+      prefetch.href = url.href;
+      document.head.appendChild(prefetch);
+    }, { once: true });
+
+    link.addEventListener('click', () => {
+      sessionStorage.setItem('meeladpulse_fast_nav', '1');
+    });
+  });
+
+  // 5. Update dynamic user profile information
   updateProfileDetails();
 
-  // 5. Logout Listener Bindings
+  // 6. Logout Listener Bindings
   const logoutBtns = document.querySelectorAll('.logout-action-btn');
   logoutBtns.forEach(btn => {
     btn.addEventListener('click', async (e) => {

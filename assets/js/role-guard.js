@@ -7,9 +7,13 @@ function appUrl(path) {
   return new URL(path.replace(/^\//, ""), new URL(/* @vite-ignore */ "../../", import.meta.url)).href;
 }
 
-// Initially hide elements or display a clean loading overlay
-if (document.getElementById('global-page-loader')) {
-  document.getElementById('global-page-loader').classList.remove('hidden');
+// Initially hide elements or display a clean loading overlay.
+// Internal admin navigation uses a fast-nav flag to avoid the heavy full-screen loader flicker on every tab click.
+const loaderEl = document.getElementById('global-page-loader');
+const fastNavRequested = sessionStorage.getItem('meeladpulse_fast_nav') === '1';
+sessionStorage.removeItem('meeladpulse_fast_nav');
+if (loaderEl) {
+  loaderEl.classList.toggle('hidden', fastNavRequested);
 }
 
 export async function verifyUserRole(allowedRoles) {
