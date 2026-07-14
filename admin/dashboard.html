@@ -97,6 +97,46 @@
           </div>
         </div>
 
+
+        <!-- Application Structure Roadmap -->
+        <div class="bg-white rounded-2xl border border-emerald-100 p-6 shadow-xs space-y-5">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Implementation Board</p>
+              <h2 class="text-lg font-extrabold text-slate-900 font-display">Festival Setup Roadmap</h2>
+              <p class="text-xs text-slate-500">Complete these steps in order so teams, judges, students, marks, and public results stay consistent.</p>
+            </div>
+            <a href="../select-fest.html" class="btn btn-secondary text-xs font-bold px-4 py-2 border border-slate-200">Switch Workspace</a>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3" id="setup-roadmap-board">
+            <a href="../admin/festival-settings.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="identity">
+              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 01</span>
+              <h3 class="text-sm font-bold text-slate-900 mt-1">Festival Settings</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Institution title, dates, registration mode, and tie-break order.</p>
+            </a>
+            <a href="../admin/teams.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="teams">
+              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 02</span>
+              <h3 class="text-sm font-bold text-slate-900 mt-1">Teams & Groups</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Team groups, chest series, and team leader login credentials.</p>
+            </a>
+            <a href="../admin/categories.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="categories">
+              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 03</span>
+              <h3 class="text-sm font-bold text-slate-900 mt-1">Categories</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Divisions, subdivisions, and student categories before entries.</p>
+            </a>
+            <a href="../admin/students.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="students">
+              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 04</span>
+              <h3 class="text-sm font-bold text-slate-900 mt-1">Student Roster</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Bulk add students into selected team/category with auto chest numbers.</p>
+            </a>
+            <a href="../admin/publish.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="publish">
+              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 05</span>
+              <h3 class="text-sm font-bold text-slate-900 mt-1">Publish & Share</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Review, approve, publish, and share public/team/judge links.</p>
+            </a>
+          </div>
+        </div>
+
         <!-- Portal Info Panel -->
         <div class="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
           <h2 class="text-lg font-bold text-slate-900 font-display">Administrator Control Center</h2>
@@ -129,7 +169,7 @@
     async function initDashboard() {
       try {
         // 1. Verify credentials and role
-        const profile = await verifyUserRole(['admin']);
+        const profile = await verifyUserRole(['superAdmin', 'admin']);
         
         // 2. Load layout templates
         await loadPortalLayout('admin');

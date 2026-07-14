@@ -65,6 +65,8 @@ export async function loginWithEmailAndPassword(email, password, rememberMe) {
     targetPath = appPath("judge/dashboard.html");
   } else if (role === "teamLeader") {
     targetPath = appPath("team/dashboard.html");
+  } else if (role === "superAdmin") {
+    targetPath = appPath("select-fest.html");
   } else {
     await auth.signOut();
     targetPath = appPath("unauthorized.html?reason=invalid_role");
