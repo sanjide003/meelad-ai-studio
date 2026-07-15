@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Security Invitations - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -135,11 +136,11 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { createSecureInvitation } from "/assets/js/invitation-service.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { createSecureInvitation } from "../assets/js/invitation-service.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const roleSelect = document.getElementById('invite-role-select');
@@ -200,7 +201,7 @@
 
       try {
         // Query Teams of this festival
-        const teamsCol = collection(db, `festivals/${festId}/teams`);
+        const teamsCol = collection(db, window.meeladPulseScopedFestivalPath('teams'));
         const querySnapshot = await getDocs(teamsCol);
 
         teamSelect.innerHTML = '<option value="">-- Choose active team --</option>';

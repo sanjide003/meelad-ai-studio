@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Certificates Terminal - Admin Portal</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
-  <link rel="stylesheet" href="/assets/css/certificates.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/certificates.css">
   <!-- Ensure high-end premium typography is loaded for rendering the certificates -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&family=JetBrains+Mono:wght@400;700&display=swap">
   <style>
@@ -169,16 +170,16 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { getTeams } from "/assets/js/firestore-service.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { getTeams } from "../assets/js/firestore-service.js";
     import { 
       getParticipationCertificatesData, 
       getMeritCertificatesData, 
       getChampionshipCertificatesData,
       issueCertificate
-    } from "/assets/js/certificate-service.js";
+    } from "../assets/js/certificate-service.js";
 
     let activeFestId = null;
     let festivalTitle = "MeeladPulse Grand Festival";
@@ -204,7 +205,7 @@
 
         if (!activeFestId) {
           alert("Please select a festival scope first.");
-          window.location.replace('/select-fest.html');
+          window.location.replace('../unauthorized.html?reason=no_scope');
           return;
         }
 

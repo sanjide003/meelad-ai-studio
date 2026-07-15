@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register Student - Admin Terminal</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -32,7 +33,7 @@
             <h1 class="text-xl font-extrabold text-slate-900 tracking-tight font-display">Register Student</h1>
             <p class="text-xs text-slate-400 font-medium">Add a new student profile directly to the active festival database.</p>
           </div>
-          <a href="/admin/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-1.5 px-3 text-xs font-bold">
+          <a href="../admin/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-1.5 px-3 text-xs font-bold">
             Back to Roster
           </a>
         </div>
@@ -65,14 +66,11 @@
               <label for="student-cat" class="text-xs font-bold text-slate-700">Age Category</label>
               <select id="student-cat" required class="form-input cursor-pointer">
                 <option value="">-- Select Category --</option>
-                <option value="cat_subjunior">Sub-Junior</option>
-                <option value="cat_junior">Junior</option>
-                <option value="cat_senior">Senior</option>
               </select>
             </div>
 
             <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
-              <a href="/admin/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold">
+              <a href="../admin/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold">
                 Cancel
               </a>
               <button type="submit" class="btn btn-primary py-2 px-4 text-xs font-bold shadow-md cursor-pointer">
@@ -88,11 +86,11 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { getFestivalSettings, createFestivalStudent } from "/assets/js/student-service.js";
-    import { getTeams } from "/assets/js/firestore-service.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { getFestivalSettings, createFestivalStudent } from "../assets/js/student-service.js";
+    import { getTeams, getCategories } from "../assets/js/firestore-service.js";
 
     let activeFestId = null;
 
@@ -105,7 +103,7 @@
         activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
         if (!activeFestId) {
           alert("Please select a festival scope first.");
-          window.location.replace('/select-fest.html');
+          window.location.replace('../unauthorized.html?reason=no_scope');
           return;
         }
 
@@ -114,11 +112,12 @@
         if (settings.studentRegistrationMode === 'teamLeadersOnly') {
           // Block and redirect
           alert("Team Leaders Only Mode is currently active.\nAdmins cannot register students directly in this mode.\n\nടീം ലീഡർമാർക്ക് മാത്രമേ ഈ മോഡിൽ രജിസ്ട്രേഷൻ ചെയ്യുവാൻ അനുവാദമുള്ളൂ.");
-          window.location.replace('/admin/students.html?warning=mode_restriction');
+          window.location.replace('../admin/students.html?warning=mode_restriction');
           return;
         }
 
         await populateTeamsDropdown();
+        await populateCategoriesDropdown();
         setupFormHandler();
 
         document.getElementById('global-page-loader').classList.add('hidden');
@@ -142,6 +141,19 @@
       }
     }
 
+
+    async function populateCategoriesDropdown() {
+      const dropdown = document.getElementById('student-cat');
+      const categories = (await getCategories() || []).filter(cat => cat.active !== false);
+      dropdown.innerHTML = '<option value="">-- Select Category --</option>';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.name || cat.code || cat.id;
+        dropdown.appendChild(opt);
+      });
+    }
+
     function setupFormHandler() {
       const form = document.getElementById('student-create-form');
       form.onsubmit = async (e) => {
@@ -159,7 +171,7 @@
 
         try {
           await createFestivalStudent(studentData);
-          window.location.replace('/admin/students.html?success=student_registered');
+          window.location.replace('../admin/students.html?success=student_registered');
         } catch (err) {
           loader.classList.add('hidden');
           alert("Registration failed: " + err.message);

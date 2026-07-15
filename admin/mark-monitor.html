@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mark Sheets Monitor - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -112,12 +113,12 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { getCompetitions, getEntries } from "/assets/js/firestore-service.js";
-    import { getJudgeAssignments } from "/assets/js/judge-service.js";
-    import { getJudgeMarksForCompetition, reopenMarkSheet } from "/assets/js/mark-service.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { getCompetitions, getEntries } from "../assets/js/firestore-service.js";
+    import { getJudgeAssignments } from "../assets/js/judge-service.js";
+    import { getJudgeMarksForCompetition, reopenMarkSheet } from "../assets/js/mark-service.js";
 
     let competitions = [];
     let entries = [];

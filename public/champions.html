@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Individual Champions - Public Portal</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     body {
@@ -80,9 +81,9 @@
   <footer id="public-footer" class="bg-white border-t border-slate-100 py-8"></footer>
 
   <script type="module">
-    import { getActiveFestivalId } from "/assets/js/public-config-service.js";
-    import { initializePublicNavigation } from "/assets/js/navigation.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { getActiveFestivalId } from "../assets/js/public-config-service.js";
+    import { initializePublicNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const festId = getActiveFestivalId();
@@ -123,7 +124,7 @@
     async function fetchChampions() {
       const body = document.getElementById('champions-table-body');
       try {
-        const path = `festivals/${festId}/publicData/champions`;
+        const path = window.meeladPulseScopedFestivalPath('publicData/champions');
         const snap = await getDocs(collection(db, path));
         allChampions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 

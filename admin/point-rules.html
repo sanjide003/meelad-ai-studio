@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Point Rules Management - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -29,8 +30,8 @@
         <!-- Header Banner & Translation Toggle -->
         <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
           <div class="space-y-1">
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display" id="page-title-pts">Point Allocation Schemes</h1>
-            <p class="text-xs text-slate-400 font-medium" id="page-subtitle-pts">Manage standard schemes for allocating team points based on participant ranks and participation.</p>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display" id="page-title-pts">Point & Grade Allocation Schemes</h1>
+            <p class="text-xs text-slate-400 font-medium" id="page-subtitle-pts">Manage position points and attach the grade scale that should be displayed with each point scheme.</p>
           </div>
           <div class="flex items-center space-x-2">
             <button id="lang-toggle-btn" class="btn btn-secondary text-xs py-2 px-3 flex items-center space-x-1 border border-slate-200 cursor-pointer">
@@ -60,6 +61,15 @@
                   <option value="positionOnly">Position Points Only (Ignore Grades)</option>
                   <option value="gradeOnly">Grade Points Only (Ignore Ranks)</option>
                 </select>
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 block" id="lbl-pts-grade-rule">Linked Grade Rule</label>
+                <select id="rule-grade-select" class="form-input cursor-pointer">
+                  <option value="">-- Select grade scale --</option>
+                </select>
+                <div id="grade-rule-preview" class="rounded-xl bg-slate-50 border border-slate-100 p-3 text-[11px] text-slate-500">Select a grade rule to preview grade ranges here.</div>
+                <a href="../admin/grade-rules.html" class="inline-flex text-[10px] font-bold text-emerald-600 hover:underline">Create / edit grade ranges</a>
               </div>
 
               <div class="grid grid-cols-2 gap-4">
@@ -121,12 +131,13 @@
                     <th class="px-6 py-4" id="th-mode">Calculation Mode</th>
                     <th class="px-6 py-4" id="th-ranks">Ranks Points (1st - 5th)</th>
                     <th class="px-6 py-4" id="th-part">Participation</th>
+                    <th class="px-6 py-4" id="th-grade">Grade Scale</th>
                     <th class="px-6 py-4 text-right" id="th-actions">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="rules-table-body" class="divide-y divide-slate-100 text-xs text-slate-700">
                   <tr>
-                    <td colspan="5" class="px-6 py-12 text-center text-slate-400">Loading point schemas...</td>
+                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">Loading point schemas...</td>
                   </tr>
                 </tbody>
               </table>
@@ -140,12 +151,13 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { getPointRules, savePointRule, deletePointRule } from "/assets/js/firestore-service.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { getPointRules, savePointRule, deletePointRule, getGradeRules } from "../assets/js/firestore-service.js";
 
     let currentLang = localStorage.getItem('meeladpulse_lang') || 'en';
+    let globalGradeRules = [];
 
     const trans = {
       en: {
@@ -155,6 +167,8 @@
         editHeader: "Edit Point Rule Profile",
         nameLabel: "Scheme Profile Name",
         modeLabel: "Calculation Mode",
+        gradeRuleLabel: "Linked Grade Rule",
+        thGrade: "Grade Scale",
         pt1: "1st Place Points",
         pt2: "2nd Place Points",
         pt3: "3rd Place Points",
@@ -182,6 +196,8 @@
         editHeader: "പോയിന്റ് നിയമം ഭേദഗതി ചെയ്യുക",
         nameLabel: "പോയിന്റ് നിയമത്തിന്റെ പേര്",
         modeLabel: "കണക്കാക്കുന്ന രീതി",
+        gradeRuleLabel: "ബന്ധിപ്പിച്ച ഗ്രേഡ് നിയമം",
+        thGrade: "ഗ്രേഡ് സ്കെയിൽ",
         pt1: "ഒന്നാം സ്ഥാനം പോയിന്റുകൾ",
         pt2: "രണ്ടാം സ്ഥാനം പോയിന്റുകൾ",
         pt3: "മൂന്നാം സ്ഥാനം പോയിന്റുകൾ",
@@ -211,6 +227,7 @@
       document.getElementById('form-header-pts').textContent = document.getElementById('rule-id').value ? t.editHeader : t.createHeader;
       document.getElementById('lbl-pts-name').textContent = t.nameLabel;
       document.getElementById('lbl-pts-mode').textContent = t.modeLabel;
+      document.getElementById('lbl-pts-grade-rule').textContent = t.gradeRuleLabel;
       document.getElementById('lbl-pt-1').textContent = t.pt1;
       document.getElementById('lbl-pt-2').textContent = t.pt2;
       document.getElementById('lbl-pt-3').textContent = t.pt3;
@@ -225,6 +242,7 @@
       document.getElementById('th-mode').textContent = t.thMode;
       document.getElementById('th-ranks').textContent = t.thRanks;
       document.getElementById('th-part').textContent = t.thPart;
+      document.getElementById('th-grade').textContent = t.thGrade;
       document.getElementById('th-actions').textContent = t.thActions;
     }
 
@@ -239,6 +257,9 @@
         await loadPortalLayout('admin');
         initializeNavigation();
         applyTranslations();
+        await loadGradeRuleOptions();
+        document.getElementById('rule-grade-select').addEventListener('change', updateGradePreview);
+        document.getElementById('rule-mode-select').addEventListener('change', updateGradePreview);
 
         // Language toggle
         document.getElementById('lang-toggle-btn').addEventListener('click', () => {
@@ -267,7 +288,8 @@
             thirdPlacePoints: parseInt(document.getElementById('pts-3-input').value) || 0,
             fourthPlacePoints: parseInt(document.getElementById('pts-4-input').value) || 0,
             fifthPlacePoints: parseInt(document.getElementById('pts-5-input').value) || 0,
-            participationPoints: parseInt(document.getElementById('pts-part-input').value) || 0
+            participationPoints: parseInt(document.getElementById('pts-part-input').value) || 0,
+            gradeRuleId: document.getElementById('rule-grade-select').value
           };
 
           try {
@@ -291,16 +313,52 @@
       }
     }
 
+    async function loadGradeRuleOptions() {
+      globalGradeRules = await getGradeRules() || [];
+      const select = document.getElementById('rule-grade-select');
+      select.innerHTML = '<option value="">-- Select grade scale --</option>';
+      globalGradeRules.forEach(rule => {
+        const opt = document.createElement('option');
+        opt.value = rule.id;
+        opt.textContent = rule.name || rule.id;
+        select.appendChild(opt);
+      });
+      updateGradePreview();
+    }
+
+    function updateGradePreview() {
+      const mode = document.getElementById('rule-mode-select').value;
+      const selectedId = document.getElementById('rule-grade-select').value;
+      const preview = document.getElementById('grade-rule-preview');
+      if (mode === 'positionOnly') {
+        preview.innerHTML = '<span class="font-bold text-slate-600">Position-only mode:</span> grade ranges are not used for point calculation.';
+        return;
+      }
+      const rule = globalGradeRules.find(item => item.id === selectedId);
+      if (!rule) {
+        preview.textContent = 'Select a grade rule to preview grade ranges here.';
+        return;
+      }
+      preview.innerHTML = (rule.ranges || []).map(range => `<span class="inline-flex mr-1.5 mb-1 px-2 py-0.5 rounded-full bg-white border border-slate-200 font-bold text-slate-700">${range.grade}: ${range.minPercentage}-${range.maxPercentage}% / Team ${range.teamPoint || 0}</span>`).join('') || 'No ranges configured.';
+    }
+
+    function gradeRuleSummary(id) {
+      const rule = globalGradeRules.find(item => item.id === id);
+      if (!rule) return '<span class="text-slate-400">Not linked</span>';
+      const ranges = (rule.ranges || []).map(range => `${range.grade} ${range.minPercentage}-${range.maxPercentage}%`).join(', ');
+      return `<div class="font-bold text-slate-700">${rule.name || rule.id}</div><div class="text-[10px] text-slate-500 mt-1">${ranges || 'No ranges'}</div>`;
+    }
+
     async function renderPointRules() {
       const t = trans[currentLang];
-      tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">${t.loading}</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">${t.loading}</td></tr>`;
       
       try {
         const rules = await getPointRules();
         countBadge.textContent = rules.length;
 
         if (rules.length === 0) {
-          tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">${t.noData}</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">${t.noData}</td></tr>`;
           return;
         }
 
@@ -327,6 +385,7 @@
               <span class="text-slate-300 font-medium">${r.fifthPlacePoints || 0}</span>
             </td>
             <td class="px-6 py-4 font-mono text-slate-600 font-semibold">+${r.participationPoints || 0} Pts</td>
+            <td class="px-6 py-4">${gradeRuleSummary(r.gradeRuleId)}</td>
             <td class="px-6 py-4 text-right space-x-2 shrink-0">
               <button class="edit-btn text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer" data-id="${r.id}">Edit</button>
               <button class="delete-btn text-xs font-bold text-rose-600 hover:text-rose-700 cursor-pointer" data-id="${r.id}">Delete</button>
@@ -350,6 +409,8 @@
               document.getElementById('pts-4-input').value = r.fourthPlacePoints || 0;
               document.getElementById('pts-5-input').value = r.fifthPlacePoints || 0;
               document.getElementById('pts-part-input').value = r.participationPoints || 0;
+              document.getElementById('rule-grade-select').value = r.gradeRuleId || '';
+              updateGradePreview();
 
               document.getElementById('form-header-pts').textContent = t.editHeader;
               cancelBtn.classList.remove('hidden');
@@ -365,23 +426,17 @@
               btn.disabled = true;
               btn.textContent = t.deleting;
               try {
-                await deletePointPointRule(id); // mapped from service deletion
+                await deletePointRule(id);
                 await renderPointRules();
               } catch (err) {
-                // fall back delete point rule
-                try {
-                  await deletePointRule(id);
-                  await renderPointRules();
-                } catch (e2) {
-                  alert("Error deleting point rule: " + e2.message);
-                }
+                alert("Error deleting point rule: " + err.message);
               }
             }
           });
         });
 
       } catch (err) {
-        tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-rose-500">Error loading point schemas: ${err.message}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-rose-500">Error loading point schemas: ${err.message}</td></tr>`;
       }
     }
 
@@ -389,6 +444,7 @@
       const t = trans[currentLang];
       document.getElementById('rule-id').value = "";
       form.reset();
+      updateGradePreview();
       document.getElementById('form-header-pts').textContent = t.createHeader;
       cancelBtn.classList.add('hidden');
     }

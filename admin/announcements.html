@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Announcements Hub - Admin Portal</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -94,12 +95,12 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { createAnnouncement, getAnnouncementsForRole } from "/assets/js/notification-service.js";
+    import { createAnnouncement, getAnnouncementsForRole } from "../assets/js/notification-service.js";
 
     let activeFestId = null;
 
@@ -112,7 +113,7 @@
         activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
         if (!activeFestId) {
           alert("Please select a festival scope first.");
-          window.location.replace('/select-fest.html');
+          window.location.replace('../unauthorized.html?reason=no_scope');
           return;
         }
 
@@ -206,7 +207,7 @@
           card.querySelector('.delete-btn').onclick = async () => {
             if (confirm("Are you sure you want to retract and delete this bulletin permanently?")) {
               try {
-                await deleteDoc(doc(db, `festivals/${activeFestId}/announcements`, item.id));
+                await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('announcements'), item.id));
                 loadBulletins();
               } catch (err) {
                 console.error("Retraction error:", err);

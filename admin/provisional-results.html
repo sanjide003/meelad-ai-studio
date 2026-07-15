@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Provisional Results - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -141,15 +142,15 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { getCompetitions, getEntries, getResults, saveResult } from "/assets/js/firestore-service.js";
-    import { db } from "/assets/js/firebase-init.js";
-    import { getJudgeAssignments } from "/assets/js/judge-service.js";
-    import { getJudgeMarksForCompetition } from "/assets/js/mark-service.js";
-    import { tabulateCompetitionResult } from "/assets/js/result-engine.js";
-    import { recalculateChampionshipTotals } from "/assets/js/championship-engine.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { getCompetitions, getEntries, getResults, saveResult } from "../assets/js/firestore-service.js";
+    import { db } from "../assets/js/firebase-init.js";
+    import { getJudgeAssignments } from "../assets/js/judge-service.js";
+    import { getJudgeMarksForCompetition } from "../assets/js/mark-service.js";
+    import { tabulateCompetitionResult } from "../assets/js/result-engine.js";
+    import { recalculateChampionshipTotals } from "../assets/js/championship-engine.js";
     import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     let competitions = [];
@@ -390,7 +391,7 @@
         holdBtn.disabled = true;
         try {
           const festId = localStorage.getItem('meeladpulse_selected_fest_id');
-          const resRef = doc(db, `festivals/${festId}/results`, compId);
+          const resRef = doc(db, window.meeladPulseScopedFestivalPath('results'), compId);
           await updateDoc(resRef, { status: nextStatus });
           showToast(`Result status toggled to ${nextStatus}.`);
           results = await getResults();

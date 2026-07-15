@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Competitions & Registration - Team Leader Desk</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen animate-fade-in">
   
@@ -132,12 +133,12 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getCompetitions, getCategories } from "/assets/js/firestore-service.js";
+    import { getCompetitions, getCategories } from "../assets/js/firestore-service.js";
 
     let leaderProfile = null;
     let assignedTeamId = null;
@@ -152,7 +153,7 @@
         assignedTeamId = leaderProfile.teamId;
 
         if (!assignedTeamId) {
-          window.location.replace('/unauthorized.html?reason=no_team_id');
+          window.location.replace('../unauthorized.html?reason=no_team_id');
           return;
         }
 
@@ -194,7 +195,7 @@
     async function loadTeamStudents() {
       const festId = localStorage.getItem('meeladpulse_selected_fest_id');
       try {
-        const snap = await getDocs(query(collection(db, `festivals/${festId}/festStudents`), where('teamId', '==', assignedTeamId)));
+        const snap = await getDocs(query(collection(db, window.meeladPulseScopedFestivalPath('festStudents')), where('teamId', '==', assignedTeamId)));
         teamStudents = [];
         snap.forEach(d => {
           teamStudents.push({ id: d.id, ...d.data() });
@@ -207,7 +208,7 @@
     async function loadTeamEntries() {
       const festId = localStorage.getItem('meeladpulse_selected_fest_id');
       try {
-        const snap = await getDocs(query(collection(db, `festivals/${festId}/entries`), where('teamId', '==', assignedTeamId)));
+        const snap = await getDocs(query(collection(db, window.meeladPulseScopedFestivalPath('entries')), where('teamId', '==', assignedTeamId)));
         teamEntries = [];
         snap.forEach(d => {
           teamEntries.push({ id: d.id, ...d.data() });
@@ -451,7 +452,7 @@
           const loader = document.getElementById('global-page-loader');
           loader.classList.remove('hidden');
 
-          await setDoc(doc(db, `festivals/${festId}/entries`, entryId), entryPayload, { merge: true });
+          await setDoc(doc(db, window.meeladPulseScopedFestivalPath('entries'), entryId), entryPayload, { merge: true });
 
           modal.classList.add('hidden');
           registerForm.reset();

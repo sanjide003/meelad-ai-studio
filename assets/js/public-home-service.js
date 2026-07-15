@@ -15,7 +15,7 @@ import {
  * Filters by target = 'public' or 'all', and checks dates if applicable.
  */
 export function subscribePublicAnnouncements(festId, callback) {
-  const path = `festivals/${festId}/announcements`;
+  const path = window.meeladPulseScopedFestivalPath('announcements');
   const colRef = collection(db, path);
   
   // Apply database query limit of 50 to optimize database reads
@@ -75,7 +75,7 @@ export function subscribePublicAnnouncements(festId, callback) {
  * Do not expose private participant lists.
  */
 export function subscribePublicSchedule(festId, callback) {
-  const path = `festivals/${festId}/schedules`;
+  const path = window.meeladPulseScopedFestivalPath('schedules');
   const colRef = collection(db, path);
   const q = query(colRef, orderBy("scheduledTime", "asc"), limit(20));
 
@@ -88,7 +88,7 @@ export function subscribePublicSchedule(festId, callback) {
   }, (err) => {
     console.error("Public schedule subscription failed:", err);
     // Fallback to competitions listing if schedules is empty or error
-    const fallbackPath = `festivals/${festId}/competitions`;
+    const fallbackPath = window.meeladPulseScopedFestivalPath('competitions');
     const fallbackRef = collection(db, fallbackPath);
     getDocs(query(fallbackRef, limit(30))).then(snap => {
       const comps = [];
@@ -119,7 +119,7 @@ export function subscribePublicSchedule(festId, callback) {
  * Promoting optimized Firestore read paths.
  */
 export async function getPublicScheduleOneTime(festId) {
-  const path = `festivals/${festId}/schedules`;
+  const path = window.meeladPulseScopedFestivalPath('schedules');
   const colRef = collection(db, path);
   const q = query(colRef, orderBy("scheduledTime", "asc"), limit(150));
   try {
@@ -136,7 +136,7 @@ export async function getPublicScheduleOneTime(festId) {
   }
 
   // Fallback to competitions listing
-  const fallbackPath = `festivals/${festId}/competitions`;
+  const fallbackPath = window.meeladPulseScopedFestivalPath('competitions');
   const fallbackRef = collection(db, fallbackPath);
   const snap = await getDocs(query(fallbackRef, limit(150)));
   const comps = [];

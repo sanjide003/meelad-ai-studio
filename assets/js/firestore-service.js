@@ -47,19 +47,38 @@ export function handleFirestoreError(error, operationType, path) {
   throw new Error(JSON.stringify(errInfo));
 }
 
-// Helper to check for active festival scope
-export function getActiveFestivalId() {
-  const festId = localStorage.getItem('meeladpulse_selected_fest_id');
-  if (!festId) {
+// Helper to check for active institution/festival scope.
+export function getActiveScope() {
+  if (window.meeladPulseGetActiveScope) {
+    const scope = window.meeladPulseGetActiveScope();
+    if (scope?.festivalId && scope?.institutionId) return scope;
+  }
+  const params = new URLSearchParams(window.location.search);
+  const urlFestivalId = params.get('festival');
+  const urlInstitutionId = params.get('institution');
+  const festivalId = urlFestivalId || localStorage.getItem('meeladpulse_selected_fest_id') || urlInstitutionId;
+  const institutionId = urlInstitutionId || localStorage.getItem('meeladpulse_selected_institution_id') || festivalId;
+  if (!festivalId) {
     throw new Error("No active festival scope selected. Please select a festival first.");
   }
-  return festId;
+  return { institutionId, festivalId };
+}
+
+// Compatibility helper for older page code; it still resolves the active scoped festival id.
+export function getActiveFestivalId() {
+  return getActiveScope().festivalId;
+}
+
+export function getScopedFestivalPath(subPath = '') {
+  const { institutionId, festivalId } = getActiveScope();
+  const suffix = subPath ? `/${subPath.replace(/^\//, '')}` : '';
+  return `institutions/${institutionId}/festivals/${festivalId}${suffix}`;
 }
 
 // Verification that user is an admin
 export function assertAdminRole() {
   const profile = window.currentUserProfile;
-  if (!profile || profile.role !== 'admin') {
+  if (!profile || !['superAdmin', 'institutionAdmin', 'admin'].includes(profile.role)) {
     throw new Error("Unauthorized access. Admin role required.");
   }
 }
@@ -69,7 +88,7 @@ export function assertAdminRole() {
 // ==========================================
 export async function getDivisions() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/divisions`;
+  const path = window.meeladPulseScopedFestivalPath('divisions');
   try {
     const q = query(collection(db, path), orderBy('order', 'asc'));
     const snap = await getDocs(q);
@@ -83,9 +102,9 @@ export async function saveDivision(divisionData) {
   assertAdminRole();
   const festId = getActiveFestivalId();
   const id = divisionData.id || doc(collection(db, 'dummy')).id;
-  const path = `festivals/${festId}/divisions/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`divisions/${id}`);
   try {
-    const docRef = doc(db, `festivals/${festId}/divisions`, id);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('divisions'), id);
     const payload = {
       id,
       name: divisionData.name,
@@ -109,9 +128,9 @@ export async function saveDivision(divisionData) {
 export async function deleteDivision(id) {
   assertAdminRole();
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/divisions/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`divisions/${id}`);
   try {
-    await deleteDoc(doc(db, `festivals/${festId}/divisions`, id));
+    await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('divisions'), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
@@ -122,7 +141,7 @@ export async function deleteDivision(id) {
 // ==========================================
 export async function getSubdivisions() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/subdivisions`;
+  const path = window.meeladPulseScopedFestivalPath('subdivisions');
   try {
     const q = query(collection(db, path), orderBy('order', 'asc'));
     const snap = await getDocs(q);
@@ -136,9 +155,9 @@ export async function saveSubdivision(subdivData) {
   assertAdminRole();
   const festId = getActiveFestivalId();
   const id = subdivData.id || doc(collection(db, 'dummy')).id;
-  const path = `festivals/${festId}/subdivisions/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`subdivisions/${id}`);
   try {
-    const docRef = doc(db, `festivals/${festId}/subdivisions`, id);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('subdivisions'), id);
     const payload = {
       id,
       divisionId: subdivData.divisionId,
@@ -161,9 +180,9 @@ export async function saveSubdivision(subdivData) {
 export async function deleteSubdivision(id) {
   assertAdminRole();
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/subdivisions/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`subdivisions/${id}`);
   try {
-    await deleteDoc(doc(db, `festivals/${festId}/subdivisions`, id));
+    await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('subdivisions'), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
@@ -174,7 +193,7 @@ export async function deleteSubdivision(id) {
 // ==========================================
 export async function getPointRules() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/pointRules`;
+  const path = window.meeladPulseScopedFestivalPath('pointRules');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -187,9 +206,9 @@ export async function savePointRule(ruleData) {
   assertAdminRole();
   const festId = getActiveFestivalId();
   const id = ruleData.id || doc(collection(db, 'dummy')).id;
-  const path = `festivals/${festId}/pointRules/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`pointRules/${id}`);
   try {
-    const docRef = doc(db, `festivals/${festId}/pointRules`, id);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('pointRules'), id);
     const payload = {
       id,
       name: ruleData.name,
@@ -203,6 +222,7 @@ export async function savePointRule(ruleData) {
       cGradePoints: Number(ruleData.cGradePoints) || 0,
       participationPoints: Number(ruleData.participationPoints) || 0,
       calculationMode: ruleData.calculationMode || 'positionAndGrade',
+      gradeRuleId: ruleData.gradeRuleId || '',
       active: ruleData.active !== false,
       updatedAt: serverTimestamp()
     };
@@ -216,9 +236,9 @@ export async function savePointRule(ruleData) {
 export async function deletePointRule(id) {
   assertAdminRole();
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/pointRules/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`pointRules/${id}`);
   try {
-    await deleteDoc(doc(db, `festivals/${festId}/pointRules`, id));
+    await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('pointRules'), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
@@ -229,7 +249,7 @@ export async function deletePointRule(id) {
 // ==========================================
 export async function getGradeRules() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/gradeRules`;
+  const path = window.meeladPulseScopedFestivalPath('gradeRules');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -242,9 +262,9 @@ export async function saveGradeRule(ruleData) {
   assertAdminRole();
   const festId = getActiveFestivalId();
   const id = ruleData.id || doc(collection(db, 'dummy')).id;
-  const path = `festivals/${festId}/gradeRules/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`gradeRules/${id}`);
   try {
-    const docRef = doc(db, `festivals/${festId}/gradeRules`, id);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('gradeRules'), id);
     const payload = {
       id,
       name: ruleData.name,
@@ -262,9 +282,9 @@ export async function saveGradeRule(ruleData) {
 export async function deleteGradeRule(id) {
   assertAdminRole();
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/gradeRules/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`gradeRules/${id}`);
   try {
-    await deleteDoc(doc(db, `festivals/${festId}/gradeRules`, id));
+    await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('gradeRules'), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
@@ -275,7 +295,7 @@ export async function deleteGradeRule(id) {
 // ==========================================
 export async function getTieBreakRules() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/tieBreakRules`;
+  const path = window.meeladPulseScopedFestivalPath('tieBreakRules');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -288,9 +308,9 @@ export async function saveTieBreakRule(ruleData) {
   assertAdminRole();
   const festId = getActiveFestivalId();
   const id = ruleData.id || doc(collection(db, 'dummy')).id;
-  const path = `festivals/${festId}/tieBreakRules/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`tieBreakRules/${id}`);
   try {
-    const docRef = doc(db, `festivals/${festId}/tieBreakRules`, id);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('tieBreakRules'), id);
     const payload = {
       id,
       name: ruleData.name,
@@ -309,9 +329,9 @@ export async function saveTieBreakRule(ruleData) {
 export async function deleteTieBreakRule(id) {
   assertAdminRole();
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/tieBreakRules/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`tieBreakRules/${id}`);
   try {
-    await deleteDoc(doc(db, `festivals/${festId}/tieBreakRules`, id));
+    await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('tieBreakRules'), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
@@ -322,7 +342,7 @@ export async function deleteTieBreakRule(id) {
 // ==========================================
 export async function getCompetitions() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/competitions`;
+  const path = window.meeladPulseScopedFestivalPath('competitions');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -333,7 +353,7 @@ export async function getCompetitions() {
 
 export async function getTeams() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/teams`;
+  const path = window.meeladPulseScopedFestivalPath('teams');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -342,14 +362,111 @@ export async function getTeams() {
   }
 }
 
+
+export async function saveTeam(teamData) {
+  assertAdminRole();
+  const festId = getActiveFestivalId();
+  const id = (teamData.id || teamData.code || doc(collection(db, 'dummy')).id).toString().trim().toLowerCase();
+  const path = window.meeladPulseScopedFestivalPath(`teams/${id}`);
+  const chestStartNumber = Math.max(1, Number(teamData.chestStartNumber) || 1);
+  const nextChestNumber = Math.max(chestStartNumber, Number(teamData.nextChestNumber) || chestStartNumber);
+  const leaderUsername = (teamData.leaderUsername || '').trim().toLowerCase();
+  try {
+    const payload = {
+      id,
+      name: teamData.name,
+      code: teamData.code || id.toUpperCase(),
+      colour: teamData.colour || '#10b981',
+      chestStartNumber,
+      nextChestNumber,
+      leader: {
+        role: teamData.leaderRole || 'teamLeader',
+        name: teamData.leaderName || '',
+        username: teamData.leaderUsername || '',
+        usernameLower: leaderUsername,
+        photoUrl: teamData.leaderPhotoUrl || '',
+        active: teamData.leaderActive !== false
+      },
+      active: teamData.active !== false,
+      updatedAt: serverTimestamp()
+    };
+    await setDoc(doc(db, window.meeladPulseScopedFestivalPath('teams'), id), payload, { merge: true });
+
+    if (leaderUsername && teamData.leaderPassword) {
+      const manualUserPayload = {
+        uid: `manual_team_${id}_${leaderUsername}`,
+        role: 'teamLeader',
+        institutionId: getActiveScope().institutionId,
+        festivalId: festId,
+        teamId: id,
+        name: teamData.leaderName || teamData.name || leaderUsername,
+        username: teamData.leaderUsername,
+        usernameLower: leaderUsername,
+        password: teamData.leaderPassword,
+        photoUrl: teamData.leaderPhotoUrl || '',
+        active: teamData.leaderActive !== false,
+        updatedAt: serverTimestamp()
+      };
+      await setDoc(doc(db, getScopedFestivalPath(`manualUsers/${leaderUsername}`)), manualUserPayload, { merge: true });
+    }
+    return id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export async function deleteTeam(id) {
+  assertAdminRole();
+  const festId = getActiveFestivalId();
+  const path = window.meeladPulseScopedFestivalPath(`teams/${id}`);
+  try {
+    await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('teams'), id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
 export async function getCategories() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/categories`;
+  const path = window.meeladPulseScopedFestivalPath('categories');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (error) {
     handleFirestoreError(error, OperationType.LIST, path);
+  }
+}
+
+
+export async function saveCategory(categoryData) {
+  assertAdminRole();
+  const festId = getActiveFestivalId();
+  const id = (categoryData.id || categoryData.code || doc(collection(db, 'dummy')).id).toString().trim().toLowerCase();
+  const path = window.meeladPulseScopedFestivalPath(`categories/${id}`);
+  try {
+    await setDoc(doc(db, window.meeladPulseScopedFestivalPath('categories'), id), {
+      id,
+      name: categoryData.name,
+      code: categoryData.code || id.toUpperCase(),
+      colour: categoryData.colour || '#10b981',
+      order: Number(categoryData.order) || 0,
+      active: categoryData.active !== false,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export async function deleteCategory(id) {
+  assertAdminRole();
+  const festId = getActiveFestivalId();
+  const path = window.meeladPulseScopedFestivalPath(`categories/${id}`);
+  try {
+    await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('categories'), id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 }
 
@@ -357,9 +474,9 @@ export async function saveCompetition(compData) {
   assertAdminRole();
   const festId = getActiveFestivalId();
   const id = compData.id || doc(collection(db, 'dummy')).id;
-  const path = `festivals/${festId}/competitions/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`competitions/${id}`);
   try {
-    const docRef = doc(db, `festivals/${festId}/competitions`, id);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('competitions'), id);
     const payload = {
       id,
       name: compData.name,
@@ -404,7 +521,7 @@ export async function saveCompetition(compData) {
 // ==========================================
 export async function getResults() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/results`;
+  const path = window.meeladPulseScopedFestivalPath('results');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -417,9 +534,9 @@ export async function saveResult(resultData) {
   assertAdminRole();
   const festId = getActiveFestivalId();
   const id = resultData.id || doc(collection(db, 'dummy')).id;
-  const path = `festivals/${festId}/results/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`results/${id}`);
   try {
-    const docRef = doc(db, `festivals/${festId}/results`, id);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('results'), id);
     const payload = {
       ...resultData,
       id,
@@ -435,7 +552,7 @@ export async function saveResult(resultData) {
 
 export async function getTeamTotals() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/teamTotals`;
+  const path = window.meeladPulseScopedFestivalPath('teamTotals');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -447,12 +564,12 @@ export async function getTeamTotals() {
 export async function saveTeamTotalsBatch(teamTotalsList) {
   assertAdminRole();
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/teamTotals`;
+  const path = window.meeladPulseScopedFestivalPath('teamTotals');
   try {
     const batch = writeBatch(db);
     for (const tt of teamTotalsList) {
       // 1. Internal admin total
-      const docRef = doc(db, `festivals/${festId}/teamTotals`, tt.teamId);
+      const docRef = doc(db, window.meeladPulseScopedFestivalPath('teamTotals'), tt.teamId);
       const payload = {
         ...tt,
         festId,
@@ -461,7 +578,7 @@ export async function saveTeamTotalsBatch(teamTotalsList) {
       batch.set(docRef, payload, { merge: true });
 
       // 2. Public safe overall total
-      const pubDocRef = doc(db, `festivals/${festId}/publicData/teamTotals`, tt.teamId);
+      const pubDocRef = doc(db, window.meeladPulseScopedFestivalPath('publicData/teamTotals'), tt.teamId);
       const pubPayload = {
         teamId: tt.teamId,
         teamName: tt.teamName,
@@ -498,13 +615,13 @@ export async function saveTeamTotalsBatch(teamTotalsList) {
 export async function saveChampionsBatch(championsList) {
   assertAdminRole();
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/publicData/champions`;
+  const path = window.meeladPulseScopedFestivalPath('publicData/champions');
   try {
     const batch = writeBatch(db);
     for (const champ of championsList) {
       const id = champ.id || champ.studentId || champ.chestNumber;
       if (!id) continue;
-      const docRef = doc(db, `festivals/${festId}/publicData/champions`, id);
+      const docRef = doc(db, window.meeladPulseScopedFestivalPath('publicData/champions'), id);
       const payload = {
         ...champ,
         updatedAt: serverTimestamp()
@@ -519,7 +636,7 @@ export async function saveChampionsBatch(championsList) {
 
 export async function getBonuses() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/bonusPoints`;
+  const path = window.meeladPulseScopedFestivalPath('bonusPoints');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -530,7 +647,7 @@ export async function getBonuses() {
 
 export async function getPenalties() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/penalties`;
+  const path = window.meeladPulseScopedFestivalPath('penalties');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -541,7 +658,7 @@ export async function getPenalties() {
 
 export async function getJudgeMarks() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/judgeMarks`;
+  const path = window.meeladPulseScopedFestivalPath('judgeMarks');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -552,7 +669,7 @@ export async function getJudgeMarks() {
 
 export async function getEntries() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/entries`;
+  const path = window.meeladPulseScopedFestivalPath('entries');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -563,7 +680,7 @@ export async function getEntries() {
 
 export async function getStudents() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/students`;
+  const path = window.meeladPulseScopedFestivalPath('students');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -575,9 +692,9 @@ export async function getStudents() {
 export async function bypassAuditOverride(entryId) {
   assertAdminRole();
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/entries/${entryId}`;
+  const path = window.meeladPulseScopedFestivalPath(`entries/${entryId}`);
   try {
-    const docRef = doc(db, `festivals/${festId}/entries`, entryId);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('entries'), entryId);
     await updateDoc(docRef, { overrideApproved: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);

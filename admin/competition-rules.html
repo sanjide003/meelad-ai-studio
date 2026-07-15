@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Competition Rules Setup - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -242,9 +243,9 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
     import { 
       getCompetitions, 
       saveCompetition, 
@@ -255,7 +256,7 @@
       getPointRules, 
       getGradeRules, 
       getTieBreakRules 
-    } from "/assets/js/firestore-service.js";
+    } from "../assets/js/firestore-service.js";
 
     let currentLang = localStorage.getItem('meeladpulse_lang') || 'en';
 

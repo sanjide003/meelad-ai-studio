@@ -9,7 +9,7 @@ import { assertOnline } from "./network-status.js";
  */
 export async function getParticipationCertificatesData() {
   const festId = getActiveFestivalId();
-  const snap = await getDocs(collection(db, `festivals/${festId}/festStudents`));
+  const snap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('festStudents')));
   return snap.docs.map(doc => {
     const data = doc.data();
     return {
@@ -30,11 +30,11 @@ export async function getMeritCertificatesData() {
   const festId = getActiveFestivalId();
   
   // Merit is based on results
-  const resultsSnap = await getDocs(collection(db, `festivals/${festId}/results`));
+  const resultsSnap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('results')));
   const results = resultsSnap.docs.map(doc => doc.data());
 
   // Also load students for name lookup
-  const studentsSnap = await getDocs(collection(db, `festivals/${festId}/festStudents`));
+  const studentsSnap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('festStudents')));
   const studentMap = {};
   studentsSnap.docs.forEach(doc => {
     studentMap[doc.id] = doc.data().name;
@@ -74,7 +74,7 @@ export async function getMeritCertificatesData() {
  */
 export async function getChampionshipCertificatesData() {
   const festId = getActiveFestivalId();
-  const snap = await getDocs(collection(db, `festivals/${festId}/teamTotals`));
+  const snap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('teamTotals')));
   
   const standings = snap.docs.map(doc => {
     const data = doc.data();
@@ -111,7 +111,7 @@ export async function issueCertificate(certInput, adminUser) {
   if (certificateType === 'merit') {
     if (!certInput.competitionId) throw new Error("Competition Context missing for Merit Certificate.");
     // Merit results must be published and not held
-    const resRef = doc(db, `festivals/${festId}/results`, certInput.competitionId);
+    const resRef = doc(db, window.meeladPulseScopedFestivalPath('results'), certInput.competitionId);
     const resSnap = await getDoc(resRef);
     if (resSnap.exists()) {
       const res = resSnap.data();
@@ -124,7 +124,7 @@ export async function issueCertificate(certInput, adminUser) {
 
   // 2. Double check recipient active state
   if (certInput.recipientType === 'student' || certificateType === 'participation') {
-    const studRef = doc(db, `festivals/${festId}/festStudents`, recipientId);
+    const studRef = doc(db, window.meeladPulseScopedFestivalPath('festStudents'), recipientId);
     const studSnap = await getDoc(studRef);
     if (studSnap.exists() && studSnap.data().status !== 'active') {
       throw new Error("Cannot issue official certificate to an inactive, withdrawn, or disqualified participant.");
@@ -136,7 +136,7 @@ export async function issueCertificate(certInput, adminUser) {
   const certificateNumber = `MP-${festId.slice(-3).toUpperCase()}-${certificateType.slice(0,3).toUpperCase()}-${recipientId.slice(-5).toUpperCase()}${cleanComp}`;
   const verificationId = certificateNumber; // Let verificationId match certificateNumber for direct URL mapping
 
-  const certRef = doc(db, `festivals/${festId}/certificates`, verificationId);
+  const certRef = doc(db, window.meeladPulseScopedFestivalPath('certificates'), verificationId);
   const certSnap = await getDoc(certRef);
 
   // Prevent duplicates unless explicitly forced (i.e. if already issued and status is valid)
@@ -184,7 +184,7 @@ export async function issueCertificate(certInput, adminUser) {
     subDetails = `Championship Standing Event - Points: ${certInput.totalPoints || 0}`;
   }
 
-  const verRef = doc(db, `festivals/${festId}/verificationDocs`, verificationId);
+  const verRef = doc(db, window.meeladPulseScopedFestivalPath('verificationDocs'), verificationId);
   await setDoc(verRef, {
     festId,
     documentType: 'certificate',
@@ -208,8 +208,8 @@ export async function revokeCertificate(certificateNumber, reason, adminUser) {
   const festId = getActiveFestivalId();
   if (!festId) throw new Error("No active festival scope found.");
 
-  const certRef = doc(db, `festivals/${festId}/certificates`, certificateNumber);
-  const verRef = doc(db, `festivals/${festId}/verificationDocs`, certificateNumber);
+  const certRef = doc(db, window.meeladPulseScopedFestivalPath('certificates'), certificateNumber);
+  const verRef = doc(db, window.meeladPulseScopedFestivalPath('verificationDocs'), certificateNumber);
 
   const certSnap = await getDoc(certRef);
   if (!certSnap.exists()) {

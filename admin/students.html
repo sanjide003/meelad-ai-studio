@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Roster - Admin Terminal</title>
-  <link class="main-css" rel="stylesheet" href="/assets/css/main.css">
+  <title>Students - Admin Terminal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link class="main-css" rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
   <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
     <div class="flex flex-col items-center space-y-3">
       <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
-      <p class="text-xs font-bold text-slate-700">Loading Student Database...</p>
+      <p class="text-xs font-bold text-slate-700">Loading Students Database...</p>
     </div>
   </div>
 
@@ -29,16 +30,39 @@
         <!-- Header Panel -->
         <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div class="space-y-1">
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Student Roster Terminal</h1>
-            <p class="text-xs text-slate-400 font-medium">Verify registrations, approve submissions, and audit chest-number assignments.</p>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Students Management</h1>
+            <p class="text-xs text-slate-400 font-medium">Register students, assign them to groups, approve submissions, and audit chest-number assignments.</p>
           </div>
           <div class="flex items-center space-x-2 shrink-0">
             <!-- Normal Register Button (Hidden/Disabled under teamLeadersOnly mode) -->
-            <a href="/admin/student-create.html" id="register-student-btn" class="btn btn-primary py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm">
+            <button type="button" id="bulk-import-toggle" class="btn btn-secondary py-2.5 px-4 text-xs font-bold border border-slate-200">Bulk Add</button>
+            <a href="../admin/student-create.html" id="register-student-btn" class="btn btn-primary py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
               <span>Register New Student</span>
             </a>
           </div>
+        </div>
+
+
+        <!-- Bulk Student Import Panel -->
+        <div id="bulk-import-panel" class="hidden bg-white rounded-2xl border border-emerald-100 p-6 shadow-xs space-y-4">
+          <div class="space-y-1">
+            <h2 class="text-sm font-bold text-slate-900 font-display">Bulk add students to groups</h2>
+            <p class="text-[11px] text-slate-500">First select the target group and category. Then paste one student name per line. Chest numbers are assigned automatically from the selected team group series.</p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <select id="bulk-team-select" class="form-input" required><option value="">Select team group</option></select>
+            <select id="bulk-category-select" class="form-input" required><option value="">Select category</option></select>
+            <select id="bulk-subdivision-select" class="form-input"><option value="">Sub category / subdivision (optional)</option></select>
+          </div>
+          <textarea id="bulk-import-text" class="form-input min-h-[140px] text-xs font-mono" placeholder="Ali
+Amina
+Muhammad"></textarea>
+          <div class="flex items-center justify-end gap-2">
+            <button type="button" id="bulk-import-cancel" class="btn btn-secondary text-xs font-bold px-4 py-2 border border-slate-200">Cancel</button>
+            <button type="button" id="bulk-import-submit" class="btn btn-primary text-xs font-bold text-white px-4 py-2">Import Students</button>
+          </div>
+          <p id="bulk-import-status" class="hidden text-xs font-bold"></p>
         </div>
 
         <!-- Mode Notification Banner -->
@@ -67,9 +91,6 @@
               <input type="text" id="roster-search" class="form-input text-xs py-1.5 px-3 max-w-xs" placeholder="Search by name, chest or team...">
               <select id="roster-category-filter" class="form-input text-xs py-1.5 px-3 cursor-pointer">
                 <option value="all">All Categories</option>
-                <option value="cat_subjunior">Sub-Junior</option>
-                <option value="cat_junior">Junior</option>
-                <option value="cat_senior">Senior</option>
               </select>
               <select id="roster-status-filter" class="form-input text-xs py-1.5 px-3 cursor-pointer">
                 <option value="all">All Statuses</option>
@@ -139,14 +160,16 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { getFestivalSettings, getAllFestivalStudents, approveStudent, rejectStudent } from "/assets/js/student-service.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { getFestivalSettings, getAllFestivalStudents, approveStudent, rejectStudent, createFestivalStudent } from "../assets/js/student-service.js";
+    import { getCategories, getTeams, getSubdivisions } from "../assets/js/firestore-service.js";
 
     let activeFestId = null;
     let festivalSettings = null;
     let studentsRoster = [];
+    let categoryMap = {};
 
     async function initPage() {
       try {
@@ -157,16 +180,19 @@
         activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
         if (!activeFestId) {
           alert("Please select a festival scope first.");
-          window.location.replace('/select-fest.html');
+          window.location.replace('../unauthorized.html?reason=no_scope');
           return;
         }
 
         festivalSettings = await getFestivalSettings(activeFestId);
         applyModeVisualState();
         
+        await populateCategoryFilter();
+        await populateBulkScopeSelectors();
         await loadRoster();
         setupFilters();
         setupRejectHandler();
+        setupBulkImport();
 
         document.getElementById('global-page-loader').classList.add('hidden');
       } catch (err) {
@@ -178,15 +204,60 @@
       const mode = festivalSettings.studentRegistrationMode || 'adminOnly';
       const warnBanner = document.getElementById('mode-warning-banner');
       const createBtn = document.getElementById('register-student-btn');
+      const bulkBtn = document.getElementById('bulk-import-toggle');
 
       if (mode === 'teamLeadersOnly') {
         warnBanner.classList.remove('hidden');
         createBtn.classList.add('opacity-50', 'pointer-events-none');
+        bulkBtn.classList.add('opacity-50', 'pointer-events-none');
         createBtn.setAttribute('title', 'Admin creations disabled under Team Leader Mode.');
       } else {
         warnBanner.classList.add('hidden');
         createBtn.classList.remove('opacity-50', 'pointer-events-none');
+        bulkBtn.classList.remove('opacity-50', 'pointer-events-none');
       }
+    }
+
+
+    async function populateCategoryFilter() {
+      const categories = (await getCategories() || []).filter(cat => cat.active !== false);
+      categoryMap = Object.fromEntries(categories.map(cat => [cat.id, cat.name || cat.code || cat.id]));
+      const dropdown = document.getElementById('roster-category-filter');
+      dropdown.innerHTML = '<option value="all">All Categories</option>';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.name || cat.code || cat.id;
+        dropdown.appendChild(opt);
+      });
+    }
+
+    async function populateBulkScopeSelectors() {
+      const [teams, categories, subdivisions] = await Promise.all([getTeams(), getCategories(), getSubdivisions()]);
+      const teamSelect = document.getElementById('bulk-team-select');
+      const categorySelect = document.getElementById('bulk-category-select');
+      const subdivisionSelect = document.getElementById('bulk-subdivision-select');
+      teamSelect.innerHTML = '<option value="">Select team group</option>';
+      categorySelect.innerHTML = '<option value="">Select category</option>';
+      subdivisionSelect.innerHTML = '<option value="">Sub category / subdivision (optional)</option>';
+      (teams || []).filter(item => item.active !== false).forEach(team => {
+        const opt = document.createElement('option');
+        opt.value = team.id;
+        opt.textContent = `${team.name || team.code || team.id} — next chest ${team.nextChestNumber || team.chestStartNumber || 1}`;
+        teamSelect.appendChild(opt);
+      });
+      (categories || []).filter(item => item.active !== false).forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.name || cat.code || cat.id;
+        categorySelect.appendChild(opt);
+      });
+      (subdivisions || []).filter(item => item.active !== false).forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub.id;
+        opt.textContent = sub.name || sub.code || sub.id;
+        subdivisionSelect.appendChild(opt);
+      });
     }
 
     async function loadRoster() {
@@ -211,11 +282,7 @@
         return;
       }
 
-      const catNames = {
-        cat_subjunior: 'Sub-Junior',
-        cat_junior: 'Junior',
-        cat_senior: 'Senior'
-      };
+const catNames = categoryMap;
 
       students.forEach(s => {
         const tr = document.createElement('tr');
@@ -244,10 +311,10 @@
         } else {
           // If mode is teamLeadersOnly, edit triggers an emergency override form.
           // If mode is adminOnly, normal edit is available.
-          const editURL = `/admin/student-edit.html?id=${s.id}`;
+          const editURL = `../admin/student-edit.html?id=${s.id}`;
           actionHTML = `
             <div class="flex items-center justify-end space-x-2">
-              <a href="/admin/student-details.html?id=${s.id}" class="text-xs font-bold text-slate-500 hover:text-slate-700 hover:underline">View</a>
+              <a href="../admin/student-details.html?id=${s.id}" class="text-xs font-bold text-slate-500 hover:text-slate-700 hover:underline">View</a>
               <a href="${editURL}" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">${festivalSettings.studentRegistrationMode === 'teamLeadersOnly' ? 'Override' : 'Edit'}</a>
             </div>
           `;
@@ -318,6 +385,50 @@
     window.closeRejectModal = function() {
       document.getElementById('reject-modal').classList.add('hidden');
     };
+
+
+    function setupBulkImport() {
+      const panel = document.getElementById('bulk-import-panel');
+      const status = document.getElementById('bulk-import-status');
+      document.getElementById('bulk-import-toggle').onclick = () => panel.classList.toggle('hidden');
+      document.getElementById('bulk-import-cancel').onclick = () => panel.classList.add('hidden');
+      document.getElementById('bulk-import-submit').onclick = async () => {
+        const lines = document.getElementById('bulk-import-text').value.split('\n').map(line => line.trim()).filter(Boolean);
+        const teamId = document.getElementById('bulk-team-select').value;
+        const categoryId = document.getElementById('bulk-category-select').value;
+        const subdivisionId = document.getElementById('bulk-subdivision-select').value;
+        if (lines.length === 0 || !teamId || !categoryId) {
+          alert('Select team group and category, then paste at least one student name.');
+          return;
+        }
+
+        const loader = document.getElementById('global-page-loader');
+        loader.classList.remove('hidden');
+        let successCount = 0;
+        const failures = [];
+
+        for (const [index, line] of lines.entries()) {
+          const name = line.trim();
+          if (!name) {
+            failures.push(`Line ${index + 1}: invalid student name`);
+            continue;
+          }
+          try {
+            await createFestivalStudent({ name, teamId, categoryId, subdivisionId });
+            successCount += 1;
+          } catch (err) {
+            failures.push(`Line ${index + 1}: ${err.message}`);
+          }
+        }
+
+        loader.classList.add('hidden');
+        status.classList.remove('hidden', 'text-rose-600', 'text-emerald-700');
+        status.classList.add(failures.length ? 'text-rose-600' : 'text-emerald-700');
+        status.textContent = failures.length ? `${successCount} imported. ${failures.join(' | ')}` : `${successCount} students imported successfully.`;
+        await populateBulkScopeSelectors();
+        await loadRoster();
+      };
+    }
 
     function setupRejectHandler() {
       const form = document.getElementById('reject-form');

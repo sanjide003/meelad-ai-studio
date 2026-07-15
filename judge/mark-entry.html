@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scoring Evaluation Station - Judge Panel</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -29,7 +30,7 @@
         <!-- Header Controls -->
         <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="space-y-1">
-            <a href="/judge/competitions.html" id="leave-btn" class="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-600 mb-1.5 transition">
+            <a href="../judge/competitions.html" id="leave-btn" class="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-600 mb-1.5 transition">
               ← <span>Back to Assignments</span>
             </a>
             <h1 id="selected-name" class="text-xl font-extrabold text-slate-900 tracking-tight font-display">Scoring Station</h1>
@@ -162,15 +163,15 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getJudgeSafeCompetition, getJudgeSafeParticipants, checkHeadJudgeStatus } from "/assets/js/judge-service.js";
-    import { loadJudgeMarkForEntry, saveSingleMarkDraft, submitSingleMarkFinal, loadSubmissionProgress } from "/assets/js/mark-service.js";
-    import { en } from "/assets/js/translations-en.js";
-    import { ml } from "/assets/js/translations-ml.js";
+    import { getJudgeSafeCompetition, getJudgeSafeParticipants, checkHeadJudgeStatus } from "../assets/js/judge-service.js";
+    import { loadJudgeMarkForEntry, saveSingleMarkDraft, submitSingleMarkFinal, loadSubmissionProgress } from "../assets/js/mark-service.js";
+    import { en } from "../assets/js/translations-en.js";
+    import { ml } from "../assets/js/translations-ml.js";
 
     let judgeProfile = null;
     let selectedComp = null;
@@ -201,7 +202,7 @@
         const compId = urlParams.get('compId');
 
         if (!compId) {
-          window.location.replace("/judge/competitions.html");
+          window.location.replace("../judge/competitions.html");
           return;
         }
 

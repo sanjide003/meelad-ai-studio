@@ -42,7 +42,7 @@ export async function queryPublicResultsWithFilters(festId, {
   pageSize = 24,
   lastDoc = null
 } = {}) {
-  const path = `festivals/${festId}/publicData/results`;
+  const path = window.meeladPulseScopedFestivalPath('publicData/results');
   const colRef = collection(db, path);
   const normalizedQuery = normalizeSearchTerm(term);
 
@@ -89,7 +89,7 @@ export async function queryPublicResultsWithFilters(festId, {
     queries.push(getDocs(qChest));
 
     // 3. Name Prefix Query on searchIndex
-    const searchIndexCol = collection(db, `festivals/${festId}/publicData/searchIndex`);
+    const searchIndexCol = collection(db, window.meeladPulseScopedFestivalPath('publicData/searchIndex'));
     let qName = query(searchIndexCol, where("active", "==", true), where("namePrefixes", "array-contains", normalizedQuery));
     queries.push(getDocs(qName));
 
@@ -127,7 +127,7 @@ export async function queryPublicResultsWithFilters(festId, {
     });
 
     if (nameResultIds.length > 0) {
-      const fetchPromises = nameResultIds.map(rid => getDoc(doc(db, `festivals/${festId}/publicData/results`, rid)));
+      const fetchPromises = nameResultIds.map(rid => getDoc(doc(db, window.meeladPulseScopedFestivalPath('publicData/results'), rid)));
       const nameSnaps = await Promise.all(fetchPromises);
       nameSnaps.forEach(snap => {
         if (snap.exists() && !seenIds.has(snap.id)) {

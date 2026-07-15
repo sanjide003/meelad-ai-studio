@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register Student - Team Leader Desk</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -32,7 +33,7 @@
             <h1 class="text-xl font-extrabold text-slate-900 tracking-tight font-display">Register Student</h1>
             <p class="text-xs text-slate-400 font-medium">Add a student participant to your team roster.</p>
           </div>
-          <a href="/team/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-1.5 px-3 text-xs font-bold">
+          <a href="../team/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-1.5 px-3 text-xs font-bold">
             Back to Roster
           </a>
         </div>
@@ -70,7 +71,7 @@
             </div>
 
             <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
-              <a href="/team/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold">
+              <a href="../team/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold">
                 Cancel
               </a>
               <button type="submit" class="btn btn-primary py-2 px-4 text-xs font-bold shadow-md cursor-pointer">
@@ -86,10 +87,10 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { getFestivalSettings, createFestivalStudent } from "/assets/js/student-service.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { getFestivalSettings, createFestivalStudent } from "../assets/js/student-service.js";
 
     let activeFestId = null;
     let leaderProfile = null;
@@ -103,20 +104,20 @@
         activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
         if (!activeFestId) {
           alert("Please select a festival scope first.");
-          window.location.replace('/select-fest.html');
+          window.location.replace('../unauthorized.html?reason=no_scope');
           return;
         }
 
         const settings = await getFestivalSettings(activeFestId);
         if (settings.studentRegistrationMode === 'adminOnly') {
           alert("Admin Only Mode is currently active.\nTeam Leaders cannot register students directly in this mode.");
-          window.location.replace('/team/students.html');
+          window.location.replace('../team/students.html');
           return;
         }
 
         if (!settings.studentRegistrationOpen) {
           alert("Student registration is currently closed.");
-          window.location.replace('/team/students.html');
+          window.location.replace('../team/students.html');
           return;
         }
 
@@ -147,7 +148,7 @@
         try {
           await createFestivalStudent(studentData);
           alert("Student registered successfully!");
-          window.location.replace('/team/students.html');
+          window.location.replace('../team/students.html');
         } catch (err) {
           alert("Registration failed: " + err.message);
           loader.classList.add('hidden');

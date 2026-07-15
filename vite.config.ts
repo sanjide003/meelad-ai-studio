@@ -1,11 +1,9 @@
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
@@ -20,12 +18,18 @@ export default defineConfig(() => {
           activateAccount: path.resolve(__dirname, 'activate-account.html'),
           selectFest: path.resolve(__dirname, 'select-fest.html'),
           unauthorized: path.resolve(__dirname, 'unauthorized.html'),
+          adminApp: path.resolve(__dirname, 'admin/app.html'),
           adminDashboard: path.resolve(__dirname, 'admin/dashboard.html'),
           adminCertificates: path.resolve(__dirname, 'admin/certificates.html'),
           adminAnnouncements: path.resolve(__dirname, 'admin/announcements.html'),
           adminBackupRestore: path.resolve(__dirname, 'admin/backup-restore.html'),
           adminReports: path.resolve(__dirname, 'admin/reports.html'),
           adminUsers: path.resolve(__dirname, 'admin/users.html'),
+          adminStudents: path.resolve(__dirname, 'admin/students.html'),
+          adminStudentCreate: path.resolve(__dirname, 'admin/student-create.html'),
+          adminStudentEdit: path.resolve(__dirname, 'admin/student-edit.html'),
+          adminTeams: path.resolve(__dirname, 'admin/teams.html'),
+          adminCategories: path.resolve(__dirname, 'admin/categories.html'),
           adminDiagnostics: path.resolve(__dirname, 'admin/public-data-diagnostics.html'),
           adminInvitations: path.resolve(__dirname, 'admin/user-invitations.html'),
           adminJudges: path.resolve(__dirname, 'admin/judges.html'),

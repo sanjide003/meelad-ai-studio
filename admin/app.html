@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Control Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen overflow-hidden">
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Loading Admin Control Center...</p>
+    </div>
+  </div>
+
+  <div class="h-screen flex flex-col lg:flex-row">
+    <div id="portal-sidebar"></div>
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <div id="portal-header"></div>
+      <main class="flex-1 min-h-0 bg-slate-50">
+        <iframe id="admin-content-frame" title="Admin workspace" class="w-full h-full border-0 bg-slate-50" src="about:blank"></iframe>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+
+    const frame = document.getElementById('admin-content-frame');
+    const defaultPage = 'dashboard.html';
+
+    async function initShell() {
+      await verifyUserRole(['admin']);
+      await loadPortalLayout('admin');
+      initializeNavigation();
+      wireShellNavigation();
+      loadAdminPage(new URLSearchParams(window.location.search).get('page') || defaultPage, false);
+      document.getElementById('global-page-loader').classList.add('hidden');
+    }
+
+    function normalizePage(rawPage) {
+      const url = new URL(rawPage || defaultPage, window.location.href);
+      if (url.origin !== window.location.origin || !url.pathname.includes('/admin/')) return defaultPage;
+      return `${url.pathname.split('/admin/').pop()}${url.search}`;
+    }
+
+    function loadAdminPage(rawPage, push = true) {
+      const page = normalizePage(rawPage);
+      const target = new URL(page, window.location.href);
+      target.searchParams.set('embedded', '1');
+      frame.src = target.href;
+      if (push) history.pushState({ page }, '', `app.html?page=${encodeURIComponent(page)}`);
+      markActive(page.split('?')[0]);
+    }
+
+    function wireShellNavigation() {
+      const sidebar = document.getElementById('portal-sidebar');
+      sidebar.addEventListener('click', (event) => {
+        const link = event.target.closest('a[href]');
+        if (!link) return;
+        const href = new URL(link.getAttribute('href'), window.location.href);
+        if (href.origin !== window.location.origin || !href.pathname.includes('/admin/')) return;
+        event.preventDefault();
+        loadAdminPage(`${href.pathname.split('/admin/').pop()}${href.search}`);
+      });
+
+      frame.addEventListener('load', () => {
+        try {
+          const doc = frame.contentDocument;
+          if (!doc || doc.getElementById('admin-shell-embedded-style')) return;
+          const style = doc.createElement('style');
+          style.id = 'admin-shell-embedded-style';
+          style.textContent = `#portal-sidebar,#portal-header,#global-page-loader{display:none!important}.main-content-layout{margin-left:0!important;width:100%!important}body{background:#f8fafc!important}main{padding:1.5rem!important}`;
+          doc.head.appendChild(style);
+        } catch (err) {
+          console.warn('Embedded page styling skipped:', err);
+        }
+      });
+
+      window.addEventListener('popstate', (event) => loadAdminPage(event.state?.page || defaultPage, false));
+    }
+
+    function markActive(pageName) {
+      document.querySelectorAll('.nav-link-item').forEach(link => {
+        const href = new URL(link.getAttribute('href'), window.location.href);
+        const active = href.pathname.endsWith(`/admin/${pageName}`);
+        link.classList.toggle('bg-emerald-100', active);
+        link.classList.toggle('text-emerald-800', active);
+        link.classList.toggle('font-extrabold', active);
+        link.setAttribute('aria-current', active ? 'page' : 'false');
+      });
+    }
+
+    initShell().catch(err => { console.error(err); alert(err.message || err); });
+  </script>
+</body>
+</html>

@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit Student - Admin Terminal</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -32,7 +33,7 @@
             <h1 id="page-title" class="text-xl font-extrabold text-slate-900 tracking-tight font-display">Edit Student Profile</h1>
             <p id="page-subtitle" class="text-xs text-slate-400 font-medium">Modify demographic details and save updates to the database.</p>
           </div>
-          <a href="/admin/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-1.5 px-3 text-xs font-bold">
+          <a href="../admin/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-1.5 px-3 text-xs font-bold">
             Back to Roster
           </a>
         </div>
@@ -73,9 +74,7 @@
             <div class="space-y-1.5">
               <label for="student-cat" class="text-xs font-bold text-slate-700">Age Category</label>
               <select id="student-cat" required class="form-input cursor-pointer">
-                <option value="cat_subjunior">Sub-Junior</option>
-                <option value="cat_junior">Junior</option>
-                <option value="cat_senior">Senior</option>
+                <option value="">-- Select Category --</option>
               </select>
             </div>
 
@@ -87,7 +86,7 @@
             </div>
 
             <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
-              <a href="/admin/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold">
+              <a href="../admin/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold">
                 Cancel
               </a>
               <button type="submit" id="save-button" class="btn btn-primary py-2 px-4 text-xs font-bold shadow-md cursor-pointer">
@@ -103,12 +102,13 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getFestivalSettings, updateFestivalStudent, performEmergencyStudentOverride } from "/assets/js/student-service.js";
+    import { getFestivalSettings, updateFestivalStudent, performEmergencyStudentOverride } from "../assets/js/student-service.js";
+    import { getCategories } from "../assets/js/firestore-service.js";
 
     let activeFestId = null;
     let studentId = null;
@@ -124,7 +124,7 @@
         activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
         if (!activeFestId) {
           alert("Please select a festival scope first.");
-          window.location.replace('/select-fest.html');
+          window.location.replace('../unauthorized.html?reason=no_scope');
           return;
         }
 
@@ -132,11 +132,12 @@
         studentId = params.get('id');
         if (!studentId) {
           alert("No student ID specified.");
-          window.location.replace('/admin/students.html');
+          window.location.replace('../admin/students.html');
           return;
         }
 
         festivalSettings = await getFestivalSettings(activeFestId);
+        await populateCategoriesDropdown();
         await loadStudentDetails();
         applyModeVisualState();
 
@@ -148,12 +149,25 @@
       }
     }
 
+
+    async function populateCategoriesDropdown() {
+      const dropdown = document.getElementById('student-cat');
+      const categories = (await getCategories() || []).filter(cat => cat.active !== false);
+      dropdown.innerHTML = '<option value="">-- Select Category --</option>';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.name || cat.code || cat.id;
+        dropdown.appendChild(opt);
+      });
+    }
+
     async function loadStudentDetails() {
-      const docRef = doc(db, `festivals/${activeFestId}/festStudents`, studentId);
+      const docRef = doc(db, window.meeladPulseScopedFestivalPath('festStudents'), studentId);
       const snap = await getDoc(docRef);
       if (!snap.exists()) {
         alert("Student record not found.");
-        window.location.replace('/admin/students.html');
+        window.location.replace('../admin/students.html');
         return;
       }
 
@@ -210,7 +224,7 @@
             await updateFestivalStudent(studentId, updatedData);
           }
 
-          window.location.replace('/admin/students.html?success=student_updated');
+          window.location.replace('../admin/students.html?success=student_updated');
         } catch (err) {
           loader.classList.add('hidden');
           alert("Update failed: " + err.message);

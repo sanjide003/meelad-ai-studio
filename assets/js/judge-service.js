@@ -46,7 +46,7 @@ export async function inviteJudge(name, email) {
  */
 export async function getJudgeAssignments() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/judgeAssignments`;
+  const path = window.meeladPulseScopedFestivalPath('judgeAssignments');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -60,7 +60,7 @@ export async function getJudgeAssignments() {
  */
 export async function getAssignmentsForJudge(judgeUserId) {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/judgeAssignments`;
+  const path = window.meeladPulseScopedFestivalPath('judgeAssignments');
   try {
     const q = query(collection(db, path), where("judgeUserId", "==", judgeUserId), where("active", "==", true));
     const snap = await getDocs(q);
@@ -99,7 +99,7 @@ export async function detectJudgeScheduleConflicts(judgeUserId, compDate, compTi
     if (a.competitionId === excludeCompId) continue;
     
     // Get assigned competition details
-    const compDoc = await getDoc(doc(db, `festivals/${festId}/competitions`, a.competitionId));
+    const compDoc = await getDoc(doc(db, window.meeladPulseScopedFestivalPath('competitions'), a.competitionId));
     if (compDoc.exists()) {
       const c = compDoc.data();
       if (c.eventDate === compDate && c.startTime === compTime) {
@@ -119,7 +119,7 @@ export async function detectJudgeScheduleConflicts(judgeUserId, compDate, compTi
  */
 export async function getJudgeSafeCompetition(competitionId) {
   const festId = getActiveFestivalId();
-  const docRef = doc(db, `festivals/${festId}/competitions`, competitionId);
+  const docRef = doc(db, window.meeladPulseScopedFestivalPath('competitions'), competitionId);
   const snap = await getDoc(docRef);
   if (!snap.exists()) {
     throw new Error("Competition not found.");
@@ -151,7 +151,7 @@ export async function getJudgeSafeCompetition(competitionId) {
  */
 export async function getJudgeSafeParticipants(competitionId, blindMode = 'none') {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/entries`;
+  const path = window.meeladPulseScopedFestivalPath('entries');
   try {
     const q = query(collection(db, path), where("competitionId", "==", competitionId));
     const snap = await getDocs(q);
@@ -204,9 +204,9 @@ export async function saveJudgeAssignment(judgeId, judgeName, competitionId, com
   assertAdminRole();
   const festId = getActiveFestivalId();
   const id = `${judgeId}_${competitionId}`;
-  const path = `festivals/${festId}/judgeAssignments/${id}`;
+  const path = window.meeladPulseScopedFestivalPath(`judgeAssignments/${id}`);
   try {
-    const docRef = doc(db, `festivals/${festId}/judgeAssignments`, id);
+    const docRef = doc(db, window.meeladPulseScopedFestivalPath('judgeAssignments'), id);
     const payload = {
       id,
       judgeUserId: judgeId, // Align with dashboard.html's query structure
@@ -232,9 +232,9 @@ export async function saveJudgeAssignment(judgeId, judgeName, competitionId, com
 export async function deleteJudgeAssignment(assignmentId) {
   assertAdminRole();
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/judgeAssignments/${assignmentId}`;
+  const path = window.meeladPulseScopedFestivalPath(`judgeAssignments/${assignmentId}`);
   try {
-    await deleteDoc(doc(db, `festivals/${festId}/judgeAssignments`, assignmentId));
+    await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('judgeAssignments'), assignmentId));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }

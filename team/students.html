@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Roster - Team Leader Desk</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen animate-fade-in">
   
@@ -152,12 +153,12 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getFestivalSettings, createFestivalStudent, updateFestivalStudent, canCurrentUserCreateStudent, canCurrentUserEditStudent } from "/assets/js/student-service.js";
+    import { getFestivalSettings, createFestivalStudent, updateFestivalStudent, canCurrentUserCreateStudent, canCurrentUserEditStudent } from "../assets/js/student-service.js";
 
     let leaderProfile = null;
     let assignedTeamId = null;
@@ -170,7 +171,7 @@
         assignedTeamId = leaderProfile.teamId;
 
         if (!assignedTeamId) {
-          window.location.replace('/unauthorized.html?reason=no_team_id');
+          window.location.replace('../unauthorized.html?reason=no_team_id');
           return;
         }
 
@@ -220,7 +221,7 @@
     async function loadStudents() {
       const festId = localStorage.getItem('meeladpulse_selected_fest_id');
       try {
-        const studentCol = collection(db, `festivals/${festId}/festStudents`);
+        const studentCol = collection(db, window.meeladPulseScopedFestivalPath('festStudents'));
         const q = query(studentCol, where('teamId', '==', assignedTeamId));
         const snap = await getDocs(q);
 

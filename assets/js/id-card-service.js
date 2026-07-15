@@ -26,7 +26,7 @@ export async function syncIdCardVerification(item, festId) {
   if (!festId || !item || !item.id) return;
   
   try {
-    const verDocRef = doc(db, `festivals/${festId}/verificationDocs`, item.id);
+    const verDocRef = doc(db, window.meeladPulseScopedFestivalPath('verificationDocs'), item.id);
     const cats = { cat_subjunior: 'Sub-Junior', cat_junior: 'Junior', cat_senior: 'Senior' };
     
     let subDetails = "";
@@ -74,7 +74,7 @@ export async function syncIdCardVerification(item, festId) {
  */
 export async function getFestivalStudentsForCards() {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/festStudents`;
+  const path = window.meeladPulseScopedFestivalPath('festStudents');
   const snap = await getDocs(collection(db, path));
   
   const list = snap.docs.map(doc => {

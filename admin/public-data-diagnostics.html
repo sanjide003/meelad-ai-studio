@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Public Data Diagnostics - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -117,13 +118,13 @@
   </div>
 
   <script type="module">
-    import { auth, db } from "/assets/js/firebase-init.js";
+    import { auth, db } from "../assets/js/firebase-init.js";
     import { collection, doc, getDocs, updateDoc, setDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { createAuditLog } from "/assets/js/audit-service.js";
-    import { normalizeMachineValue, generatePrefixes } from "/assets/js/public-data-normalizer.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { createAuditLog } from "../assets/js/audit-service.js";
+    import { normalizeMachineValue, generatePrefixes } from "../assets/js/public-data-normalizer.js";
 
     const festId = localStorage.getItem('meeladpulse_selected_fest_id') || 'fest_default';
     let rawRecords = [];
@@ -150,12 +151,12 @@
       scanBtn.disabled = true;
       scanBtn.textContent = "Scanning...";
 
-      const path = `festivals/${festId}/publicData/results`;
+      const path = window.meeladPulseScopedFestivalPath('publicData/results');
       try {
         const snap = await getDocs(collection(db, path));
         rawRecords = snap.docs.map(docSnap => ({ id: docSnap.id, ref: docSnap.ref, ...docSnap.data() }));
 
-        const searchIndexSnap = await getDocs(collection(db, `festivals/${festId}/publicData/searchIndex`));
+        const searchIndexSnap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('publicData/searchIndex')));
         const searchIndexMap = {};
         searchIndexSnap.docs.forEach(d => {
           const data = d.data();
@@ -384,7 +385,7 @@
             const chestNorm = w.chestNumberNormalized || normalizeMachineValue(w.chestNumber) || '';
             const nameNorm = w.displayNameNormalized || normalizeMachineValue(w.displayName) || '';
             const sId = `${recId}_${chestNorm || nameNorm}`;
-            const searchIndexRef = doc(db, `festivals/${festId}/publicData/searchIndex`, sId);
+            const searchIndexRef = doc(db, window.meeladPulseScopedFestivalPath('publicData/searchIndex'), sId);
             batch.set(searchIndexRef, {
               resultId: recId,
               competitionId: recId,
@@ -457,7 +458,7 @@
               const chestNorm = w.chestNumberNormalized || normalizeMachineValue(w.chestNumber) || '';
               const nameNorm = w.displayNameNormalized || normalizeMachineValue(w.displayName) || '';
               const sId = `${recId}_${chestNorm || nameNorm}`;
-              const searchIndexRef = doc(db, `festivals/${festId}/publicData/searchIndex`, sId);
+              const searchIndexRef = doc(db, window.meeladPulseScopedFestivalPath('publicData/searchIndex'), sId);
               batch.set(searchIndexRef, {
                 resultId: recId,
                 competitionId: recId,

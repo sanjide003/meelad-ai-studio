@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Select Festival - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col justify-between">
   
@@ -16,14 +17,31 @@
     </div>
   </div>
 
-  <main class="flex-1 flex items-center justify-center p-4">
-    <div class="max-w-xl w-full space-y-8 py-8">
+  <header id="super-admin-header" class="hidden bg-white border-b border-slate-100 px-4 py-3 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div>
+        <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-600">MeeladPulse SaaS Owner</p>
+        <h2 class="text-lg font-extrabold text-slate-900 font-display">Super Admin Control Center</h2>
+      </div>
+      <nav class="flex flex-wrap items-center gap-2" aria-label="Super Admin tabs">
+        <button data-super-filter="all" class="super-filter rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-slate-50">All Institutions</button>
+        <button data-super-filter="purchased" class="super-filter rounded-2xl border border-sky-100 bg-sky-50 px-4 py-2 text-xs font-extrabold text-sky-700 hover:bg-sky-100">Purchased</button>
+        <button data-super-filter="trial" class="super-filter rounded-2xl border border-amber-100 bg-amber-50 px-4 py-2 text-xs font-extrabold text-amber-700 hover:bg-amber-100">Trial</button>
+        <button data-super-filter="deactivated" class="super-filter rounded-2xl border border-rose-100 bg-rose-50 px-4 py-2 text-xs font-extrabold text-rose-700 hover:bg-rose-100">Deactivated</button>
+        <button id="super-profile-tab" type="button" class="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-2 text-xs font-extrabold text-indigo-700 hover:bg-indigo-100">Profile</button>
+        <button class="logout-action-btn rounded-2xl border border-slate-900 bg-slate-900 px-4 py-2 text-xs font-extrabold text-white hover:bg-slate-800">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="flex-1 flex items-start justify-center p-4">
+    <div class="max-w-7xl w-full space-y-8 py-8">
       
       <!-- Upper Banner Info -->
       <div class="text-center space-y-3">
         <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-emerald-200">Session Authorized</span>
         <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight font-display">Select Festival Scope</h1>
-        <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">Choose an active competition festival to load its registered items, scoring matrices, and team rosters.</p>
+        <p id="portal-subtitle" class="text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">Choose an active competition festival to load its registered items, scoring matrices, and team rosters.</p>
       </div>
 
       <!-- Grid Cards -->
@@ -38,6 +56,153 @@
     </div>
   </main>
 
+  <div id="institution-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 p-4">
+    <div class="w-full max-w-4xl rounded-3xl bg-white shadow-2xl border border-slate-100 overflow-hidden">
+      <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Super Admin Control</p>
+          <h2 id="institution-modal-title" class="text-xl font-extrabold text-slate-900 font-display">Create Institution</h2>
+          <p class="text-xs text-slate-500 mt-1">Create or update the customer institution, payment status, and admin login credentials.</p>
+        </div>
+        <button id="institution-modal-close" type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50">Close</button>
+      </div>
+      <form id="institution-form" class="max-h-[75vh] overflow-y-auto px-6 py-5">
+        <input type="hidden" id="institution-edit-id">
+        <input type="hidden" id="institution-old-login">
+        <div class="space-y-5">
+          <section class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+            <div class="mb-4 flex items-center gap-3">
+              <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-100 text-lg">🏫</span>
+              <div>
+                <h3 class="text-sm font-extrabold text-slate-900">Institution & Admin Login Details</h3>
+                <p class="text-[11px] text-slate-500">This username/password is the customer institution admin login.</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label class="space-y-1 text-xs font-bold text-slate-600">Institution Name
+                <input id="institution-name" required class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="Institution name">
+              </label>
+              <label class="space-y-1 text-xs font-bold text-slate-600">Workspace ID / Slug
+                <input id="institution-slug" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="auto-generated on create">
+              </label>
+              <label class="space-y-1 text-xs font-bold text-slate-600">Admin Name
+                <input id="institution-admin-name" required class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="Institution admin name">
+              </label>
+              <label class="space-y-1 text-xs font-bold text-slate-600">Admin Email / Username
+                <input id="institution-admin-login" required class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="email or username">
+              </label>
+              <label class="space-y-1 text-xs font-bold text-slate-600 md:col-span-2">Admin Password
+                <input id="institution-admin-password" required class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="temporary password">
+              </label>
+            </div>
+          </section>
+
+          <section class="rounded-2xl border border-sky-100 bg-sky-50/60 p-4">
+            <div class="mb-4 flex items-center gap-3">
+              <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-sky-100 text-lg">💳</span>
+              <div>
+                <h3 class="text-sm font-extrabold text-slate-900">Payment & Subscription Control</h3>
+                <p class="text-[11px] text-slate-500">Choose Trial, Active/Paid, or Suspended. The visible fields change based on this status.</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label class="space-y-1 text-xs font-bold text-slate-600 md:col-span-2">Subscription Status
+                <select id="institution-subscription" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800">
+                  <option value="trial">Trial</option>
+                  <option value="active">Active / Paid</option>
+                  <option value="suspended">Suspended</option>
+                </select>
+              </label>
+
+              <div id="trial-controls" class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 rounded-2xl border border-amber-100 bg-amber-50/80 p-4">
+                <label class="space-y-1 text-xs font-bold text-amber-800">Trial Starts On
+                  <input id="institution-trial-starts" type="date" class="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm font-semibold text-slate-800">
+                </label>
+                <label class="space-y-1 text-xs font-bold text-amber-800">Trial Days
+                  <input id="institution-trial-days" type="number" min="1" step="1" class="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="e.g. 14">
+                </label>
+                <label class="space-y-1 text-xs font-bold text-amber-800">Trial Ends On
+                  <input id="institution-trial-ends" type="date" class="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm font-semibold text-slate-800">
+                </label>
+              </div>
+
+              <div id="paid-controls" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 hidden">
+                <label class="space-y-1 text-xs font-bold text-emerald-800">Purchase Duration
+                  <select id="institution-billing-cycle" class="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm font-semibold text-slate-800">
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="custom">Custom Date</option>
+                    <option value="unlimited">Unlimited</option>
+                  </select>
+                </label>
+                <label class="space-y-1 text-xs font-bold text-emerald-800">Subscription Starts On
+                  <input id="institution-purchase-date" type="date" class="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm font-semibold text-slate-800">
+                </label>
+                <label class="space-y-1 text-xs font-bold text-emerald-800">Subscription Ends On
+                  <input id="institution-subscription-ends" type="date" class="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm font-semibold text-slate-800">
+                </label>
+                <label class="space-y-1 text-xs font-bold text-emerald-800">Amount Received
+                  <input id="institution-payment-amount" type="number" min="0" step="0.01" class="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="0.00">
+                </label>
+                <label class="space-y-1 text-xs font-bold text-emerald-800 md:col-span-2">Payment Reference
+                  <input id="institution-payment-reference" class="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="receipt / UPI / bank ref">
+                </label>
+              </div>
+
+              <div id="suspended-controls" class="hidden md:col-span-2 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-xs font-bold text-rose-700">
+                🚫 Suspended selected: this institution admin login and application access will be blocked immediately after save.
+              </div>
+
+              <label class="space-y-1 text-xs font-bold text-slate-600 md:col-span-2">Payment / Subscription Notes
+                <textarea id="institution-purchase-notes" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800" rows="2" placeholder="Payment details, validity, reminders, remarks"></textarea>
+              </label>
+            </div>
+          </section>
+        </div>
+        <div class="flex justify-end gap-3 border-t border-slate-100 pt-4">
+          <button id="institution-modal-cancel" type="button" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="btn btn-primary rounded-xl px-5 py-2 text-xs font-bold text-white">Save Institution</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+
+  <div id="share-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 p-4">
+    <div class="w-full max-w-3xl rounded-3xl bg-white shadow-2xl border border-slate-100 overflow-hidden">
+      <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-sky-600">Share Portal Access</p>
+          <h2 id="share-modal-title" class="text-xl font-extrabold text-slate-900 font-display">Institution Links</h2>
+          <p class="text-xs text-slate-500 mt-1">Review the non-editable share message, or use Edit Format to customize before copying.</p>
+        </div>
+        <button id="share-modal-close" type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50">Close</button>
+      </div>
+      <div class="space-y-4 px-6 py-5">
+        <textarea id="share-message" readonly class="h-80 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-800"></textarea>
+        <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <button id="share-edit-btn" type="button" class="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-2 text-xs font-extrabold text-indigo-700 hover:bg-indigo-100">Edit Format</button>
+          <button id="share-copy-btn" type="button" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-extrabold text-white hover:bg-slate-800">Copy Complete Message</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="profile-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 p-4">
+    <div class="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-slate-100 overflow-hidden">
+      <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-indigo-600">Super Admin Profile</p>
+          <h2 class="text-xl font-extrabold text-slate-900 font-display">Account Details</h2>
+          <p class="text-xs text-slate-500 mt-1">Firebase passwords are protected and cannot be displayed in the browser.</p>
+        </div>
+        <button id="profile-modal-close" type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50">Close</button>
+      </div>
+      <div id="profile-details" class="space-y-3 px-6 py-5 text-sm text-slate-700"></div>
+    </div>
+  </div>
+
   <footer class="w-full text-center py-6 border-t border-slate-100 bg-white">
     <button class="logout-action-btn text-xs font-bold text-rose-600 hover:text-rose-500 transition cursor-pointer">
       Sign Out of Session
@@ -45,32 +210,52 @@
   </footer>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { db } from "/assets/js/firebase-init.js";
-    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { verifyUserRole } from "./assets/js/role-guard.js";
+    import { db } from "./assets/js/firebase-init.js";
+    import { collection, query, where, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const festivalsGrid = document.getElementById('festivals-grid');
+    let superAdminFilter = 'all';
+    let currentSuperAdminProfile = null;
 
     async function initializeFestivalSelection() {
       try {
         // 1. Verify user profile and authenticate first
-        const userProfile = await verifyUserRole(['admin', 'judge', 'teamLeader']);
+        const userProfile = await verifyUserRole(['superAdmin', 'admin', 'judge', 'teamLeader']);
         
-        // 2. Query Firestore festivals
-        const festivalsCol = collection(db, 'festivals');
-        // Let's get both active festivals and drafts (or all where active is true)
-        const q = query(festivalsCol, where('active', '==', true));
+        if (userProfile.role === 'superAdmin') {
+          currentSuperAdminProfile = userProfile;
+          await renderSuperAdminPortal();
+          return;
+        }
+
+        // 2. Query active institution workspaces. Runtime data is now institution-scoped.
+        const institutionsCol = collection(db, 'institutions');
+        const q = query(institutionsCol, where('active', '==', true));
         const querySnapshot = await getDocs(q);
 
         festivalsGrid.innerHTML = '';
 
         if (querySnapshot.empty) {
-          festivalsGrid.innerHTML = `
-            <div class="bg-white border border-slate-100 rounded-2xl p-8 text-center space-y-3">
-              <p class="text-sm font-bold text-slate-700">No Active Festivals Available</p>
-              <p class="text-xs text-slate-500">There are currently no active competition festivals configured in the system. Please ask an administrator to set up a festival.</p>
-            </div>
-          `;
+          if (userProfile.role === 'admin') {
+            festivalsGrid.innerHTML = `
+              <div class="bg-white border border-slate-100 rounded-2xl p-8 text-center space-y-4">
+                <p class="text-sm font-bold text-slate-700">No Active Festivals Available</p>
+                <p class="text-xs text-slate-500">Create an initial festival scope now to unlock the administrator control center.</p>
+                <button id="create-default-festival-btn" class="btn btn-primary px-5 py-2.5 text-xs font-bold text-white rounded-xl cursor-pointer">Create Initial Festival</button>
+                <button id="admin-dashboard-without-fest-btn" class="block mx-auto text-[10px] font-bold text-slate-400 hover:text-slate-700 cursor-pointer">Open Admin Dashboard without a festival</button>
+              </div>
+            `;
+            document.getElementById('create-default-festival-btn').onclick = createInitialFestivalAndEnter;
+            document.getElementById('admin-dashboard-without-fest-btn').onclick = () => window.location.replace('admin/app.html');
+          } else {
+            festivalsGrid.innerHTML = `
+              <div class="bg-white border border-slate-100 rounded-2xl p-8 text-center space-y-3">
+                <p class="text-sm font-bold text-slate-700">No Active Festivals Available</p>
+                <p class="text-xs text-slate-500">There are currently no active competition festivals configured in the system. Please ask an administrator to set up a festival.</p>
+              </div>
+            `;
+          }
           return;
         }
 
@@ -97,17 +282,13 @@
           `;
 
           card.addEventListener('click', () => {
-            // Store selected festival in local storage
-            localStorage.setItem('meeladpulse_selected_fest_id', festId);
-            localStorage.setItem('meeladpulse_selected_fest_title', festival.title);
-
             // Redirect user to their custom dashboard
-            let redirectUrl = "/login.html";
-            if (userProfile.role === 'admin') redirectUrl = "/admin/dashboard.html";
-            else if (userProfile.role === 'judge') redirectUrl = "/judge/dashboard.html";
-            else if (userProfile.role === 'teamLeader') redirectUrl = "/team/dashboard.html";
+            let redirectUrl = "login.html";
+            if (userProfile.role === 'admin') redirectUrl = "admin/app.html";
+            else if (userProfile.role === 'judge') redirectUrl = "judge/dashboard.html";
+            else if (userProfile.role === 'teamLeader') redirectUrl = "team/dashboard.html";
 
-            window.location.replace(redirectUrl);
+            enterFestivalScope(festId, festival, redirectUrl);
           });
 
           festivalsGrid.appendChild(card);
@@ -124,8 +305,494 @@
       }
     }
 
+
+    function toDateOnly(value) {
+      if (!value) return '';
+      if (typeof value === 'string') return value.slice(0, 10);
+      if (value.toDate) return value.toDate().toISOString().slice(0, 10);
+      return '';
+    }
+
+    function daysUntil(dateString) {
+      if (!dateString) return null;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const target = new Date(`${dateString}T00:00:00`);
+      return Math.ceil((target - today) / 86400000);
+    }
+
+    function getEffectiveSubscription(festival) {
+      const status = ['trial', 'active', 'suspended'].includes(festival.subscriptionStatus) ? festival.subscriptionStatus : (festival.plan === 'purchased' ? 'active' : 'trial');
+      const plan = status === 'active' ? 'purchased' : 'trial';
+      const trialEndsAt = toDateOnly(festival.trialEndsAt);
+      const subscriptionEndsAt = toDateOnly(festival.subscriptionEndsAt);
+      const endDate = status === 'trial' ? trialEndsAt : subscriptionEndsAt;
+      const remainingDays = daysUntil(endDate);
+      const hasExpiry = Boolean(endDate);
+      const expiredByDate = hasExpiry && remainingDays < 0 && festival.billingCycle !== 'unlimited';
+      const blockedStatus = status === 'suspended';
+      const effectiveActive = festival.active !== false && !expiredByDate && !blockedStatus;
+      return { plan, status, endDate, remainingDays, effectiveActive, expiredByDate };
+    }
+
+    async function renderSuperAdminPortal() {
+      document.getElementById('super-admin-header').classList.remove('hidden');
+      document.querySelector('h1').textContent = 'Super Admin Institution Portal';
+      document.getElementById('portal-subtitle').textContent = 'Application-owner control for institution customers, paid/trial subscriptions, activation, login credentials, and links.';
+      const snap = await getDocs(collection(db, 'institutions'));
+      let festivals = snap.docs.map(item => ({ id: item.id, institutionId: item.id, ...item.data() })).sort((a, b) => (a.title || a.name || '').localeCompare(b.title || b.name || ''));
+      festivals = festivals.filter(festival => {
+        const info = getEffectiveSubscription(festival);
+        if (superAdminFilter === 'trial') return info.status === 'trial';
+        if (superAdminFilter === 'purchased') return info.status === 'active';
+        if (superAdminFilter === 'deactivated') return !info.effectiveActive;
+        return true;
+      });
+      festivalsGrid.innerHTML = `
+        <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-4 overflow-hidden">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">SaaS Control</p>
+              <h2 class="text-lg font-extrabold text-slate-900 font-display">Institutions / Festival Workspaces</h2>
+              <p class="text-xs text-slate-500 mt-1">Current filter: <span class="font-bold text-slate-700">${superAdminFilter}</span></p>
+            </div>
+            <button id="super-create-festival" class="btn btn-primary text-xs font-bold text-white px-4 py-2">Create Institution + Admin Login</button>
+          </div>
+          <div class="overflow-x-auto rounded-2xl border border-slate-100">
+            <table class="min-w-full divide-y divide-slate-100 text-left text-xs">
+              <thead class="bg-slate-50 text-[10px] uppercase tracking-widest text-slate-500">
+                <tr>
+                  <th class="px-4 py-3">Institution</th>
+                  <th class="px-4 py-3">Admin Login</th>
+                  <th class="px-4 py-3">Plan / Status</th>
+                  <th class="px-4 py-3">Validity / Payment</th>
+                  <th class="px-4 py-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="super-admin-list" class="divide-y divide-slate-100 bg-white"></tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      document.getElementById('super-create-festival').onclick = () => openInstitutionModal();
+      const list = document.getElementById('super-admin-list');
+      list.innerHTML = festivals.length ? '' : '<tr><td colspan="5" class="px-4 py-8 text-center text-xs text-slate-400">No institution workspaces found for this filter.</td></tr>';
+      festivals.forEach(festival => {
+        const info = getEffectiveSubscription(festival);
+        const warning = info.remainingDays !== null && info.remainingDays >= 0 && info.remainingDays <= 7
+          ? `<div class="mt-1 rounded-lg bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700">Expires in ${info.remainingDays} day(s)</div>` : '';
+        const row = document.createElement('tr');
+        row.className = info.effectiveActive ? 'align-top hover:bg-slate-50' : 'align-top bg-rose-50/40 hover:bg-rose-50';
+        row.innerHTML = `
+          <td class="px-4 py-4">
+            <div class="font-extrabold text-slate-900">${festival.title || festival.name || festival.code || 'Untitled Institution'}</div>
+            <div class="mt-1 font-mono text-[10px] font-bold text-slate-400">${festival.id}</div>
+            <div class="mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${info.effectiveActive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${info.effectiveActive ? 'ACTIVE' : 'DEACTIVATED'}</div>
+          </td>
+          <td class="px-4 py-4">
+            <div class="font-bold text-slate-700">${festival.ownerName || 'Not assigned'}</div>
+            <div class="mt-1 text-slate-500">${festival.ownerUsername || festival.ownerEmail || 'No username'}</div>
+            <div class="mt-1 font-mono text-[11px] font-bold text-slate-800">Password: ${festival.ownerPassword || 'not set'}</div>
+          </td>
+          <td class="px-4 py-4">
+            <div class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${info.plan === 'purchased' ? 'bg-sky-50 text-sky-700' : 'bg-amber-50 text-amber-700'}">${info.plan.toUpperCase()}</div>
+            <div class="mt-2 text-slate-500">${info.status}</div>
+          </td>
+          <td class="px-4 py-4">
+            <div class="text-slate-600">Ends: <span class="font-bold">${info.endDate || (festival.billingCycle === 'unlimited' ? 'Unlimited' : 'Not set')}</span></div>
+            <div class="mt-1 text-slate-500">Amount: ${festival.paymentAmount || '0'} ${festival.paymentCurrency || 'INR'}</div>
+            <div class="mt-1 text-slate-400">${festival.billingCycle || 'monthly'} • ${festival.paymentReference || 'no ref'}</div>
+            ${warning}
+          </td>
+          <td class="px-4 py-4">
+            <div class="grid grid-cols-2 gap-2 min-w-[220px]">
+              <button title="Edit institution, admin login, payment, and subscription" class="edit-workspace rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-[10px] font-extrabold text-indigo-700 hover:bg-indigo-100">✏️ Edit</button>
+              <button title="Copy institution admin login link" class="share-login rounded-xl border border-sky-100 bg-sky-50 px-3 py-2 text-[10px] font-extrabold text-sky-700 hover:bg-sky-100">🔗 Copy Link</button>
+              <button title="${info.effectiveActive ? 'Suspend institution login and app access' : 'Restore institution login and app access'}" class="toggle-workspace rounded-xl border ${info.effectiveActive ? 'border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100' : 'border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'} px-3 py-2 text-[10px] font-extrabold">${info.effectiveActive ? '⏸ Deactivate' : '▶ Activate'}</button>
+              <button title="Delete institution workspace" class="delete-workspace rounded-xl border border-rose-100 bg-rose-600 px-3 py-2 text-[10px] font-extrabold text-white hover:bg-rose-700">🗑 Delete</button>
+            </div>
+          </td>
+        `;
+        row.querySelector('.edit-workspace').onclick = () => openInstitutionModal(festival);
+        row.querySelector('.share-login').onclick = () => openShareModal(festival);
+        row.querySelector('.toggle-workspace').onclick = async () => {
+          const nextActive = !info.effectiveActive;
+          const nextStatus = nextActive ? (info.status === 'active' ? 'active' : 'trial') : 'suspended';
+          await updateDoc(doc(db, 'institutions', festival.id), { active: nextActive, subscriptionStatus: nextStatus, updatedAt: serverTimestamp() });
+          await setDoc(doc(db, `institutions/${festival.id}/festivals`, festival.defaultFestivalId || festival.id), { active: nextActive, subscriptionStatus: nextStatus, updatedAt: serverTimestamp() }, { merge: true });
+          if (festival.ownerUsername || festival.ownerEmail) {
+            const loginKey = (festival.ownerUsername || festival.ownerEmail).toLowerCase();
+            await setDoc(doc(db, 'institutionLogins', loginKey), { active: nextActive, subscriptionStatus: nextStatus, updatedAt: serverTimestamp() }, { merge: true });
+            await setDoc(doc(db, `institutions/${festival.id}/festivals/${festival.defaultFestivalId || festival.id}/manualUsers`, loginKey), { active: nextActive, subscriptionStatus: nextStatus, updatedAt: serverTimestamp() }, { merge: true });
+          }
+          await renderSuperAdminPortal();
+        };
+        row.querySelector('.delete-workspace').onclick = async () => {
+          if (!confirm(`Delete ${festival.title || festival.id}? This removes the workspace document only.`)) return;
+          if (festival.ownerUsername || festival.ownerEmail) await deleteDoc(doc(db, 'institutionLogins', (festival.ownerUsername || festival.ownerEmail).toLowerCase()));
+          await deleteDoc(doc(db, 'institutions', festival.id));
+          await renderSuperAdminPortal();
+        };
+        list.appendChild(row);
+      });
+    }
+
+    const modal = document.getElementById('institution-modal');
+    const institutionForm = document.getElementById('institution-form');
+    const modalTitle = document.getElementById('institution-modal-title');
+    const editIdInput = document.getElementById('institution-edit-id');
+    const oldLoginInput = document.getElementById('institution-old-login');
+
+    function slugify(value) {
+      return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `workspace-${Date.now()}`;
+    }
+
+
+    function addDays(dateString, days) {
+      if (!dateString || !days) return '';
+      const date = new Date(`${dateString}T00:00:00`);
+      date.setDate(date.getDate() + Number(days));
+      return date.toISOString().slice(0, 10);
+    }
+
+    function updateSubscriptionControls() {
+      const status = document.getElementById('institution-subscription').value;
+      const trialControls = document.getElementById('trial-controls');
+      const paidControls = document.getElementById('paid-controls');
+      const suspendedControls = document.getElementById('suspended-controls');
+      trialControls.classList.toggle('hidden', status !== 'trial');
+      paidControls.classList.toggle('hidden', status !== 'active');
+      suspendedControls.classList.toggle('hidden', status !== 'suspended');
+    }
+
+    function setModalOpen(open) {
+      modal.classList.toggle('hidden', !open);
+      modal.classList.toggle('flex', open);
+    }
+
+    function openInstitutionModal(festival = null) {
+      const isEdit = Boolean(festival);
+      modalTitle.textContent = isEdit ? 'Edit Institution / Admin Login' : 'Create Institution + Admin Login';
+      editIdInput.value = festival?.id || '';
+      oldLoginInput.value = (festival?.ownerUsername || festival?.ownerEmail || '').toLowerCase();
+      document.getElementById('institution-name').value = festival?.title || festival?.name || '';
+      document.getElementById('institution-slug').value = festival?.id || '';
+      document.getElementById('institution-slug').disabled = isEdit;
+      document.getElementById('institution-admin-name').value = festival?.ownerName || `${festival?.name || festival?.title || ''} Admin`.trim();
+      document.getElementById('institution-admin-login').value = festival?.ownerUsername || festival?.ownerEmail || '';
+      document.getElementById('institution-admin-password').value = festival?.ownerPassword || '';
+      document.getElementById('institution-admin-password').placeholder = 'admin login password';
+      const modalStatus = ['trial', 'active', 'suspended'].includes(festival?.subscriptionStatus) ? festival.subscriptionStatus : (festival?.plan === 'purchased' ? 'active' : 'trial');
+      document.getElementById('institution-subscription').value = modalStatus;
+      document.getElementById('institution-trial-starts').value = toDateOnly(festival?.trialStartsAt);
+      document.getElementById('institution-trial-days').value = festival?.trialDays || '';
+      document.getElementById('institution-trial-ends').value = toDateOnly(festival?.trialEndsAt);
+      document.getElementById('institution-billing-cycle').value = festival?.billingCycle || 'monthly';
+      document.getElementById('institution-subscription-ends').value = toDateOnly(festival?.subscriptionEndsAt);
+      document.getElementById('institution-payment-amount').value = festival?.paymentAmount || '';
+      document.getElementById('institution-payment-reference').value = festival?.paymentReference || '';
+      document.getElementById('institution-purchase-date').value = toDateOnly(festival?.purchaseDate);
+      document.getElementById('institution-purchase-notes').value = festival?.purchaseNotes || '';
+      updateSubscriptionControls();
+      setModalOpen(true);
+    }
+
+    document.getElementById('institution-modal-close').onclick = () => setModalOpen(false);
+    document.getElementById('institution-modal-cancel').onclick = () => setModalOpen(false);
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) setModalOpen(false);
+    });
+
+    document.getElementById('institution-subscription').addEventListener('change', updateSubscriptionControls);
+    document.getElementById('institution-trial-days').addEventListener('input', () => {
+      const start = document.getElementById('institution-trial-starts').value;
+      const days = document.getElementById('institution-trial-days').value;
+      const computedEnd = addDays(start, days);
+      if (computedEnd) document.getElementById('institution-trial-ends').value = computedEnd;
+    });
+    document.getElementById('institution-trial-starts').addEventListener('change', () => {
+      const days = document.getElementById('institution-trial-days').value;
+      const computedEnd = addDays(document.getElementById('institution-trial-starts').value, days);
+      if (computedEnd) document.getElementById('institution-trial-ends').value = computedEnd;
+    });
+    document.getElementById('institution-billing-cycle').addEventListener('change', () => {
+      const cycle = document.getElementById('institution-billing-cycle').value;
+      const start = document.getElementById('institution-purchase-date').value;
+      if (cycle === 'monthly' && start) document.getElementById('institution-subscription-ends').value = addDays(start, 30);
+      if (cycle === 'yearly' && start) document.getElementById('institution-subscription-ends').value = addDays(start, 365);
+      if (cycle === 'unlimited') document.getElementById('institution-subscription-ends').value = '';
+    });
+
+
+    const shareModal = document.getElementById('share-modal');
+    const shareMessage = document.getElementById('share-message');
+    const shareModalTitle = document.getElementById('share-modal-title');
+    const profileModal = document.getElementById('profile-modal');
+    const profileDetails = document.getElementById('profile-details');
+
+    function setShareModalOpen(open) {
+      shareModal.classList.toggle('hidden', !open);
+      shareModal.classList.toggle('flex', open);
+      if (!open) shareMessage.setAttribute('readonly', 'readonly');
+    }
+
+    function buildPortalLinks(festival) {
+      const institutionSlug = festival.id;
+      const shortUrl = (path, params = {}) => {
+        const url = new URL(path, window.location.href);
+        Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+        return url.href;
+      };
+      return {
+        universalLogin: shortUrl('login.html'),
+        publicHome: shortUrl('index.html', { institution: institutionSlug }),
+        publicDirect: shortUrl('public/index.html', { institution: institutionSlug })
+      };
+    }
+
+    function buildShareMessage(festival) {
+      const links = buildPortalLinks(festival);
+      const institutionName = festival.title || festival.name || festival.id;
+      return `Assalamu Alaikum,
+
+${institutionName} institution portal is ready on MeeladPulse. MeeladPulse helps manage competitions, teams, judges, entries, result publishing, public result pages, certificates, reports, and live access links in one secured platform.
+
+One Login Page (Admin / Team / Judge):
+${links.universalLogin}
+
+Public Results/Home (Short Link):
+${links.publicHome}
+
+Backup Public Direct Link:
+${links.publicDirect}
+
+Admin Username: ${festival.ownerUsername || festival.ownerEmail || 'not set'}
+Admin Password: ${festival.ownerPassword || 'not set'}
+
+Use the same login page for every user. MeeladPulse will identify the user from the username/password and open the correct institution page automatically. Please keep these credentials safe and share only with authorized users.`;
+    }
+
+    function openShareModal(festival) {
+      shareModalTitle.textContent = `${festival.title || festival.name || festival.id} Portal Links`;
+      shareMessage.value = buildShareMessage(festival);
+      setShareModalOpen(true);
+    }
+
+    function setProfileModalOpen(open) {
+      profileModal.classList.toggle('hidden', !open);
+      profileModal.classList.toggle('flex', open);
+    }
+
+    function openSuperAdminProfile() {
+      const profile = currentSuperAdminProfile || window.currentUserProfile || {};
+      profileDetails.innerHTML = `
+        <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4"><span class="text-xs font-bold text-slate-400">Name</span><div class="font-extrabold text-slate-900">${profile.name || profile.displayName || 'Super Admin'}</div></div>
+        <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4"><span class="text-xs font-bold text-slate-400">Email / Username</span><div class="font-extrabold text-slate-900">${profile.email || profile.emailLower || 'Not available'}</div></div>
+        <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4"><span class="text-xs font-bold text-slate-400">Role</span><div class="font-extrabold text-slate-900">${profile.role || 'superAdmin'}</div></div>
+        <div class="rounded-2xl border border-amber-100 bg-amber-50 p-4"><span class="text-xs font-bold text-amber-700">Password</span><div class="font-bold text-amber-900">Firebase password is encrypted and cannot be displayed. Use Firebase Authentication password reset to change it.</div></div>
+      `;
+      setProfileModalOpen(true);
+    }
+
+    document.getElementById('share-modal-close').onclick = () => setShareModalOpen(false);
+    document.getElementById('share-edit-btn').onclick = () => {
+      shareMessage.removeAttribute('readonly');
+      shareMessage.focus();
+    };
+    document.getElementById('share-copy-btn').onclick = async () => {
+      if (navigator.clipboard) await navigator.clipboard.writeText(shareMessage.value);
+      alert('Share message copied successfully.');
+    };
+    document.getElementById('profile-modal-close').onclick = () => setProfileModalOpen(false);
+    document.getElementById('super-profile-tab').onclick = openSuperAdminProfile;
+    shareModal.addEventListener('click', (event) => { if (event.target === shareModal) setShareModalOpen(false); });
+    profileModal.addEventListener('click', (event) => { if (event.target === profileModal) setProfileModalOpen(false); });
+
+    institutionForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const existingId = editIdInput.value;
+      const title = document.getElementById('institution-name').value.trim();
+      const institutionId = existingId || slugify(document.getElementById('institution-slug').value.trim() || title);
+      const ownerName = document.getElementById('institution-admin-name').value.trim();
+      const ownerLogin = document.getElementById('institution-admin-login').value.trim().toLowerCase();
+      const ownerPassword = document.getElementById('institution-admin-password').value.trim();
+      const subscriptionStatus = document.getElementById('institution-subscription').value;
+      const plan = subscriptionStatus === 'active' ? 'purchased' : 'trial';
+      const trialStartsAt = document.getElementById('institution-trial-starts').value;
+      const trialDays = document.getElementById('institution-trial-days').value;
+      const trialEndsAt = document.getElementById('institution-trial-ends').value;
+      const billingCycle = document.getElementById('institution-billing-cycle').value;
+      const subscriptionEndsAt = document.getElementById('institution-subscription-ends').value;
+      const paymentAmount = document.getElementById('institution-payment-amount').value;
+      const paymentReference = document.getElementById('institution-payment-reference').value.trim();
+      const purchaseDate = document.getElementById('institution-purchase-date').value;
+      const active = subscriptionStatus !== 'suspended';
+      const purchaseNotes = document.getElementById('institution-purchase-notes').value.trim();
+
+      if (!title || !ownerName || !ownerLogin || !ownerPassword) {
+        alert('Institution name, admin name, login, and password are required.');
+        return;
+      }
+
+      await saveInstitutionWorkspace({
+        id: institutionId,
+        title,
+        ownerName,
+        ownerLogin,
+        ownerPassword,
+        plan,
+        subscriptionStatus,
+        trialStartsAt,
+        trialDays,
+        trialEndsAt,
+        billingCycle,
+        subscriptionEndsAt,
+        paymentAmount,
+        paymentReference,
+        purchaseDate,
+        active,
+        purchaseNotes,
+        oldLogin: oldLoginInput.value
+      });
+      setModalOpen(false);
+      await renderSuperAdminPortal();
+    });
+
+    async function saveInstitutionWorkspace({ id, title, ownerName, ownerLogin, ownerPassword, plan, subscriptionStatus, trialStartsAt, trialDays, trialEndsAt, billingCycle, subscriptionEndsAt, paymentAmount, paymentReference, purchaseDate, active, purchaseNotes, oldLogin }) {
+      await setDoc(doc(db, 'institutions', id), {
+        id,
+        title,
+        name: title,
+        slug: id,
+        active,
+        plan,
+        subscriptionStatus,
+        trialStartsAt,
+        trialDays,
+        trialEndsAt,
+        billingCycle,
+        subscriptionEndsAt,
+        paymentAmount,
+        paymentCurrency: 'INR',
+        paymentReference,
+        purchaseDate,
+        purchaseNotes,
+        ownerName,
+        ownerEmail: ownerLogin.includes('@') ? ownerLogin : '',
+        ownerUsername: ownerLogin,
+        ownerPassword,
+        defaultFestivalId: id,
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      await setDoc(doc(db, `institutions/${id}/festivals`, id), {
+        id,
+        title,
+        name: title,
+        active,
+        plan,
+        subscriptionStatus,
+        trialStartsAt,
+        trialDays,
+        trialEndsAt,
+        billingCycle,
+        subscriptionEndsAt,
+        paymentAmount,
+        paymentCurrency: 'INR',
+        paymentReference,
+        purchaseDate,
+        purchaseNotes,
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      if (oldLogin && oldLogin !== ownerLogin) {
+        await deleteDoc(doc(db, 'institutionLogins', oldLogin));
+        await deleteDoc(doc(db, `institutions/${id}/festivals/${id}/manualUsers`, oldLogin));
+      }
+      await saveInstitutionAdminLogin({ id, defaultFestivalId: id, name: title, title }, ownerName, ownerLogin, ownerPassword, active, plan, subscriptionStatus, trialStartsAt, trialDays, trialEndsAt, billingCycle, subscriptionEndsAt);
+    }
+
+    async function saveInstitutionAdminLogin(festival, ownerName, ownerLogin, ownerPassword, active, plan = 'trial', subscriptionStatus = 'trial', trialStartsAt = '', trialDays = '', trialEndsAt = '', billingCycle = 'monthly', subscriptionEndsAt = '') {
+      const institutionId = festival.id;
+      const festivalId = festival.defaultFestivalId || festival.id;
+      const loginKey = ownerLogin.toLowerCase();
+      const loginPayload = {
+        uid: `manual_institution_${institutionId}_${loginKey.replace(/[^a-z0-9]+/g, '_')}`,
+        role: 'institutionAdmin',
+        institutionId,
+        festivalId,
+        institutionName: festival.title || festival.name || institutionId,
+        name: ownerName,
+        username: ownerLogin,
+        usernameLower: loginKey,
+        email: ownerLogin.includes('@') ? ownerLogin : '',
+        password: ownerPassword,
+        plan,
+        subscriptionStatus,
+        trialStartsAt,
+        trialDays,
+        trialEndsAt,
+        billingCycle,
+        subscriptionEndsAt,
+        active,
+        updatedAt: serverTimestamp()
+      };
+      await setDoc(doc(db, 'institutionLogins', loginKey), loginPayload, { merge: true });
+      await setDoc(doc(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`, loginKey), loginPayload, { merge: true });
+    }
+
+    document.querySelectorAll('.super-filter').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        superAdminFilter = btn.dataset.superFilter || 'all';
+        await renderSuperAdminPortal();
+      });
+    });
+
+    function enterFestivalScope(festId, festival, redirectUrl) {
+      localStorage.setItem('meeladpulse_selected_fest_id', festId);
+      localStorage.setItem('meeladpulse_selected_institution_id', festival.institutionId || festival.id || festId);
+      localStorage.setItem('meeladpulse_selected_fest_title', festival.title || festival.name || festId);
+      window.location.replace(redirectUrl);
+    }
+
+
+    async function createInitialFestivalAndEnter() {
+      const festId = 'main-festival';
+      const festivalTitle = 'Meelad Fest';
+      await setDoc(doc(db, 'institutions', festId), {
+        title: festivalTitle,
+        name: festivalTitle,
+        code: 'MEELAD',
+        venue: 'Main Campus',
+        active: true,
+        studentRegistrationMode: 'adminOnly',
+        studentRegistrationOpen: true,
+        defaultFestivalId: festId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      await setDoc(doc(db, `institutions/${festId}/festivals`, festId), {
+        id: festId,
+        title: festivalTitle,
+        name: festivalTitle,
+        code: 'MEELAD',
+        venue: 'Main Campus',
+        active: true,
+        studentRegistrationMode: 'adminOnly',
+        studentRegistrationOpen: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      localStorage.setItem('meeladpulse_selected_fest_id', festId);
+      localStorage.setItem('meeladpulse_selected_institution_id', festId);
+      localStorage.setItem('meeladpulse_selected_fest_title', festivalTitle);
+      window.location.replace('admin/app.html');
+    }
+
     // Initialize layout navigation controls (e.g. signout)
-    import { initializeNavigation } from "/assets/js/navigation.js";
+    import { initializeNavigation } from "./assets/js/navigation.js";
     // We will call initializeNavigation once auth verification completes inside initializeFestivalSelection
     initializeFestivalSelection().then(() => {
       initializeNavigation();

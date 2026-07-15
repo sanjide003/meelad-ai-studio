@@ -19,7 +19,7 @@ export function getActiveFestivalId() {
  */
 export async function getPublicFestivalConfig(festId) {
   try {
-    const festRef = doc(db, 'festivals', festId);
+    const festRef = doc(db, window.meeladPulseScopedFestivalPath());
     const snap = await getDoc(festRef);
     if (snap.exists()) {
       return { id: snap.id, ...snap.data() };

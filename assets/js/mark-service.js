@@ -20,7 +20,7 @@ import { assertOnline } from "./network-status.js";
  */
 export async function getJudgeMarksForCompetition(competitionId) {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/judgeMarks`;
+  const path = window.meeladPulseScopedFestivalPath('judgeMarks');
   try {
     const q = query(collection(db, path), where("competitionId", "==", competitionId));
     const snap = await getDocs(q);
@@ -35,7 +35,7 @@ export async function getJudgeMarksForCompetition(competitionId) {
  */
 export async function getJudgeMarksForCompetitionAndJudge(competitionId, judgeUserId) {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/judgeMarks`;
+  const path = window.meeladPulseScopedFestivalPath('judgeMarks');
   try {
     const q = query(
       collection(db, path), 
@@ -55,9 +55,9 @@ export async function getJudgeMarksForCompetitionAndJudge(competitionId, judgeUs
 export async function loadJudgeMarkForEntry(competitionId, entryId, judgeUserId) {
   const festId = getActiveFestivalId();
   const docId = `${competitionId}_${entryId}_${judgeUserId}`;
-  const path = `festivals/${festId}/judgeMarks/${docId}`;
+  const path = window.meeladPulseScopedFestivalPath(`judgeMarks/${docId}`);
   try {
-    const docSnap = await getDoc(doc(db, `festivals/${festId}/judgeMarks`, docId));
+    const docSnap = await getDoc(doc(db, window.meeladPulseScopedFestivalPath('judgeMarks'), docId));
     if (docSnap.exists()) {
       return docSnap.data();
     }
@@ -83,7 +83,7 @@ export async function saveSingleMarkDraft({
 }) {
   const festId = getActiveFestivalId();
   const docId = `${competitionId}_${entryId}_${judgeUserId}`;
-  const path = `festivals/${festId}/judgeMarks/${docId}`;
+  const path = window.meeladPulseScopedFestivalPath(`judgeMarks/${docId}`);
   
   try {
     // Check if the current document is already finalized
@@ -107,7 +107,7 @@ export async function saveSingleMarkDraft({
       updatedAt: serverTimestamp()
     };
 
-    await setDoc(doc(db, `festivals/${festId}/judgeMarks`, docId), payload, { merge: true });
+    await setDoc(doc(db, window.meeladPulseScopedFestivalPath('judgeMarks'), docId), payload, { merge: true });
     return docId;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
@@ -119,12 +119,12 @@ export async function saveSingleMarkDraft({
  */
 export async function saveMarksDraft(competitionId, marksArray, judgeUserId, judgeName) {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/judgeMarks`;
+  const path = window.meeladPulseScopedFestivalPath('judgeMarks');
   try {
     const batch = writeBatch(db);
     for (const m of marksArray) {
       const docId = `${competitionId}_${m.entryId}_${judgeUserId}`;
-      const docRef = doc(db, `festivals/${festId}/judgeMarks`, docId);
+      const docRef = doc(db, window.meeladPulseScopedFestivalPath('judgeMarks'), docId);
       const payload = {
         id: docId,
         competitionId,
@@ -164,7 +164,7 @@ export async function submitSingleMarkFinal({
   assertOnline('Judge Final Submission');
   const festId = getActiveFestivalId();
   const docId = `${competitionId}_${entryId}_${judgeUserId}`;
-  const path = `festivals/${festId}/judgeMarks/${docId}`;
+  const path = window.meeladPulseScopedFestivalPath(`judgeMarks/${docId}`);
 
   try {
     let finalStatus = 'final';
@@ -192,7 +192,7 @@ export async function submitSingleMarkFinal({
       updatedAt: serverTimestamp()
     };
 
-    await setDoc(doc(db, `festivals/${festId}/judgeMarks`, docId), payload, { merge: true });
+    await setDoc(doc(db, window.meeladPulseScopedFestivalPath('judgeMarks'), docId), payload, { merge: true });
     
     // Log the audit event for final submission
     await logAuditEvent(
@@ -214,7 +214,7 @@ export async function submitSingleMarkFinal({
 export async function submitMarksFinal(competitionId, marksArray, judgeUserId, judgeName) {
   assertOnline('Judge Final Submission');
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/judgeMarks`;
+  const path = window.meeladPulseScopedFestivalPath('judgeMarks');
   try {
     const existingMarks = await getJudgeMarksForCompetitionAndJudge(competitionId, judgeUserId);
     const existingMap = {};
@@ -225,7 +225,7 @@ export async function submitMarksFinal(competitionId, marksArray, judgeUserId, j
     const batch = writeBatch(db);
     for (const m of marksArray) {
       const docId = `${competitionId}_${m.entryId}_${judgeUserId}`;
-      const docRef = doc(db, `festivals/${festId}/judgeMarks`, docId);
+      const docRef = doc(db, window.meeladPulseScopedFestivalPath('judgeMarks'), docId);
 
       const current = existingMap[m.entryId] || 'draft';
       const finalStatus = (current === 'reopened' || current === 'correction_required') ? 'resubmitted' : 'final';
@@ -266,7 +266,7 @@ export async function submitMarksFinal(competitionId, marksArray, judgeUserId, j
  */
 export async function reopenMarkSheet(competitionId, judgeUserId, adminUserEmail = 'Admin', reason = '') {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/judgeMarks`;
+  const path = window.meeladPulseScopedFestivalPath('judgeMarks');
   try {
     const marks = await getJudgeMarksForCompetitionAndJudge(competitionId, judgeUserId);
     if (marks.length === 0) {
@@ -274,7 +274,7 @@ export async function reopenMarkSheet(competitionId, judgeUserId, adminUserEmail
     }
     const batch = writeBatch(db);
     for (const m of marks) {
-      const docRef = doc(db, `festivals/${festId}/judgeMarks`, m.id);
+      const docRef = doc(db, window.meeladPulseScopedFestivalPath('judgeMarks'), m.id);
       
       const history = m.history || [];
       history.push({
@@ -312,7 +312,7 @@ export async function reopenMarkSheet(competitionId, judgeUserId, adminUserEmail
  */
 export async function returnMarkSheetForCorrection(competitionId, judgeUserId, adminUserEmail = 'Admin', reason = '') {
   const festId = getActiveFestivalId();
-  const path = `festivals/${festId}/judgeMarks`;
+  const path = window.meeladPulseScopedFestivalPath('judgeMarks');
   try {
     const marks = await getJudgeMarksForCompetitionAndJudge(competitionId, judgeUserId);
     if (marks.length === 0) {
@@ -320,7 +320,7 @@ export async function returnMarkSheetForCorrection(competitionId, judgeUserId, a
     }
     const batch = writeBatch(db);
     for (const m of marks) {
-      const docRef = doc(db, `festivals/${festId}/judgeMarks`, m.id);
+      const docRef = doc(db, window.meeladPulseScopedFestivalPath('judgeMarks'), m.id);
       
       const history = m.history || [];
       history.push({

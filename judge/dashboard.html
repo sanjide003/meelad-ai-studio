@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Judge Panel - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
   
@@ -145,10 +146,10 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     let judgeProfile = null;
@@ -174,7 +175,7 @@
       
       try {
         // Query assignments strictly belonging to this judge
-        const assignCol = collection(db, `festivals/${festId}/judgeAssignments`);
+        const assignCol = collection(db, window.meeladPulseScopedFestivalPath('judgeAssignments'));
         const q = query(assignCol, where('judgeUserId', '==', judgeProfile.uid), where('active', '==', true));
         const querySnapshot = await getDocs(q);
 
@@ -198,7 +199,7 @@
           assignedCompetitionIds.push(assign.competitionId);
 
           // Get Competition Details
-          const compDocRef = doc(db, `festivals/${festId}/competitions`, assign.competitionId);
+          const compDocRef = doc(db, window.meeladPulseScopedFestivalPath('competitions'), assign.competitionId);
           const compSnap = await getDoc(compDocRef);
           
           if (compSnap.exists()) {
@@ -240,7 +241,7 @@
       // Security Check: Verify if this competition is indeed in the assigned list
       if (!assignedCompetitionIds.includes(competitionId)) {
         alert("Security Breach Blocked: You do not have permission to view this competition.");
-        window.location.replace("/unauthorized.html?reason=access_denied");
+        window.location.replace("../unauthorized.html?reason=access_denied");
         return;
       }
 
@@ -260,7 +261,7 @@
         const festId = localStorage.getItem('meeladpulse_selected_fest_id');
         
         // Fetch all entries for this competition
-        const entriesCol = collection(db, `festivals/${festId}/entries`);
+        const entriesCol = collection(db, window.meeladPulseScopedFestivalPath('entries'));
         const q = query(entriesCol, where('competitionId', '==', competitionId));
         const querySnapshot = await getDocs(q);
 
@@ -277,7 +278,7 @@
 
           // Query if marks already exist from this judge
           const markDocId = `${competitionId}_${entryId}_${judgeProfile.uid}`;
-          const markDocRef = doc(db, `festivals/${festId}/judgeMarks`, markDocId);
+          const markDocRef = doc(db, window.meeladPulseScopedFestivalPath('judgeMarks'), markDocId);
           const markSnap = await getDoc(markDocRef);
           
           let scoreStatusText = '<span class="text-slate-300 font-normal">Not Graded</span>';
@@ -449,7 +450,7 @@
         const globalLoader = document.getElementById('global-page-loader');
         globalLoader.classList.remove('hidden');
 
-        const docRef = doc(db, `festivals/${festId}/judgeMarks`, markId);
+        const docRef = doc(db, window.meeladPulseScopedFestivalPath('judgeMarks'), markId);
         await setDoc(docRef, evaluationData);
 
         scoringModal.classList.add('hidden');
@@ -457,7 +458,7 @@
 
         // Refresh Roster table list
         // Fetch competitionDetails
-        const compDocRef = doc(db, `festivals/${festId}/competitions`, selectedCompetition);
+        const compDocRef = doc(db, window.meeladPulseScopedFestivalPath('competitions'), selectedCompetition);
         const compSnap = await getDoc(compDocRef);
         if (compSnap.exists()) {
           await loadScoringArea(selectedAssignment, selectedCompetition, compSnap.data());

@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Publishing Board - Admin Desk</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     body {
@@ -115,7 +116,7 @@
             <p class="text-xs text-slate-400 font-medium font-display">Manage the public-facing leaderboard with full simulation previews and audited workflows.</p>
           </div>
           <div class="flex items-center space-x-2">
-            <a href="/public/live-scoreboard.html" target="_blank" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition font-display">
+            <a href="../public/live-scoreboard.html" target="_blank" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition font-display">
               Open Public Live Board ↗
             </a>
           </div>
@@ -208,15 +209,15 @@
   </div>
 
   <script type="module">
-    import { verifyUserRole } from "/assets/js/role-guard.js";
-    import { loadPortalLayout } from "/assets/js/component-loader.js";
-    import { initializeNavigation } from "/assets/js/navigation.js";
-    import { db } from "/assets/js/firebase-init.js";
+    import { verifyUserRole } from "../assets/js/role-guard.js";
+    import { loadPortalLayout } from "../assets/js/component-loader.js";
+    import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
     import { doc, getDoc, collection, getDocs, updateDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     
-    import { getResultPublishingQueue, bulkPublishResults } from "/assets/js/publishing-service.js";
-    import { publishResult, unpublishResult, republishResult, archiveResult, simulatePublication, recalculateAndPublishTeamStandings } from "/assets/js/result-action-service.js";
-    import { subscribePublicRankings } from "/assets/js/public-result-service.js";
+    import { getResultPublishingQueue, bulkPublishResults } from "../assets/js/publishing-service.js";
+    import { publishResult, unpublishResult, republishResult, archiveResult, simulatePublication, recalculateAndPublishTeamStandings } from "../assets/js/result-action-service.js";
+    import { subscribePublicRankings } from "../assets/js/public-result-service.js";
 
     let adminProfile = null;
     let festId = null;
@@ -292,8 +293,8 @@
 
       try {
         const [divsSnap, catsSnap] = await Promise.all([
-          getDocs(collection(db, `festivals/${festId}/divisions`)),
-          getDocs(collection(db, `festivals/${festId}/categories`))
+          getDocs(collection(db, window.meeladPulseScopedFestivalPath('divisions'))),
+          getDocs(collection(db, window.meeladPulseScopedFestivalPath('categories')))
         ]);
 
         divsSnap.forEach(d => {
@@ -421,7 +422,7 @@
             <button class="action-btn-hold px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-[10px] font-bold cursor-pointer transition">
               Hold
             </button>
-            <a href="/admin/result-review.html?compId=${r.id}" class="px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-[10px] font-bold transition">
+            <a href="../admin/result-review.html?compId=${r.id}" class="px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-[10px] font-bold transition">
               Review
             </a>
           `;
@@ -442,7 +443,7 @@
             <button class="action-btn-restore px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-bold cursor-pointer transition">
               Restore Queue
             </button>
-            <a href="/admin/result-review.html?compId=${r.id}" class="px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-[10px] font-bold transition">
+            <a href="../admin/result-review.html?compId=${r.id}" class="px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-[10px] font-bold transition">
               Review
             </a>
           `;
@@ -491,7 +492,7 @@
             if (!confirm(`Move ${r.competitionName} results to held status?`)) return;
             showProcessing("Holding publication...");
             try {
-              await updateDoc(doc(db, `festivals/${festId}/results`, r.id), { status: 'held' });
+              await updateDoc(doc(db, window.meeladPulseScopedFestivalPath('results'), r.id), { status: 'held' });
               showToast("Result status updated to Held", "success");
               await fetchAndRenderQueue();
             } catch (err) {
@@ -562,7 +563,7 @@
             if (!confirm(`Restore ${r.competitionName} to Ready to Publish state?`)) return;
             showProcessing("Restoring to ready...");
             try {
-              await updateDoc(doc(db, `festivals/${festId}/results`, r.id), { status: 'approved' });
+              await updateDoc(doc(db, window.meeladPulseScopedFestivalPath('results'), r.id), { status: 'approved' });
               showToast("Restored to ready to publish queue", "success");
               await fetchAndRenderQueue();
             } catch (err) {

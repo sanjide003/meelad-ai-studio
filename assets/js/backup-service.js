@@ -34,7 +34,7 @@ export async function exportDatabaseBackup(activeFestId) {
   };
 
   const queries = subcollections.map(async (colName) => {
-    const snap = await getDocs(collection(db, `festivals/${activeFestId}/${colName}`));
+    const snap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath(colName)));
     backupData.payload[colName] = snap.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -75,7 +75,7 @@ export async function restoreDatabaseBackup(activeFestId, backupObj) {
       const { id, ...fields } = docData;
       if (!id) continue;
 
-      const docRef = doc(db, `festivals/${activeFestId}/${colName}`, id);
+      const docRef = doc(db, window.meeladPulseScopedFestivalPath(colName), id);
       currentBatch.set(docRef, fields, { merge: true });
       await commitBatchIfLimit();
     }

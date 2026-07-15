@@ -26,7 +26,7 @@ export async function verifyCardIntegrity(id, role, festId) {
     // 1. Fetch festival context if provided
     if (festId) {
       try {
-        const festRef = doc(db, "festivals", festId);
+        const festRef = doc(db, window.meeladPulseScopedFestivalPath());
         const festSnap = await getDoc(festRef);
         if (festSnap.exists()) {
           festivalName = festSnap.data().name || "MeeladPulse Festival";
@@ -38,7 +38,7 @@ export async function verifyCardIntegrity(id, role, festId) {
 
     // 2. Query the official public-safe verificationDocs subcollection first
     if (festId) {
-      const verDocRef = doc(db, `festivals/${festId}/verificationDocs`, id);
+      const verDocRef = doc(db, window.meeladPulseScopedFestivalPath('verificationDocs'), id);
       const verDocSnap = await getDoc(verDocRef);
 
       if (verDocSnap.exists()) {

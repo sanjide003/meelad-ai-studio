@@ -1,4 +1,8 @@
 // MeeladPulse Permission Enforcement System
+function appUrl(path) {
+  return new URL(path.replace(/^\//, ""), new URL(/* @vite-ignore */ "../../", import.meta.url)).href;
+}
+
 export function hasPermission(userProfile, requiredPermission) {
   if (!userProfile || !userProfile.permissions) return false;
   // Admin with wildcard '*' gets access to everything
@@ -8,7 +12,7 @@ export function hasPermission(userProfile, requiredPermission) {
 
 export function enforcePagePermission(userProfile, requiredPermission) {
   if (!hasPermission(userProfile, requiredPermission)) {
-    window.location.replace('/unauthorized.html?reason=insufficient_permissions');
+    window.location.replace(appUrl('unauthorized.html?reason=insufficient_permissions'));
     throw new Error('Security Error: Insufficient permissions for this action.');
   }
 }

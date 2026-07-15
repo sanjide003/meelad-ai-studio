@@ -1,6 +1,8 @@
 /* MeeladPulse Central Stylesheet */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Chilanka&family=Manjari:wght@400;700&display=swap');
-@import "tailwindcss";
+/* Browser-readable Tailwind fallback for GitHub Pages/source hosting.
+   Vite builds still process Tailwind through @tailwindcss/vite. */
+@import url("https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css");
 
 @import "./variables.css";
 @import "./components.css";

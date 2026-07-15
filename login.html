@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - MeeladPulse</title>
-  <link rel="stylesheet" href="/assets/css/main.css">
-  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="manifest" href="public/manifest.json">
   <meta name="theme-color" content="#0f172a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -54,8 +55,8 @@
         
         <!-- Email field -->
         <div class="space-y-1.5">
-          <label id="lbl-email" for="email" class="text-xs font-bold text-slate-700">Email Address</label>
-          <input type="email" id="email" required class="form-input" placeholder="name@domain.com">
+          <label id="lbl-email" for="email" class="text-xs font-bold text-slate-700">Email / Username</label>
+          <input type="text" id="email" required class="form-input" placeholder="admin@email.com or team username">
           <p id="err-email" class="hidden text-[10px] text-rose-600 font-medium"></p>
         </div>
 
@@ -63,7 +64,7 @@
         <div class="space-y-1.5">
           <div class="flex justify-between items-center">
             <label id="lbl-password" for="password" class="text-xs font-bold text-slate-700">Password</label>
-            <a id="lnk-forgot" href="/forgot-password.html" class="text-[10px] font-bold text-emerald-600 hover:text-emerald-500 transition">Forgot Password?</a>
+            <a id="lnk-forgot" href="forgot-password.html" class="text-[10px] font-bold text-emerald-600 hover:text-emerald-500 transition">Forgot Password?</a>
           </div>
           <div class="relative">
             <input type="password" id="password" required class="form-input pr-10" placeholder="••••••••">
@@ -100,7 +101,11 @@
 
   <!-- Module Core Auth Script -->
   <script type="module">
-    import { loginWithEmailAndPassword } from "/assets/js/auth.js";
+    import { loginWithEmailAndPassword, loginWithUsernamePassword } from "./assets/js/auth.js";
+
+    const loginScopeParams = new URLSearchParams(window.location.search);
+    if (loginScopeParams.get('institution')) localStorage.setItem('meeladpulse_selected_institution_id', loginScopeParams.get('institution'));
+    if (loginScopeParams.get('festival')) localStorage.setItem('meeladpulse_selected_fest_id', loginScopeParams.get('festival'));
 
     // Simple dual translation database
     const t = {
@@ -192,9 +197,9 @@
       const rememberMe = document.getElementById('remember-me').checked;
 
       // Simple validations
-      if (!email.includes('@')) {
+      if (!email) {
         const errEmail = document.getElementById('err-email');
-        errEmail.textContent = t[activeLang].invalidEmail;
+        errEmail.textContent = "Email or username is required.";
         errEmail.classList.remove('hidden');
         return;
       }
@@ -212,12 +217,32 @@
       submitBtn.querySelector('span').textContent = t[activeLang].btnSigningIn;
 
       try {
-        const redirectPath = await loginWithEmailAndPassword(email, password, rememberMe);
+        let redirectPath;
+        const hasInstitutionScope = Boolean(localStorage.getItem('meeladpulse_selected_institution_id') && localStorage.getItem('meeladpulse_selected_fest_id'));
+        try {
+          // Institution links include scope, so try manual institution login before Firebase Auth.
+          redirectPath = hasInstitutionScope ? await loginWithUsernamePassword(email, password) : (email.includes('@') ? await loginWithEmailAndPassword(email, password, rememberMe) : await loginWithUsernamePassword(email, password));
+        } catch (primaryErr) {
+          // Super Admin uses Firebase Auth; institution admins may use email-like manual usernames.
+          if (hasInstitutionScope || !email.includes('@')) throw primaryErr;
+          redirectPath = await loginWithUsernamePassword(email, password);
+        }
         window.location.replace(redirectPath);
       } catch (err) {
         console.error("Auth transaction failed:", err);
-        errorText.textContent = err.message || "An authentication error occurred. Please verify your email and password.";
+        const friendlyMessage = err.message || "An authentication error occurred. Please verify your email and password.";
+        errorText.textContent = friendlyMessage;
         errorBox.classList.remove('hidden');
+        if (err.code === 'auth/manual-user-not-found') {
+          const errEmail = document.getElementById('err-email');
+          errEmail.textContent = friendlyMessage;
+          errEmail.classList.remove('hidden');
+        }
+        if (err.code === 'auth/manual-wrong-password' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+          const errPass = document.getElementById('err-password');
+          errPass.textContent = err.code === 'auth/invalid-credential' ? 'Password is incorrect, or this Firebase account is not configured for this portal.' : friendlyMessage;
+          errPass.classList.remove('hidden');
+        }
         
         // Recover state
         loader.classList.add('hidden');

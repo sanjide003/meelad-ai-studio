@@ -3,6 +3,10 @@ import { auth, db } from "./firebase-init.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+function appUrl(path) {
+  return new URL(path.replace(/^\//, ""), new URL(/* @vite-ignore */ "../../", import.meta.url)).href;
+}
+
 export function initializeNavigation() {
   // 1. Mobile Hamburger Menu Setup
   const hamburgerBtn = document.getElementById('mobile-hamburger-btn');
@@ -61,8 +65,13 @@ export function initializeNavigation() {
 
   allNavLinks.forEach(link => {
     const href = link.getAttribute('href');
-    if (href && (currentPath.endsWith(href) || currentPath.includes(href.replace('.html', '')))) {
-      link.classList.add('bg-slate-100', 'text-slate-900', 'font-bold');
+    if (!href) return;
+
+    const hrefPath = new URL(href, window.location.href).pathname;
+    if (currentPath === hrefPath || currentPath.endsWith(hrefPath.split('/').pop())) {
+      link.classList.remove('text-slate-400', 'text-slate-500', 'text-slate-600');
+      link.classList.add('bg-emerald-100', 'text-emerald-800', 'font-extrabold', 'shadow-sm');
+      link.setAttribute('aria-current', 'page');
       
       // Auto expand parent group if it exists
       const parentGroup = link.closest('.nav-group-content');
@@ -71,6 +80,7 @@ export function initializeNavigation() {
         const trigger = document.querySelector(`[aria-controls="${parentGroup.id}"]`);
         if (trigger) {
           trigger.setAttribute('aria-expanded', 'true');
+          trigger.classList.add('bg-emerald-50', 'text-emerald-800', 'font-bold');
         }
       }
     }
@@ -79,31 +89,68 @@ export function initializeNavigation() {
   // 3. Dropdown Expanders (Sidebar groups)
   const groupTriggers = document.querySelectorAll('.nav-group-trigger');
   groupTriggers.forEach(trigger => {
+    const targetId = trigger.getAttribute('aria-controls');
+    const target = document.getElementById(targetId);
+    if (!targetId || !target) return;
+
+    if (localStorage.getItem(`meeladpulse_nav_${targetId}`) === 'open') {
+      target.classList.remove('hidden');
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+
     trigger.addEventListener('click', (e) => {
       e.preventDefault();
-      const targetId = trigger.getAttribute('aria-controls');
-      const target = document.getElementById(targetId);
-      if (target) {
-        const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
-        trigger.setAttribute('aria-expanded', !isExpanded ? 'true' : 'false');
-        target.classList.toggle('hidden');
-      }
+      const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+      const nextOpen = !isExpanded;
+      trigger.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+      target.classList.toggle('hidden', !nextOpen);
+      localStorage.setItem(`meeladpulse_nav_${targetId}`, nextOpen ? 'open' : 'closed');
     });
   });
 
-  // 4. Update dynamic user profile information
+
+  // 4. Fast internal navigation: keep static multi-page routing, but avoid loader flicker and warm the next page.
+  document.querySelectorAll('a[href]').forEach(link => {
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+
+    let url;
+    try {
+      url = new URL(href, window.location.href);
+    } catch (_) {
+      return;
+    }
+
+    if (url.origin !== window.location.origin || !url.pathname.endsWith('.html')) return;
+
+    link.addEventListener('pointerenter', () => {
+      if (document.head.querySelector(`link[rel="prefetch"][href="${url.href}"]`)) return;
+      const prefetch = document.createElement('link');
+      prefetch.rel = 'prefetch';
+      prefetch.href = url.href;
+      document.head.appendChild(prefetch);
+    }, { once: true });
+
+    link.addEventListener('click', () => {
+      sessionStorage.setItem('meeladpulse_fast_nav', '1');
+    });
+  });
+
+  // 5. Update dynamic user profile information
   updateProfileDetails();
 
-  // 5. Logout Listener Bindings
+  // 6. Logout Listener Bindings
   const logoutBtns = document.querySelectorAll('.logout-action-btn');
   logoutBtns.forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
       try {
         await signOut(auth);
+        sessionStorage.removeItem('meeladpulse_manual_user');
         localStorage.removeItem('meeladpulse_selected_fest_id');
+        localStorage.removeItem('meeladpulse_selected_institution_id');
         localStorage.removeItem('meeladpulse_selected_fest_title');
-        window.location.replace('/login.html');
+        window.location.replace(appUrl('login.html'));
       } catch (err) {
         console.error("Sign out process error:", err);
       }
@@ -151,7 +198,7 @@ export async function initializePublicNavigation() {
   // Load components dynamically if containers exist
   if (headerContainer) {
     try {
-      const res = await fetch('/components/public-header.html');
+      const res = await fetch(appUrl('components/public-header.html'));
       if (res.ok) {
         headerContainer.innerHTML = await res.text();
       }
@@ -162,7 +209,7 @@ export async function initializePublicNavigation() {
 
   if (footerContainer) {
     try {
-      const res = await fetch('/components/public-footer.html');
+      const res = await fetch(appUrl('components/public-footer.html'));
       if (res.ok) {
         footerContainer.innerHTML = await res.text();
       }
@@ -177,7 +224,7 @@ export async function initializePublicNavigation() {
   
   navLinks.forEach(link => {
     const href = link.getAttribute('href');
-    if (href && (currentPath === href || currentPath.endsWith(href) || (href !== '/index.html' && currentPath.includes(href.replace('.html', ''))))) {
+    if (href && (currentPath === href || currentPath.endsWith(href) || (href !== 'index.html' && href !== '../index.html' && currentPath.includes(href.replace('.html', ''))))) {
       link.classList.add('bg-indigo-50/70', 'text-indigo-600');
       link.classList.remove('text-slate-500', 'text-slate-600');
     }
@@ -189,7 +236,7 @@ export async function initializePublicNavigation() {
   
   if (!festTitle && db) {
     try {
-      const docSnap = await getDoc(doc(db, 'festivals', festId));
+      const docSnap = await getDoc(doc(db, window.meeladPulseScopedFestivalPath()));
       if (docSnap.exists()) {
         const data = docSnap.data();
         festTitle = data.title || data.name || 'MeeladPulse';
