@@ -290,3 +290,87 @@ html.loading-state body {
   background: #f1f5f9;
   box-shadow: inset 0 0 0 1px #e2e8f0;
 }
+
+
+/* Reusable admin professional design system */
+.admin-section-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+.admin-status-card,
+.admin-workflow-card {
+  position: relative;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.125rem;
+  padding: 1rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.admin-workflow-card:hover,
+.admin-status-card:hover {
+  transform: translateY(-1px);
+  border-color: #cbd5e1;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+}
+.admin-danger-card { background: #fff1f2; border-color: #fecdd3; color: #9f1239; }
+.admin-warning-card { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+.admin-info-card { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+.admin-success-card { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+.admin-empty-state {
+  border: 1px dashed #cbd5e1;
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+}
+.admin-confirm-dialog {
+  width: min(28rem, calc(100vw - 2rem));
+  border-radius: 1.5rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 1.5rem;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+.admin-card-icon {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.9rem;
+}
+.admin-card-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.admin-progress-track {
+  height: 0.65rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: #e2e8f0;
+}
+.admin-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #10b981, #0ea5e9);
+  transition: width 0.25s ease;
+}
+.admin-link-input {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  background: #f8fafc;
+  padding: 0.75rem 0.875rem;
+  color: #334155;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}

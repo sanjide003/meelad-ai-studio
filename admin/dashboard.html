@@ -32,206 +32,143 @@
       <!-- Main Action Content -->
       <main class="flex-1 p-4 lg:p-8 space-y-8">
         
-        <!-- Welcome Banner -->
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
-          <div class="space-y-1">
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Dashboard</h1>
-            <p class="text-xs text-slate-400 font-medium">Manage setup, people, judging, results, publishing, and official outputs from one workspace.</p>
+        <!-- Command Center Header -->
+        <section class="admin-section-card bg-gradient-to-br from-white via-slate-50 to-emerald-50 border-emerald-100">
+          <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+            <div class="space-y-2">
+              <span class="status-badge status-badge-active">Command Center</span>
+              <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-950 tracking-tight font-display">Dashboard</h1>
+              <p class="text-sm text-slate-500 max-w-3xl">Manage setup, people, judging, results, publishing, account access, and public links from one professional workspace.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <a href="../admin/account-settings.html" class="btn bg-white border border-emerald-100 text-emerald-700 hover:bg-emerald-50 py-2.5 px-4 text-xs font-extrabold">Public Links & Account</a>
+              <a href="../admin/user-invitations.html" class="btn btn-accent py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v6m3-3h-6M12 12a4 4 0 100-8 4 4 0 000 8zM4 20a8 8 0 0116 0"/></svg>
+                <span>Invite User</span>
+              </a>
+            </div>
           </div>
-          <div class="flex flex-wrap items-center gap-2 shrink-0">
-            <a href="../admin/account-settings.html" class="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2.5 text-xs font-extrabold text-emerald-700 hover:bg-emerald-100">Public Links & Account</a>
-            <a href="../admin/user-invitations.html" class="btn btn-accent py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-              <span>Invite User</span>
-            </a>
-          </div>
-        </div>
+        </section>
 
-        <!-- Admin next-step guidance -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div class="admin-guidance-card border-l-4 border-l-emerald-500">
-            <span class="status-badge status-badge-active">Command Center</span>
-            <h2 class="text-sm font-extrabold text-slate-900 mt-3">Start with the setup checklist</h2>
-            <p class="text-xs text-slate-500 mt-1 leading-relaxed">The dashboard shows what must be completed before judges can enter marks and results can be published.</p>
+        <!-- Account summary, warnings, and quick stats -->
+        <section class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+          <div class="admin-section-card xl:col-span-1 space-y-4">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-widest">Account Summary</p>
+                <h2 id="summary-institution-name" class="text-lg font-extrabold text-slate-950 font-display">Institution workspace</h2>
+              </div>
+              <span id="summary-status" class="status-badge status-badge-active">Active</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div class="rounded-xl bg-slate-50 border border-slate-100 p-3">
+                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Admin</p>
+                <p id="summary-admin-name" class="font-extrabold text-slate-900 mt-1">...</p>
+              </div>
+              <div class="rounded-xl bg-slate-50 border border-slate-100 p-3">
+                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Role</p>
+                <p id="summary-role" class="font-extrabold text-slate-900 mt-1">...</p>
+              </div>
+              <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-3">
+                <p class="text-[10px] uppercase tracking-widest text-emerald-600 font-bold">Festival</p>
+                <p id="summary-festival" class="font-extrabold text-emerald-900 mt-1">...</p>
+              </div>
+              <div class="rounded-xl bg-sky-50 border border-sky-100 p-3">
+                <p class="text-[10px] uppercase tracking-widest text-sky-600 font-bold">Workspace</p>
+                <p class="font-extrabold text-sky-900 mt-1">Scoped</p>
+              </div>
+            </div>
           </div>
-          <div class="admin-guidance-card border-l-4 border-l-amber-500">
-            <span class="status-badge status-badge-pending">Needs Review</span>
-            <h2 class="text-sm font-extrabold text-slate-900 mt-3">Validate before publishing</h2>
-            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Review submitted marks, tie-breaks, and pending sheets before approving public results.</p>
-          </div>
-          <div class="admin-guidance-card border-l-4 border-l-cyan-500">
-            <span class="status-badge status-badge-info">Official Outputs</span>
-            <h2 class="text-sm font-extrabold text-slate-900 mt-3">Generate documents after approval</h2>
-            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Use reports, certificates, ID cards, and backups once the data is verified.</p>
-          </div>
-        </div>
 
-        <!-- First Run Festival Setup Panel -->
-        <div id="festival-setup-panel" class="hidden bg-amber-50 border border-amber-100 rounded-2xl p-6 space-y-3">
-          <p class="text-xs font-extrabold text-amber-700 uppercase tracking-widest">First Run Setup Required</p>
-          <h2 class="text-lg font-bold text-slate-900 font-display">No festival scope is selected</h2>
-          <p class="text-xs text-slate-600 leading-relaxed">Create an initial active festival to unlock teams, competitions, students, judge assignments, and result management.</p>
+          <div class="admin-section-card xl:col-span-2 space-y-4">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Quick Stats</p>
+                <h2 class="text-lg font-extrabold text-slate-950 font-display">Workspace Snapshot</h2>
+              </div>
+              <span class="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">Workspace locked to this institution</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+              <div class="admin-status-card admin-info-card">
+                <span class="admin-card-icon bg-white/70"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-3-3h-2M9 20H4v-2a3 3 0 013-3h2m4-6a4 4 0 11-8 0 4 4 0 018 0z"/></svg></span>
+                <div><p class="text-[10px] font-extrabold uppercase tracking-widest opacity-70">Registered Users</p><p id="stat-users-count" class="text-2xl font-extrabold font-display">...</p></div>
+              </div>
+              <div class="admin-status-card admin-warning-card">
+                <span class="admin-card-icon bg-white/70"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></span>
+                <div><p class="text-[10px] font-extrabold uppercase tracking-widest opacity-70">Pending Invites</p><p id="stat-invitations-count" class="text-2xl font-extrabold font-display">...</p></div>
+              </div>
+              <div class="admin-status-card admin-success-card">
+                <span class="admin-card-icon bg-white/70"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H3v-2a4 4 0 014-4h2m8-6a4 4 0 11-8 0 4 4 0 018 0z"/></svg></span>
+                <div><p class="text-[10px] font-extrabold uppercase tracking-widest opacity-70">Active Teams</p><p id="stat-teams-count" class="text-2xl font-extrabold font-display">...</p></div>
+              </div>
+              <div class="admin-status-card bg-amber-50 border-amber-100 text-amber-700">
+                <span class="admin-card-icon bg-white/70"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547"/></svg></span>
+                <div><p class="text-[10px] font-extrabold uppercase tracking-widest opacity-70">Competitions</p><p id="stat-competitions-count" class="text-2xl font-extrabold font-display">...</p></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Warning cards -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="admin-workflow-card admin-info-card"><span class="admin-card-icon bg-white/70"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 22a10 10 0 110-20 10 10 0 010 20z"/></svg></span><div><h3 class="font-extrabold text-sm">Start with setup</h3><p class="text-xs mt-1 opacity-80">Complete setup before opening judging and publishing results.</p></div></div>
+          <div class="admin-workflow-card admin-warning-card"><span class="admin-card-icon bg-white/70"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></span><div><h3 class="font-extrabold text-sm">Validate before publishing</h3><p class="text-xs mt-1 opacity-80">Review submitted marks, tie-breaks, and pending sheets first.</p></div></div>
+          <div class="admin-workflow-card admin-success-card"><span class="admin-card-icon bg-white/70"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M12 22a10 10 0 100-20 10 10 0 000 20z"/></svg></span><div><h3 class="font-extrabold text-sm">Generate outputs after approval</h3><p class="text-xs mt-1 opacity-80">Use reports, certificates, ID cards, and backups after verification.</p></div></div>
+        </section>
+
+        <div id="festival-setup-panel" class="hidden admin-section-card admin-warning-card space-y-3">
+          <p class="text-xs font-extrabold uppercase tracking-widest">First Run Setup Required</p>
+          <h2 class="text-lg font-bold font-display">No festival scope is selected</h2>
+          <p class="text-xs leading-relaxed">Create an initial active festival to unlock teams, competitions, students, judge assignments, and result management.</p>
           <button id="create-default-festival-btn" class="btn btn-primary px-5 py-2.5 text-xs font-bold text-white rounded-xl cursor-pointer">Create Initial Festival</button>
         </div>
 
-        <!-- Quick Stats Bento Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="card-panel flex items-center space-x-4">
-            <div class="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            </div>
+        <!-- Setup progress and action cards -->
+        <section class="admin-section-card space-y-5">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Registered Users</p>
-              <p id="stat-users-count" class="text-xl font-extrabold text-slate-900 font-display mt-1">...</p>
+              <p class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-widest">Setup Progress</p>
+              <h2 class="text-xl font-extrabold text-slate-950 font-display">Festival Readiness</h2>
+              <p class="text-xs text-slate-500">Follow these steps in order. Each card opens the exact admin page needed for that task.</p>
             </div>
-          </div>
-
-          <div class="card-panel flex items-center space-x-4">
-            <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 11-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+            <div class="min-w-[12rem] space-y-2">
+              <div class="flex justify-between text-[10px] font-extrabold uppercase tracking-widest text-slate-400"><span>Progress</span><span id="setup-progress-label">0%</span></div>
+              <div class="admin-progress-track"><div id="setup-progress-fill" class="admin-progress-fill" style="width: 0%"></div></div>
             </div>
-            <div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Pending Invites</p>
-              <p id="stat-invitations-count" class="text-xl font-extrabold text-slate-900 font-display mt-1">...</p>
-            </div>
-          </div>
-
-          <div class="card-panel flex items-center space-x-4">
-            <div class="h-10 w-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-            </div>
-            <div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Active Teams</p>
-              <p id="stat-teams-count" class="text-xl font-extrabold text-slate-900 font-display mt-1">...</p>
-            </div>
-          </div>
-
-          <div class="card-panel flex items-center space-x-4">
-            <div class="h-10 w-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-            </div>
-            <div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Competitions</p>
-              <p id="stat-competitions-count" class="text-xl font-extrabold text-slate-900 font-display mt-1">...</p>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- Application Structure Roadmap -->
-        <div class="bg-white rounded-2xl border border-emerald-100 p-6 shadow-xs space-y-5">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div>
-              <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Setup Checklist</p>
-              <h2 class="text-lg font-extrabold text-slate-900 font-display">Festival Readiness</h2>
-              <p class="text-xs text-slate-500">Complete these steps in order before opening judging and publishing official results.</p>
-            </div>
-            <span class="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700">Workspace locked to this institution</span>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3" id="setup-roadmap-board">
-            <a href="../admin/festival-settings.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="blueprint">
-              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 01</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Festival Settings</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Confirm festival profile, venue, registration mode, and public visibility settings.</p>
-            </a>
-            <a href="../admin/teams.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="teams">
-              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 02</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Teams</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Create team groups and confirm team identifiers before registering students.</p>
-            </a>
-            <a href="../admin/categories.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="categories">
-              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 03</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Categories</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Create age/category divisions according to the gender competition mode.</p>
-            </a>
-            <a href="../admin/competition-rules.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="competitions">
-              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 04</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Competition Rules</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Configure competition items, rules, scoring mode, and eligibility details.</p>
-            </a>
-            <a href="../admin/students.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="students">
-              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 05</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Students</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Register students after teams, divisions, and categories are ready.</p>
-            </a>
-            <a href="../admin/judges.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="judges">
-              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 06</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Judges</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Create judge accounts before assigning evaluation panels.</p>
-            </a>
-            <a href="../admin/judge-assignments.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="assignments">
-              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 07</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Judge Assignments</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Map judges to competitions, stages, and categories.</p>
-            </a>
-            <a href="../admin/result-publish.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="publish">
-              <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 08</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Publish Results</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Review approved results and publish only when validation checks are complete.</p>
-            </a>
+            <a href="../admin/festival-settings.html" class="admin-workflow-card" data-progress-step><span class="status-badge status-badge-active">01</span><div><h3 class="font-extrabold text-sm text-slate-900">Festival Settings</h3><p class="text-xs text-slate-500 mt-1">Confirm profile, venue, registration mode, and visibility.</p></div></a>
+            <a href="../admin/teams.html" class="admin-workflow-card" data-progress-step><span class="status-badge status-badge-active">02</span><div><h3 class="font-extrabold text-sm text-slate-900">Teams</h3><p class="text-xs text-slate-500 mt-1">Create team groups before registrations.</p></div></a>
+            <a href="../admin/categories.html" class="admin-workflow-card" data-progress-step><span class="status-badge status-badge-pending">03</span><div><h3 class="font-extrabold text-sm text-slate-900">Categories</h3><p class="text-xs text-slate-500 mt-1">Create age/category divisions.</p></div></a>
+            <a href="../admin/competition-rules.html" class="admin-workflow-card" data-progress-step><span class="status-badge status-badge-pending">04</span><div><h3 class="font-extrabold text-sm text-slate-900">Competition Rules</h3><p class="text-xs text-slate-500 mt-1">Configure competition items and scoring.</p></div></a>
+            <a href="../admin/students.html" class="admin-workflow-card" data-progress-step><span class="status-badge status-badge-info">05</span><div><h3 class="font-extrabold text-sm text-slate-900">Students</h3><p class="text-xs text-slate-500 mt-1">Register and review participants.</p></div></a>
+            <a href="../admin/judges.html" class="admin-workflow-card" data-progress-step><span class="status-badge status-badge-info">06</span><div><h3 class="font-extrabold text-sm text-slate-900">Judges</h3><p class="text-xs text-slate-500 mt-1">Create judge accounts.</p></div></a>
+            <a href="../admin/judge-assignments.html" class="admin-workflow-card" data-progress-step><span class="status-badge status-badge-info">07</span><div><h3 class="font-extrabold text-sm text-slate-900">Judge Assignments</h3><p class="text-xs text-slate-500 mt-1">Assign panels to competitions.</p></div></a>
+            <a href="../admin/result-publish.html" class="admin-workflow-card" data-progress-step><span class="status-badge status-badge-info">08</span><div><h3 class="font-extrabold text-sm text-slate-900">Publish Results</h3><p class="text-xs text-slate-500 mt-1">Publish only after validation.</p></div></a>
           </div>
-        </div>
+        </section>
 
+        <!-- Action cards -->
+        <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          <a href="../admin/account-settings.html" class="admin-workflow-card admin-success-card"><span class="admin-card-icon bg-white/70"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A9 9 0 1118.88 6.196M15 11a3 3 0 11-6 0 3 3 0 016 0zM6 21a6 6 0 0112 0"/></svg></span><div><h3 class="font-extrabold text-sm">My Account & Public Links</h3><p class="text-xs mt-1 opacity-80">Update admin login and copy portal links.</p></div></a>
+          <a href="../admin/user-invitations.html" class="admin-workflow-card admin-info-card"><span class="admin-card-icon bg-white/70"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></span><div><h3 class="font-extrabold text-sm">Invitations</h3><p class="text-xs mt-1 opacity-80">Invite admins, judges, and teams.</p></div></a>
+          <a href="../admin/mark-monitor.html" class="admin-workflow-card admin-warning-card"><span class="admin-card-icon bg-white/70"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19V5m4 14v-7m4 7V8m4 11v-4m4 4V9"/></svg></span><div><h3 class="font-extrabold text-sm">Mark Monitor</h3><p class="text-xs mt-1 opacity-80">Track judging and missing sheets.</p></div></a>
+          <a href="../admin/backup-restore.html" class="admin-workflow-card admin-danger-card"><span class="admin-card-icon bg-white/70"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5 19A9 9 0 0019 5M12 8v5l3 2"/></svg></span><div><h3 class="font-extrabold text-sm">Backup & Restore</h3><p class="text-xs mt-1 opacity-80">Protect data before major changes.</p></div></a>
+        </section>
 
-        <!-- Scoped Portal Share Links -->
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
+        <!-- Public links -->
+        <section class="admin-section-card space-y-4">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div>
-              <p class="text-[10px] font-bold text-sky-600 uppercase tracking-widest">Share Links</p>
-              <h2 class="text-lg font-extrabold text-slate-900 font-display">Portal Links</h2>
-              <p class="text-xs text-slate-500">Share these links only after selecting the correct institution/festival workspace.</p>
-            </div>
-            <button id="copy-public-link-btn" class="btn btn-secondary text-xs font-bold px-4 py-2 border border-slate-200">Copy Public Result Link</button>
+            <div><p class="text-[10px] font-extrabold text-sky-600 uppercase tracking-widest">Public Links</p><h2 class="text-lg font-extrabold text-slate-950 font-display">Portal Links</h2><p class="text-xs text-slate-500">Share these only after confirming the selected institution/festival workspace.</p></div>
+            <button id="copy-public-link-btn" class="btn bg-sky-50 border border-sky-100 text-sky-700 hover:bg-sky-100 text-xs font-bold px-4 py-2">Copy Public Result Link</button>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-[11px] font-mono">
-            <input id="share-admin-link" class="form-input" readonly value="Admin link unavailable">
-            <input id="share-team-link" class="form-input" readonly value="Team link unavailable">
-            <input id="share-judge-link" class="form-input" readonly value="Judge link unavailable">
-            <input id="share-public-link" class="form-input" readonly value="Public link unavailable">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            <input id="share-admin-link" class="admin-link-input" readonly value="Admin link unavailable">
+            <input id="share-team-link" class="admin-link-input" readonly value="Team link unavailable">
+            <input id="share-judge-link" class="admin-link-input" readonly value="Judge link unavailable">
+            <input id="share-public-link" class="admin-link-input" readonly value="Public link unavailable">
           </div>
-        </div>
-
-        <!-- Portal Info Panel -->
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
-          <h2 class="text-lg font-bold text-slate-900 font-display">Admin Guidance</h2>
-          <p class="text-xs text-slate-500 leading-relaxed">
-            Use the lifecycle sidebar from top to bottom: finish setup, register students, manage access, monitor judging, review results, publish outputs, and keep system backups current.
-          </p>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 pt-2">
-            <a href="../admin/account-settings.html" class="block p-4 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/50 rounded-xl transition-all">
-              <span class="text-xs font-bold text-slate-800 block">My Account & Public Links</span>
-              <span class="text-[11px] text-slate-400 mt-1 block">Update the institution admin login and copy public portal links.</span>
-            </a>
-            <a href="../admin/users.html" class="block p-4 border border-slate-100 hover:border-slate-300 rounded-xl transition-all">
-              <span class="text-xs font-bold text-slate-800 block">Accounts</span>
-              <span class="text-[11px] text-slate-400 mt-1 block">Review administrators, judges, and support users. Disable access when a user no longer needs the portal.</span>
-            </a>
-            <a href="../admin/user-invitations.html" class="block p-4 border border-slate-100 hover:border-slate-300 rounded-xl transition-all">
-              <span class="text-xs font-bold text-slate-800 block">Invitations</span>
-              <span class="text-[11px] text-slate-400 mt-1 block">Invite admins, judges, and team users with clear roles and expiry-aware onboarding.</span>
-            </a>
-            <a href="../admin/mark-monitor.html" class="block p-4 border border-slate-100 hover:border-amber-200 hover:bg-amber-50/50 rounded-xl transition-all">
-              <span class="text-xs font-bold text-slate-800 block">Mark Monitor</span>
-              <span class="text-[11px] text-slate-400 mt-1 block">Track mark sheets and identify missing judging work.</span>
-            </a>
-            <a href="../admin/result-review.html" class="block p-4 border border-slate-100 hover:border-green-200 hover:bg-green-50/50 rounded-xl transition-all">
-              <span class="text-xs font-bold text-slate-800 block">Result Review</span>
-              <span class="text-[11px] text-slate-400 mt-1 block">Approve or hold calculated results before publishing.</span>
-            </a>
-            <a href="../admin/result-publish.html" class="block p-4 border border-slate-100 hover:border-sky-200 hover:bg-sky-50/50 rounded-xl transition-all">
-              <span class="text-xs font-bold text-slate-800 block">Publish Results</span>
-              <span class="text-[11px] text-slate-400 mt-1 block">Publish validated results to public pages.</span>
-            </a>
-            <a href="../admin/reports.html" class="block p-4 border border-slate-100 hover:border-cyan-200 hover:bg-cyan-50/50 rounded-xl transition-all">
-              <span class="text-xs font-bold text-slate-800 block">Reports</span>
-              <span class="text-[11px] text-slate-400 mt-1 block">Generate exports and official summaries.</span>
-            </a>
-            <a href="../admin/backup-restore.html" class="block p-4 border border-slate-100 hover:border-rose-200 hover:bg-rose-50/50 rounded-xl transition-all">
-              <span class="text-xs font-bold text-slate-800 block">Backup & Restore</span>
-              <span class="text-[11px] text-slate-400 mt-1 block">Protect data before high-impact operations.</span>
-            </a>
-          </div>
-        </div>
+        </section>
 
       </main>
     </div>
@@ -257,12 +194,40 @@
         initializeNavigation();
 
         // 4. Load basic quick statistics from Firestore
+        renderAccountSummary(profile);
         loadQuickStatistics();
         populateShareLinks();
+        updateSetupProgress();
       } catch (err) {
         console.error("Dashboard initialize failed:", err);
       }
     }
+
+    function renderAccountSummary(profile) {
+      const institutionName = localStorage.getItem('meeladpulse_selected_institution_name') || localStorage.getItem('meeladpulse_selected_fest_title') || 'Institution workspace';
+      const festivalTitle = localStorage.getItem('meeladpulse_selected_fest_title') || 'No festival selected';
+      document.getElementById('summary-institution-name').textContent = institutionName;
+      document.getElementById('summary-admin-name').textContent = profile?.name || profile?.username || 'Admin';
+      document.getElementById('summary-role').textContent = profile?.role || 'Institution Admin';
+      document.getElementById('summary-festival').textContent = festivalTitle;
+      const status = document.getElementById('summary-status');
+      if (status) {
+        status.textContent = festivalTitle === 'No festival selected' ? 'Setup Needed' : 'Active';
+        status.className = festivalTitle === 'No festival selected' ? 'status-badge status-badge-pending' : 'status-badge status-badge-active';
+      }
+    }
+
+    function updateSetupProgress() {
+      const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+      const totalSteps = document.querySelectorAll('[data-progress-step]').length || 8;
+      const completed = festId ? 2 : 0;
+      const percentage = Math.round((completed / totalSteps) * 100);
+      const label = document.getElementById('setup-progress-label');
+      const fill = document.getElementById('setup-progress-fill');
+      if (label) label.textContent = `${percentage}%`;
+      if (fill) fill.style.width = `${percentage}%`;
+    }
+
     function populateShareLinks() {
       const festId = localStorage.getItem('meeladpulse_selected_fest_id') || '';
       const institutionId = localStorage.getItem('meeladpulse_selected_institution_id') || festId;
@@ -307,6 +272,10 @@
 
           const compsSnap = await getDocs(collection(db, window.meeladPulseScopedFestivalPath('competitions')));
           document.getElementById('stat-competitions-count').textContent = compsSnap.size;
+          const completedSteps = 1 + (teamsSnap.size > 0 ? 1 : 0) + (compsSnap.size > 0 ? 2 : 0) + (usersSnap.size > 0 ? 1 : 0);
+          const percentage = Math.min(100, Math.round((completedSteps / 8) * 100));
+          document.getElementById('setup-progress-label').textContent = `${percentage}%`;
+          document.getElementById('setup-progress-fill').style.width = `${percentage}%`;
         } else {
           document.getElementById('festival-setup-panel')?.classList.remove('hidden');
           document.getElementById('create-default-festival-btn').onclick = createInitialFestival;
