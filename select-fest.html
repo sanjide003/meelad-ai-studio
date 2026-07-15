@@ -18,24 +18,19 @@
   </div>
 
   <header id="super-admin-header" class="hidden bg-white border-b border-slate-100 px-4 py-3 sticky top-0 z-40 shadow-sm">
-    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+    <div class="max-w-7xl mx-auto flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
       <div>
         <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-600">MeeladPulse SaaS Owner</p>
         <h2 class="text-lg font-extrabold text-slate-900 font-display">Super Admin Control Center</h2>
       </div>
-      <div class="relative">
-        <button id="super-menu-btn" type="button" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-extrabold text-slate-700 shadow-sm hover:bg-slate-50" aria-expanded="false">
-          ☰ Menu
-        </button>
-        <div id="super-menu" class="hidden absolute right-0 mt-2 w-56 rounded-2xl border border-slate-100 bg-white p-2 shadow-2xl">
-          <button data-super-filter="all" class="super-filter block w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50">All Institutions</button>
-          <button data-super-filter="purchased" class="super-filter block w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50">Purchased</button>
-          <button data-super-filter="trial" class="super-filter block w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50">Trial</button>
-          <button data-super-filter="deactivated" class="super-filter block w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50">Deactivated / Expired</button>
-          <div class="my-2 border-t border-slate-100"></div>
-          <button class="logout-action-btn block w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-rose-600 hover:bg-rose-50">Logout</button>
-        </div>
-      </div>
+      <nav class="flex flex-wrap items-center gap-2" aria-label="Super Admin tabs">
+        <button data-super-filter="all" class="super-filter rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-slate-50">All Institutions</button>
+        <button data-super-filter="purchased" class="super-filter rounded-2xl border border-sky-100 bg-sky-50 px-4 py-2 text-xs font-extrabold text-sky-700 hover:bg-sky-100">Purchased</button>
+        <button data-super-filter="trial" class="super-filter rounded-2xl border border-amber-100 bg-amber-50 px-4 py-2 text-xs font-extrabold text-amber-700 hover:bg-amber-100">Trial</button>
+        <button data-super-filter="deactivated" class="super-filter rounded-2xl border border-rose-100 bg-rose-50 px-4 py-2 text-xs font-extrabold text-rose-700 hover:bg-rose-100">Deactivated</button>
+        <button id="super-profile-tab" type="button" class="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-2 text-xs font-extrabold text-indigo-700 hover:bg-indigo-100">Profile</button>
+        <button class="logout-action-btn rounded-2xl border border-slate-900 bg-slate-900 px-4 py-2 text-xs font-extrabold text-white hover:bg-slate-800">Logout</button>
+      </nav>
     </div>
   </header>
 
@@ -172,6 +167,42 @@
     </div>
   </div>
 
+
+
+  <div id="share-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 p-4">
+    <div class="w-full max-w-3xl rounded-3xl bg-white shadow-2xl border border-slate-100 overflow-hidden">
+      <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-sky-600">Share Portal Access</p>
+          <h2 id="share-modal-title" class="text-xl font-extrabold text-slate-900 font-display">Institution Links</h2>
+          <p class="text-xs text-slate-500 mt-1">Review the non-editable share message, or use Edit Format to customize before copying.</p>
+        </div>
+        <button id="share-modal-close" type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50">Close</button>
+      </div>
+      <div class="space-y-4 px-6 py-5">
+        <textarea id="share-message" readonly class="h-80 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-800"></textarea>
+        <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <button id="share-edit-btn" type="button" class="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-2 text-xs font-extrabold text-indigo-700 hover:bg-indigo-100">Edit Format</button>
+          <button id="share-copy-btn" type="button" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-extrabold text-white hover:bg-slate-800">Copy Complete Message</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="profile-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 p-4">
+    <div class="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-slate-100 overflow-hidden">
+      <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-indigo-600">Super Admin Profile</p>
+          <h2 class="text-xl font-extrabold text-slate-900 font-display">Account Details</h2>
+          <p class="text-xs text-slate-500 mt-1">Firebase passwords are protected and cannot be displayed in the browser.</p>
+        </div>
+        <button id="profile-modal-close" type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50">Close</button>
+      </div>
+      <div id="profile-details" class="space-y-3 px-6 py-5 text-sm text-slate-700"></div>
+    </div>
+  </div>
+
   <footer class="w-full text-center py-6 border-t border-slate-100 bg-white">
     <button class="logout-action-btn text-xs font-bold text-rose-600 hover:text-rose-500 transition cursor-pointer">
       Sign Out of Session
@@ -185,6 +216,7 @@
 
     const festivalsGrid = document.getElementById('festivals-grid');
     let superAdminFilter = 'all';
+    let currentSuperAdminProfile = null;
 
     async function initializeFestivalSelection() {
       try {
@@ -192,6 +224,7 @@
         const userProfile = await verifyUserRole(['superAdmin', 'admin', 'judge', 'teamLeader']);
         
         if (userProfile.role === 'superAdmin') {
+          currentSuperAdminProfile = userProfile;
           await renderSuperAdminPortal();
           return;
         }
@@ -381,25 +414,7 @@
           </td>
         `;
         row.querySelector('.edit-workspace').onclick = () => openInstitutionModal(festival);
-        row.querySelector('.share-login').onclick = async () => {
-          const festivalId = festival.defaultFestivalId || festival.id;
-          const scopedUrl = (path) => {
-            const url = new URL(path, window.location.href);
-            url.searchParams.set('institution', festival.id);
-            url.searchParams.set('festival', festivalId);
-            return url.href;
-          };
-          const links = [
-            ['Admin Login', scopedUrl('login.html')],
-            ['Admin Portal', scopedUrl('admin/app.html')],
-            ['Public Results/Home', scopedUrl('public/index.html')],
-            ['Team Login', scopedUrl('login.html?portal=team')],
-            ['Judge Login', scopedUrl('login.html?portal=judge')]
-          ];
-          const linkText = links.map(([label, url]) => `${label}: ${url}`).join(String.fromCharCode(10));
-          if (navigator.clipboard) await navigator.clipboard.writeText(linkText);
-          alert(`Portal links copied:\n${linkText}`);
-        };
+        row.querySelector('.share-login').onclick = () => openShareModal(festival);
         row.querySelector('.toggle-workspace').onclick = async () => {
           const nextActive = !info.effectiveActive;
           const nextStatus = nextActive ? (info.status === 'active' ? 'active' : 'trial') : 'suspended';
@@ -507,6 +522,100 @@
       if (cycle === 'yearly' && start) document.getElementById('institution-subscription-ends').value = addDays(start, 365);
       if (cycle === 'unlimited') document.getElementById('institution-subscription-ends').value = '';
     });
+
+
+    const shareModal = document.getElementById('share-modal');
+    const shareMessage = document.getElementById('share-message');
+    const shareModalTitle = document.getElementById('share-modal-title');
+    const profileModal = document.getElementById('profile-modal');
+    const profileDetails = document.getElementById('profile-details');
+
+    function setShareModalOpen(open) {
+      shareModal.classList.toggle('hidden', !open);
+      shareModal.classList.toggle('flex', open);
+      if (!open) shareMessage.setAttribute('readonly', 'readonly');
+    }
+
+    function buildPortalLinks(festival) {
+      const festivalId = festival.defaultFestivalId || festival.id;
+      const scopedUrl = (path) => {
+        const url = new URL(path, window.location.href);
+        url.searchParams.set('institution', festival.id);
+        url.searchParams.set('festival', festivalId);
+        return url.href;
+      };
+      return {
+        adminLogin: scopedUrl('login.html'),
+        adminPortal: scopedUrl('admin/app.html'),
+        publicHome: scopedUrl('public/index.html'),
+        teamLogin: scopedUrl('login.html?portal=team'),
+        judgeLogin: scopedUrl('login.html?portal=judge')
+      };
+    }
+
+    function buildShareMessage(festival) {
+      const links = buildPortalLinks(festival);
+      const institutionName = festival.title || festival.name || festival.id;
+      return `Assalamu Alaikum,
+
+${institutionName} institution portal is ready on MeeladPulse. MeeladPulse helps manage competitions, teams, judges, entries, result publishing, public result pages, certificates, reports, and live access links in one secured platform.
+
+Admin Login:
+${links.adminLogin}
+
+Admin Portal:
+${links.adminPortal}
+
+Public Results/Home:
+${links.publicHome}
+
+Team Login:
+${links.teamLogin}
+
+Judge Login:
+${links.judgeLogin}
+
+Admin Username: ${festival.ownerUsername || festival.ownerEmail || 'not set'}
+Admin Password: ${festival.ownerPassword || 'not set'}
+
+Please keep these credentials safe and share only with authorized users.`;
+    }
+
+    function openShareModal(festival) {
+      shareModalTitle.textContent = `${festival.title || festival.name || festival.id} Portal Links`;
+      shareMessage.value = buildShareMessage(festival);
+      setShareModalOpen(true);
+    }
+
+    function setProfileModalOpen(open) {
+      profileModal.classList.toggle('hidden', !open);
+      profileModal.classList.toggle('flex', open);
+    }
+
+    function openSuperAdminProfile() {
+      const profile = currentSuperAdminProfile || window.currentUserProfile || {};
+      profileDetails.innerHTML = `
+        <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4"><span class="text-xs font-bold text-slate-400">Name</span><div class="font-extrabold text-slate-900">${profile.name || profile.displayName || 'Super Admin'}</div></div>
+        <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4"><span class="text-xs font-bold text-slate-400">Email / Username</span><div class="font-extrabold text-slate-900">${profile.email || profile.emailLower || 'Not available'}</div></div>
+        <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4"><span class="text-xs font-bold text-slate-400">Role</span><div class="font-extrabold text-slate-900">${profile.role || 'superAdmin'}</div></div>
+        <div class="rounded-2xl border border-amber-100 bg-amber-50 p-4"><span class="text-xs font-bold text-amber-700">Password</span><div class="font-bold text-amber-900">Firebase password is encrypted and cannot be displayed. Use Firebase Authentication password reset to change it.</div></div>
+      `;
+      setProfileModalOpen(true);
+    }
+
+    document.getElementById('share-modal-close').onclick = () => setShareModalOpen(false);
+    document.getElementById('share-edit-btn').onclick = () => {
+      shareMessage.removeAttribute('readonly');
+      shareMessage.focus();
+    };
+    document.getElementById('share-copy-btn').onclick = async () => {
+      if (navigator.clipboard) await navigator.clipboard.writeText(shareMessage.value);
+      alert('Share message copied successfully.');
+    };
+    document.getElementById('profile-modal-close').onclick = () => setProfileModalOpen(false);
+    document.getElementById('super-profile-tab').onclick = openSuperAdminProfile;
+    shareModal.addEventListener('click', (event) => { if (event.target === shareModal) setShareModalOpen(false); });
+    profileModal.addEventListener('click', (event) => { if (event.target === profileModal) setProfileModalOpen(false); });
 
     institutionForm.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -643,17 +752,9 @@
       await setDoc(doc(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`, loginKey), loginPayload, { merge: true });
     }
 
-    const superMenuBtn = document.getElementById('super-menu-btn');
-    const superMenu = document.getElementById('super-menu');
-    superMenuBtn.addEventListener('click', () => {
-      const nextOpen = superMenu.classList.contains('hidden');
-      superMenu.classList.toggle('hidden', !nextOpen);
-      superMenuBtn.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
-    });
     document.querySelectorAll('.super-filter').forEach((btn) => {
       btn.addEventListener('click', async () => {
         superAdminFilter = btn.dataset.superFilter || 'all';
-        superMenu.classList.add('hidden');
         await renderSuperAdminPortal();
       });
     });
