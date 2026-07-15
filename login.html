@@ -223,7 +223,7 @@
           // Institution links include scope, so try manual institution login before Firebase Auth.
           redirectPath = hasInstitutionScope ? await loginWithUsernamePassword(email, password) : (email.includes('@') ? await loginWithEmailAndPassword(email, password, rememberMe) : await loginWithUsernamePassword(email, password));
         } catch (primaryErr) {
-          // Super Admin uses Firebase Auth; institution admins may use email-like manual usernames.
+          // Institution users may use email-like manual usernames.
           if (hasInstitutionScope || !email.includes('@')) throw primaryErr;
           redirectPath = await loginWithUsernamePassword(email, password);
         }

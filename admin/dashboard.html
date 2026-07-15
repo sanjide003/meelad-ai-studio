@@ -218,11 +218,12 @@
     import { initializeNavigation } from "../assets/js/navigation.js";
     import { db } from "../assets/js/firebase-init.js";
     import { collection, getDocs, query, where, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getActiveScope } from "../assets/js/firestore-service.js";
 
     async function initDashboard() {
       try {
         // 1. Verify credentials and role
-        const profile = await verifyUserRole(['superAdmin', 'admin']);
+        const profile = await verifyUserRole(['admin']);
         
         // 2. Load layout templates
         await loadPortalLayout('admin');
@@ -263,13 +264,14 @@
     async function loadQuickStatistics() {
       try {
         const festId = localStorage.getItem('meeladpulse_selected_fest_id');
+        const { institutionId } = getActiveScope();
 
-        // Fetch Users count
-        const usersSnap = await getDocs(collection(db, "users"));
+        // Fetch institution-scoped users count
+        const usersSnap = await getDocs(query(collection(db, "users"), where("institutionId", "==", institutionId)));
         document.getElementById('stat-users-count').textContent = usersSnap.size;
 
-        // Fetch Invitations count
-        const invitesSnap = await getDocs(collection(db, "userInvitations"));
+        // Fetch institution-scoped invitations count
+        const invitesSnap = await getDocs(query(collection(db, "userInvitations"), where("institutionId", "==", institutionId)));
         document.getElementById('stat-invitations-count').textContent = invitesSnap.size;
 
         // Fetch Teams count inside selected festival

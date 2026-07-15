@@ -143,3 +143,38 @@ html.loading-state body {
 .status-badge-active { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
 .status-badge-info { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
 .status-badge-danger { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+
+.admin-desktop-required-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+}
+.admin-desktop-required-card {
+  max-width: 28rem;
+  border-radius: 1.5rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 2rem;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.16);
+  text-align: center;
+}
+.admin-desktop-required-card h1 {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.admin-desktop-required-card p {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #475569;
+}
+.admin-desktop-locked {
+  overflow: hidden;
+}

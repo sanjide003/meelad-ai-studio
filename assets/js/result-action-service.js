@@ -415,23 +415,20 @@ export async function recalculateAndPublishIndividualChampions(festId) {
       compsSnap,
       pointRulesSnap,
       gradeRulesSnap,
-      festStudentsSnap,
-      studentsSnap
+      festStudentsSnap
     ] = await Promise.all([
       getDocs(collection(db, window.meeladPulseScopedFestivalPath('publicData/results'))),
       getDocs(collection(db, window.meeladPulseScopedFestivalPath('competitions'))),
       getDocs(collection(db, window.meeladPulseScopedFestivalPath('pointRules'))),
       getDocs(collection(db, window.meeladPulseScopedFestivalPath('gradeRules'))),
-      getDocs(collection(db, window.meeladPulseScopedFestivalPath('festStudents'))),
-      getDocs(collection(db, `students`))
+      getDocs(collection(db, window.meeladPulseScopedFestivalPath('festStudents')))
     ]);
 
     const results = resultsSnap.docs.map(d => d.data());
     const competitions = compsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     const pointRules = pointRulesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     const gradeRules = gradeRulesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const festStudents = festStudentsSnap.docs.map(d => d.data());
-    const students = studentsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const festStudents = festStudentsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     // Map builders
     const compsMap = {};
@@ -451,7 +448,7 @@ export async function recalculateAndPublishIndividualChampions(festId) {
     });
 
     const studsMap = {};
-    students.forEach(s => { studsMap[s.id] = s; });
+    festStudents.forEach(s => { if (s.studentId) studsMap[s.studentId] = s; });
 
     // 2. Map rules point calculators dynamically
     const calculateIndividualPoints = (position, grade, pRule, gRule) => {

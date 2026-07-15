@@ -30,8 +30,8 @@
       <main class="flex-1 p-4 lg:p-8 space-y-8">
         
         <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-2">
-          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Manage User Accounts</h1>
-          <p class="text-xs text-slate-400 font-medium">Verify system profiles, toggle activation codes, and restrict security clearances.</p>
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Accounts</h1>
+          <p class="text-xs text-slate-400 font-medium">Manage only the accounts that belong to the selected institution workspace.</p>
         </div>
 
         <!-- Alert Notification Toast -->
@@ -43,7 +43,7 @@
         <!-- Users Table Card -->
         <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-xs">
           <div class="p-5 border-b border-slate-100 bg-slate-50/50">
-            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Registered System Profiles</h2>
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Institution Accounts</h2>
           </div>
 
           <div class="table-container">
@@ -60,7 +60,7 @@
               <tbody id="users-table-body" class="divide-y divide-slate-100 text-xs text-slate-700">
                 <!-- Loaded Dynamically -->
                 <tr>
-                  <td colspan="5" class="px-6 py-12 text-center text-slate-400">Scanning security nodes...</td>
+                  <td colspan="5" class="px-6 py-12 text-center text-slate-400">Loading institution accounts...</td>
                 </tr>
               </tbody>
             </table>
@@ -76,7 +76,8 @@
     import { loadPortalLayout } from "../assets/js/component-loader.js";
     import { initializeNavigation } from "../assets/js/navigation.js";
     import { db } from "../assets/js/firebase-init.js";
-    import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { collection, getDocs, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getActiveScope } from "../assets/js/firestore-service.js";
 
     async function initUsersManager() {
       try {
@@ -94,15 +95,17 @@
       const tableBody = document.getElementById('users-table-body');
       
       try {
+        const { institutionId } = getActiveScope();
         const usersCol = collection(db, 'users');
-        const querySnapshot = await getDocs(usersCol);
+        const scopedUsersQuery = query(usersCol, where('institutionId', '==', institutionId));
+        const querySnapshot = await getDocs(scopedUsersQuery);
 
         tableBody.innerHTML = '';
 
         if (querySnapshot.empty) {
           tableBody.innerHTML = `
             <tr>
-              <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No registered system profiles found.</td>
+              <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No accounts found for this institution.</td>
             </tr>
           `;
           return;
@@ -181,8 +184,10 @@
       globalLoader.classList.remove('hidden');
 
       try {
+        const { institutionId } = getActiveScope();
         const userDocRef = doc(db, 'users', uid);
         await updateDoc(userDocRef, {
+          institutionId,
           active: newStatus,
           updatedAt: new Date()
         });

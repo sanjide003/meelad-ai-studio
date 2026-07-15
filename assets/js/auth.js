@@ -101,7 +101,8 @@ export async function loginWithEmailAndPassword(email, password, rememberMe) {
   } else if (role === "teamLeader") {
     targetPath = appPath("team/dashboard.html");
   } else if (role === "superAdmin") {
-    targetPath = appPath("select-fest.html");
+    await auth.signOut();
+    targetPath = appPath("unauthorized.html?reason=locked_admin_entry");
   } else {
     await auth.signOut();
     targetPath = appPath("unauthorized.html?reason=invalid_role");
@@ -142,7 +143,7 @@ export async function loginWithUsernamePassword(username, password) {
     }
   }
 
-  // Institution admins can also log in without a selected scope through the Super Admin login index.
+  // Institution admins can also log in without a selected scope through the institution login index.
   if (!profile) {
     try {
       const indexSnap = await getDoc(doc(db, 'institutionLogins', usernameLower));

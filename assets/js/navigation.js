@@ -46,6 +46,31 @@ function applyAdminPageGuidance() {
   main.prepend(panel);
 }
 
+
+function enforceAdminDesktopExperience() {
+  if (!window.location.pathname.includes('/admin/')) return;
+  const overlayId = 'admin-desktop-required-overlay';
+  const render = () => {
+    const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+    let overlay = document.getElementById(overlayId);
+    if (isDesktop) {
+      overlay?.remove();
+      document.body.classList.remove('admin-desktop-locked');
+      return;
+    }
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = overlayId;
+      overlay.className = 'admin-desktop-required-overlay';
+      overlay.innerHTML = `<div class="admin-desktop-required-card"><span class="status-badge status-badge-pending">Desktop Required</span><h1>Use a desktop or laptop</h1><p>The admin portal is optimized and restricted for desktop management workflows. Please open this page on a screen that is at least 1024px wide.</p></div>`;
+      document.body.appendChild(overlay);
+    }
+    document.body.classList.add('admin-desktop-locked');
+  };
+  render();
+  window.addEventListener('resize', render);
+}
+
 export function initializeNavigation() {
   // 1. Mobile Hamburger Menu Setup
   const hamburgerBtn = document.getElementById('mobile-hamburger-btn');
@@ -180,6 +205,9 @@ export function initializeNavigation() {
 
   // 6. Add consistent admin page purpose guidance where pages do not already provide it.
   applyAdminPageGuidance();
+
+  // 7. Admin is intentionally desktop-first for management accuracy.
+  enforceAdminDesktopExperience();
 
   // 6. Logout Listener Bindings
   const logoutBtns = document.querySelectorAll('.logout-action-btn');
