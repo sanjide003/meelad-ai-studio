@@ -75,7 +75,7 @@
               <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-100 text-lg">🏫</span>
               <div>
                 <h3 class="text-sm font-extrabold text-slate-900">Institution & Admin Login Details</h3>
-                <p class="text-[11px] text-slate-500">This username/password is the customer institution admin login.</p>
+                <p class="text-[11px] text-slate-500">This username and password create the customer institution admin login. Passwords are saved as hashes and cannot be displayed later.</p>
               </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -92,7 +92,7 @@
                 <input id="institution-admin-login" required class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="email or username">
               </label>
               <label class="space-y-1 text-xs font-bold text-slate-600 md:col-span-2">Admin Password
-                <input id="institution-admin-password" required class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="temporary password">
+                <input id="institution-admin-password" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="temporary password">
               </label>
             </div>
           </section>
@@ -212,7 +212,7 @@
   <script type="module">
     import { verifyUserRole } from "./assets/js/role-guard.js";
     import { db } from "./assets/js/firebase-init.js";
-    import { collection, query, where, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { collection, query, where, getDocs, doc, setDoc, updateDoc, deleteDoc, deleteField, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const festivalsGrid = document.getElementById('festivals-grid');
     let superAdminFilter = 'all';
@@ -387,7 +387,7 @@
           <td class="px-4 py-4">
             <div class="font-bold text-slate-700">${festival.ownerName || 'Not assigned'}</div>
             <div class="mt-1 text-slate-500">${festival.ownerUsername || festival.ownerEmail || 'No username'}</div>
-            <div class="mt-1 font-mono text-[11px] font-bold text-slate-800">Password: ${festival.ownerPassword || 'not set'}</div>
+            <div class="mt-1 font-mono text-[11px] font-bold text-slate-800">Password: saved securely</div>
           </td>
           <td class="px-4 py-4">
             <div class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${info.plan === 'purchased' ? 'bg-sky-50 text-sky-700' : 'bg-amber-50 text-amber-700'}">${info.plan.toUpperCase()}</div>
@@ -438,6 +438,14 @@
     const editIdInput = document.getElementById('institution-edit-id');
     const oldLoginInput = document.getElementById('institution-old-login');
 
+
+    async function hashManualPassword(password) {
+      if (!password) return '';
+      const data = new TextEncoder().encode(password);
+      const digest = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+    }
+
     function slugify(value) {
       return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `workspace-${Date.now()}`;
     }
@@ -475,8 +483,9 @@
       document.getElementById('institution-slug').disabled = isEdit;
       document.getElementById('institution-admin-name').value = festival?.ownerName || `${festival?.name || festival?.title || ''} Admin`.trim();
       document.getElementById('institution-admin-login').value = festival?.ownerUsername || festival?.ownerEmail || '';
-      document.getElementById('institution-admin-password').value = festival?.ownerPassword || '';
-      document.getElementById('institution-admin-password').placeholder = 'admin login password';
+      document.getElementById('institution-admin-password').value = '';
+      document.getElementById('institution-admin-password').required = !isEdit;
+      document.getElementById('institution-admin-password').placeholder = isEdit ? 'Leave blank to keep the existing password' : 'temporary password';
       const modalStatus = ['trial', 'active', 'suspended'].includes(festival?.subscriptionStatus) ? festival.subscriptionStatus : (festival?.plan === 'purchased' ? 'active' : 'trial');
       document.getElementById('institution-subscription').value = modalStatus;
       document.getElementById('institution-trial-starts').value = toDateOnly(festival?.trialStartsAt);
@@ -562,7 +571,7 @@ Backup Public Direct Link:
 ${links.publicDirect}
 
 Admin Username: ${festival.ownerUsername || festival.ownerEmail || 'not set'}
-Admin Password: ${festival.ownerPassword || 'not set'}
+Admin Password: The temporary password set by the owner/admin. Share it separately and securely.
 
 Use the same login page for every user. MeeladPulse will identify the user from the username/password and open the correct institution page automatically. Please keep these credentials safe and share only with authorized users.`;
     }
@@ -624,8 +633,8 @@ Use the same login page for every user. MeeladPulse will identify the user from 
       const active = subscriptionStatus !== 'suspended';
       const purchaseNotes = document.getElementById('institution-purchase-notes').value.trim();
 
-      if (!title || !ownerName || !ownerLogin || !ownerPassword) {
-        alert('Institution name, admin name, login, and password are required.');
+      if (!title || !ownerName || !ownerLogin || (!existingId && !ownerPassword)) {
+        alert('Institution name, admin name, login, and password are required for new institutions. For edits, leave password blank to keep the existing password.');
         return;
       }
 
@@ -675,7 +684,8 @@ Use the same login page for every user. MeeladPulse will identify the user from 
         ownerName,
         ownerEmail: ownerLogin.includes('@') ? ownerLogin : '',
         ownerUsername: ownerLogin,
-        ownerPassword,
+        ownerPassword: deleteField(),
+        ownerPasswordSet: true,
         defaultFestivalId: id,
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp()
@@ -723,7 +733,7 @@ Use the same login page for every user. MeeladPulse will identify the user from 
         username: ownerLogin,
         usernameLower: loginKey,
         email: ownerLogin.includes('@') ? ownerLogin : '',
-        password: ownerPassword,
+        ...(ownerPassword ? { password: deleteField(), passwordHash: await hashManualPassword(ownerPassword), passwordUpdatedAt: serverTimestamp(), legacyPasswordMigrated: true } : {}),
         plan,
         subscriptionStatus,
         trialStartsAt,

@@ -13,8 +13,17 @@ import {
   where, 
   orderBy, 
   writeBatch,
+  deleteField,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+async function hashManualPassword(password) {
+  if (!password) return '';
+  const data = new TextEncoder().encode(password);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
 
 // Firestore Error Information conforming to strict security skill specification
 export const OperationType = {
@@ -402,7 +411,10 @@ export async function saveTeam(teamData) {
         name: teamData.leaderName || teamData.name || leaderUsername,
         username: teamData.leaderUsername,
         usernameLower: leaderUsername,
-        password: teamData.leaderPassword,
+        password: deleteField(),
+        passwordHash: await hashManualPassword(teamData.leaderPassword),
+        passwordUpdatedAt: serverTimestamp(),
+        legacyPasswordMigrated: true,
         photoUrl: teamData.leaderPhotoUrl || '',
         active: teamData.leaderActive !== false,
         updatedAt: serverTimestamp()

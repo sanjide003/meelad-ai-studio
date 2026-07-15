@@ -15,6 +15,26 @@ function appPath(path) {
 }
 
 
+async function hashManualPassword(password) {
+  if (!password) return '';
+  const data = new TextEncoder().encode(password);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function manualPasswordMatches(profile, enteredPassword) {
+  if (profile.passwordHash) {
+    return profile.passwordHash === await hashManualPassword(enteredPassword);
+  }
+  // Legacy plaintext records are supported only until the password migration is run.
+  return profile.password === enteredPassword;
+}
+
+function withoutCredentialSecrets(profile) {
+  const { password, passwordHash, ownerPassword, ...safeProfile } = profile || {};
+  return safeProfile;
+}
+
 async function establishManualFirebaseSession(profile) {
   if (auth.currentUser) {
     await auth.signOut();
@@ -45,7 +65,7 @@ async function establishManualFirebaseSession(profile) {
     lastLoginAt: serverTimestamp()
   };
   await setDoc(doc(db, 'users', manualUid), sessionProfile, { merge: true });
-  return { ...profile, ...sessionProfile, password: profile.password };
+  return { ...withoutCredentialSecrets(profile), ...sessionProfile };
 }
 
 /**
@@ -129,7 +149,7 @@ export async function loginWithUsernamePassword(username, password) {
       if (!snap.empty) {
         usernameFound = true;
         const candidate = { id: snap.docs[0].id, institutionId, festivalId, ...snap.docs[0].data(), manualAuth: true };
-        if (candidate.password !== password) {
+        if (!(await manualPasswordMatches(candidate, password))) {
           const err = new Error('Password is incorrect. Please check the password entered for this admin account.');
           err.code = 'auth/manual-wrong-password';
           throw err;
@@ -150,7 +170,7 @@ export async function loginWithUsernamePassword(username, password) {
       if (indexSnap.exists()) {
         usernameFound = true;
         const indexedProfile = indexSnap.data();
-        if (indexedProfile.password !== password) {
+        if (!(await manualPasswordMatches(indexedProfile, password))) {
           const err = new Error('Password is incorrect. Please check the password entered for this admin account.');
           err.code = 'auth/manual-wrong-password';
           throw err;

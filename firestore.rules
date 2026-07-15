@@ -102,16 +102,18 @@ service cloud.firestore {
     }
 
 
-    // --- Public manual login index for institution admins (replace with Cloud Function + hashed passwords before launch). ---
+    // --- Public manual login index for institution admins. Passwords must be stored only as hashes. ---
     match /institutionLogins/{loginId} {
       allow read: if true;
-      allow write: if isSuperAdmin();
+      allow create, update: if isSuperAdmin() && !request.resource.data.keys().hasAny(['password']);
+      allow delete: if isSuperAdmin();
     }
 
     // --- Premium SaaS Institutions Collection ---
     match /institutions/{institutionId} {
       allow read: if isSuperAdmin() || isInstitutionMember(institutionId);
-      allow create, update, delete: if isSuperAdmin();
+      allow create, update: if isSuperAdmin() && !request.resource.data.keys().hasAny(['ownerPassword']);
+      allow delete: if isSuperAdmin();
 
       match /admins/{adminId} {
         allow read: if isSuperAdmin() || isInstitutionMember(institutionId);
@@ -124,7 +126,8 @@ service cloud.firestore {
 
         match /manualUsers/{manualUserId} {
           allow read: if true;
-          allow write: if isSuperAdmin() || isInstitutionMember(institutionId);
+          allow create, update: if (isSuperAdmin() || isInstitutionMember(institutionId)) && !request.resource.data.keys().hasAny(['password']);
+          allow delete: if isSuperAdmin() || isInstitutionMember(institutionId);
         }
 
         match /publicData/{pubId} {
