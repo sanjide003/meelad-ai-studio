@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Access - MeeladPulse</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body class="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4">
+  <main class="w-full max-w-md rounded-3xl border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur">
+    <div class="mb-6 space-y-2 text-center">
+      <p class="text-[10px] font-extrabold uppercase tracking-[0.3em] text-emerald-300">Restricted Owner Access</p>
+      <h1 class="font-display text-2xl font-extrabold text-white">MeeladPulse Owner Login</h1>
+      <p class="text-xs leading-6 text-slate-300">This unlinked entry is only for the application owner to manage institution workspaces and admin credentials.</p>
+    </div>
+
+    <form id="super-admin-login-form" class="space-y-4">
+      <label class="block space-y-1 text-xs font-bold text-slate-200">Email
+        <input id="super-admin-email" type="email" required autocomplete="username" class="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-300" placeholder="owner@example.com">
+      </label>
+      <label class="block space-y-1 text-xs font-bold text-slate-200">Password
+        <input id="super-admin-password" type="password" required autocomplete="current-password" class="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-300" placeholder="Owner password">
+      </label>
+      <label class="flex items-center gap-2 text-xs font-bold text-slate-300">
+        <input id="super-admin-remember" type="checkbox" class="h-4 w-4 rounded border-white/20 text-emerald-500">
+        Keep owner session on this browser
+      </label>
+      <button id="super-admin-submit" type="submit" class="w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-emerald-400">Open Owner Console</button>
+      <p id="super-admin-error" class="hidden rounded-2xl border border-rose-300/30 bg-rose-500/10 p-3 text-xs font-bold text-rose-100"></p>
+    </form>
+  </main>
+
+  <script type="module">
+    import { loginSuperAdminWithEmailAndPassword } from './assets/js/auth.js';
+
+    const form = document.getElementById('super-admin-login-form');
+    const submitButton = document.getElementById('super-admin-submit');
+    const errorBox = document.getElementById('super-admin-error');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      errorBox.classList.add('hidden');
+      submitButton.disabled = true;
+      submitButton.textContent = 'Verifying...';
+      try {
+        const targetPath = await loginSuperAdminWithEmailAndPassword(
+          document.getElementById('super-admin-email').value.trim(),
+          document.getElementById('super-admin-password').value,
+          document.getElementById('super-admin-remember').checked
+        );
+        window.location.replace(targetPath);
+      } catch (err) {
+        errorBox.textContent = err.message || 'Owner login failed.';
+        errorBox.classList.remove('hidden');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Open Owner Console';
+      }
+    });
+  </script>
+</body>
+</html>

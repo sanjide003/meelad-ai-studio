@@ -68,6 +68,40 @@ async function establishManualFirebaseSession(profile) {
   return { ...withoutCredentialSecrets(profile), ...sessionProfile };
 }
 
+
+export async function loginSuperAdminWithEmailAndPassword(email, password, rememberMe) {
+  const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+  await setPersistence(auth, persistence);
+
+  const userCredential = await firebaseSignIn(auth, email, password);
+  const user = userCredential.user;
+  const userDocRef = doc(db, "users", user.uid);
+  const userDocSnapshot = await getDoc(userDocRef);
+
+  if (!userDocSnapshot.exists()) {
+    await auth.signOut();
+    const err = new Error("Owner access denied: no super admin profile exists for this Firebase user.");
+    err.code = "auth/super-admin-profile-missing";
+    throw err;
+  }
+
+  const userData = userDocSnapshot.data();
+  if (userData.active !== true || userData.role !== "superAdmin") {
+    await auth.signOut();
+    const err = new Error("Owner access denied: this account is not an active super admin.");
+    err.code = "auth/super-admin-denied";
+    throw err;
+  }
+
+  try {
+    await updateDoc(userDocRef, { lastLoginAt: serverTimestamp() });
+  } catch (err) {
+    console.warn("Could not update super admin last login timestamp:", err);
+  }
+
+  return appPath("select-fest.html");
+}
+
 /**
  * Handles the secure login sequence following the 9-step exact flow.
  */

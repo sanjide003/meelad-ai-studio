@@ -221,7 +221,12 @@
     async function initializeFestivalSelection() {
       try {
         // 1. Verify user profile and authenticate first
-        const userProfile = await verifyUserRole(['admin', 'judge', 'teamLeader']);
+        const userProfile = await verifyUserRole(['superAdmin', 'admin', 'judge', 'teamLeader']);
+        if (userProfile.role === 'superAdmin') {
+          currentSuperAdminProfile = userProfile;
+          await renderSuperAdminPortal();
+          return;
+        }
         
 
         // 2. Query active institution workspaces. Runtime data is now institution-scoped.
