@@ -21,13 +21,13 @@ All notable changes for the SaaS institution-management version are documented h
 - Removed the previous premium-plan workflow from the active subscription UI.
 - Changed active/paid subscriptions to support monthly, yearly, custom date, and unlimited durations with amount and reference number.
 - Changed trial subscriptions to store trial start, trial day count, and trial end date.
-- Updated login and route-guard behavior so `institutionAdmin` can enter `admin/app.html` after successful manual login.
+- Updated login and route-guard behavior so `institutionAdmin` can enter `admin/app.html` after successful manual login through an anonymous Firebase session bridge.
 - Updated subscription blocking so suspended, expired trial, and expired paid accounts are denied before private pages load.
 - Updated documentation to describe the current SaaS architecture, login flow, subscription model, deployment checklist, and production hardening roadmap.
 
 ### Fixed
 
-- Fixed the previous institution-admin login failure caused by relying only on protected/scoped documents before authentication context was fully established.
+- Fixed the previous institution-admin login failure caused by relying on client-only manual session state that Firestore rules could not recognize.
 - Fixed admin route fallback issues by preserving `institutionId` and `festivalId` from copied links and successful manual login.
 - Fixed unclear login failures by documenting username, password, subscription, and rules-deployment failure categories.
 - Fixed stale documentation that still described the app as blocked or as a legacy top-level festival system.

@@ -5,12 +5,47 @@ import {
   browserLocalPersistence, 
   browserSessionPersistence, 
   signInWithEmailAndPassword as firebaseSignIn,
-  sendPasswordResetEmail as firebaseResetPassword
+  sendPasswordResetEmail as firebaseResetPassword,
+  signInAnonymously
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc, getDoc, updateDoc, serverTimestamp, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 function appPath(path) {
   return new URL(path.replace(/^\//, ""), new URL(/* @vite-ignore */ "../../", import.meta.url)).pathname;
+}
+
+
+async function establishManualFirebaseSession(profile) {
+  if (auth.currentUser) {
+    await auth.signOut();
+  }
+  let credential;
+  try {
+    credential = await signInAnonymously(auth);
+  } catch (err) {
+    const sessionErr = new Error('Manual login verified, but Firebase Anonymous Authentication is not enabled. Enable the Anonymous provider in Firebase Authentication and deploy the latest rules.');
+    sessionErr.code = 'auth/manual-session-unavailable';
+    throw sessionErr;
+  }
+  const manualUid = credential.user.uid;
+  const sessionProfile = {
+    uid: manualUid,
+    manualAuth: true,
+    role: profile.role,
+    active: profile.active === true,
+    institutionId: profile.institutionId,
+    festivalId: profile.festivalId,
+    username: profile.username || profile.email || profile.id,
+    usernameLower: profile.usernameLower || (profile.username || profile.email || profile.id || '').toLowerCase(),
+    name: profile.name || profile.institutionName || 'Institution Admin',
+    email: profile.email || '',
+    teamId: profile.teamId || '',
+    judgeId: profile.judgeId || '',
+    updatedAt: serverTimestamp(),
+    lastLoginAt: serverTimestamp()
+  };
+  await setDoc(doc(db, 'users', manualUid), sessionProfile, { merge: true });
+  return { ...profile, ...sessionProfile, password: profile.password };
 }
 
 /**
@@ -145,6 +180,8 @@ export async function loginWithUsernamePassword(username, password) {
     err.code = 'auth/user-disabled';
     throw err;
   }
+
+  profile = await establishManualFirebaseSession(profile);
 
   localStorage.setItem('meeladpulse_selected_institution_id', institutionId);
   localStorage.setItem('meeladpulse_selected_fest_id', festivalId);

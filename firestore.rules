@@ -22,7 +22,18 @@ service cloud.firestore {
     }
 
     function isInstitutionMember(institutionId) {
-      return isSuperAdmin() || (isAuthenticated() && getUserData().institutionId == institutionId);
+      return isSuperAdmin() || (isAuthenticated() && getUserData().active == true && getUserData().institutionId == institutionId);
+    }
+
+    function isValidManualSessionProfile(userId) {
+      return isAuthenticated() &&
+        request.auth.uid == userId &&
+        request.resource.data.manualAuth == true &&
+        request.resource.data.active == true &&
+        request.resource.data.institutionId is string &&
+        request.resource.data.festivalId is string &&
+        request.resource.data.usernameLower is string &&
+        request.resource.data.role in ['institutionAdmin', 'admin', 'judge', 'teamLeader'];
     }
 
     function isJudge() {
@@ -36,12 +47,20 @@ service cloud.firestore {
     // --- Users Collection ---
     match /users/{userId} {
       allow read: if isAuthenticated();
-      // Allow admin to write anything. Allow users to update their own profile, but prevent modifying critical fields (role, teamId, active, permissions).
-      allow write: if isAdmin() || (
-        isAuthenticated() && 
-        request.auth.uid == userId && 
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions', 'teamId', 'active'])
+      // Super Admin/admin writes normal profiles. Manual institution credentials create an anonymous Firebase session profile
+      // after the password is verified through institutionLogins, so scoped Firestore rules can enforce tenant isolation.
+      allow create: if isAdmin() || isValidManualSessionProfile(userId);
+      allow update: if isAdmin() || (
+        isAuthenticated() &&
+        request.auth.uid == userId &&
+        resource.data.manualAuth == true &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt', 'updatedAt'])
+      ) || (
+        isAuthenticated() &&
+        request.auth.uid == userId &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions', 'teamId', 'active', 'institutionId', 'festivalId', 'manualAuth'])
       );
+      allow delete: if isAdmin();
     }
 
     // --- User Invitations Collection (Top-Level) ---

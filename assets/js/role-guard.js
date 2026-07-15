@@ -7,6 +7,16 @@ function appUrl(path) {
   return new URL(path.replace(/^\//, ""), new URL(/* @vite-ignore */ "../../", import.meta.url)).href;
 }
 
+function appUrlWithCurrentScope(path) {
+  const url = new URL(appUrl(path));
+  const currentParams = new URLSearchParams(window.location.search);
+  const institutionId = currentParams.get('institution') || localStorage.getItem('meeladpulse_selected_institution_id');
+  const festivalId = currentParams.get('festival') || localStorage.getItem('meeladpulse_selected_fest_id') || institutionId;
+  if (institutionId) url.searchParams.set('institution', institutionId);
+  if (festivalId) url.searchParams.set('festival', festivalId);
+  return url.href;
+}
+
 // Initially hide elements or display a clean loading overlay.
 // Internal admin navigation uses a fast-nav flag to avoid the heavy full-screen loader flicker on every tab click.
 const loaderEl = document.getElementById('global-page-loader');
@@ -68,7 +78,7 @@ export async function verifyUserRole(allowedRoles) {
         if (!currentPath.includes('select-fest.html') && !currentPath.includes('unauthorized.html')) {
           const selectedFestId = localStorage.getItem('meeladpulse_selected_fest_id');
           if (!selectedFestId) {
-            window.location.replace(appUrl('select-fest.html'));
+            window.location.replace(appUrlWithCurrentScope('select-fest.html'));
             throw new Error('No festival selected');
           }
           const available = await isSelectedFestivalAvailable(selectedFestId, manualProfile.role, manualProfile);
@@ -95,7 +105,7 @@ export async function verifyUserRole(allowedRoles) {
       unsubscribe();
       
       if (!user) {
-        window.location.replace(appUrl('login.html'));
+        window.location.replace(appUrlWithCurrentScope('login.html'));
         return reject('Not authenticated');
       }
 
@@ -132,7 +142,7 @@ export async function verifyUserRole(allowedRoles) {
           if (!selectedFestId) {
             const isAdminDashboard = ['admin', 'superAdmin', 'institutionAdmin'].includes(userData.role) && (currentPath.includes('admin/dashboard.html') || currentPath.includes('admin/app.html'));
             if (!isAdminDashboard) {
-              window.location.replace(appUrl('select-fest.html'));
+              window.location.replace(appUrlWithCurrentScope('select-fest.html'));
               return reject('No festival selected');
             }
           } else {

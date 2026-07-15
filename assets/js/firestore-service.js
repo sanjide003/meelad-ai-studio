@@ -49,8 +49,15 @@ export function handleFirestoreError(error, operationType, path) {
 
 // Helper to check for active institution/festival scope.
 export function getActiveScope() {
-  const festivalId = localStorage.getItem('meeladpulse_selected_fest_id');
-  const institutionId = localStorage.getItem('meeladpulse_selected_institution_id') || festivalId;
+  if (window.meeladPulseGetActiveScope) {
+    const scope = window.meeladPulseGetActiveScope();
+    if (scope?.festivalId && scope?.institutionId) return scope;
+  }
+  const params = new URLSearchParams(window.location.search);
+  const urlFestivalId = params.get('festival');
+  const urlInstitutionId = params.get('institution');
+  const festivalId = urlFestivalId || localStorage.getItem('meeladpulse_selected_fest_id') || urlInstitutionId;
+  const institutionId = urlInstitutionId || localStorage.getItem('meeladpulse_selected_institution_id') || festivalId;
   if (!festivalId) {
     throw new Error("No active festival scope selected. Please select a festival first.");
   }

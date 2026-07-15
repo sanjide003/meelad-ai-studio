@@ -8,7 +8,7 @@ MeeladPulse is a Firebase-backed, static multi-page competition management platf
 - **Backend services:** Firebase Authentication and Cloud Firestore, secured by `firestore.rules`.
 - **Tenant model:** Institution data is scoped under `institutions/{institutionId}/festivals/{festivalId}` so one institution cannot mix data with another.
 - **Super Admin portal:** `select-fest.html` is the SaaS owner control center for institution onboarding, subscription/payment control, activation/suspension, profile viewing, and formatted link sharing.
-- **Institution admin login:** Institution admins can sign in from `login.html` using the username/password created by the Super Admin. Successful manual institution-admin login stores the selected institution/festival context and opens `admin/app.html`.
+- **Institution admin login:** Institution admins can sign in from `login.html` using the username/password created by the Super Admin. Successful manual institution-admin login creates an anonymous Firebase session bridge, stores the selected institution/festival context, and opens `admin/app.html`.
 - **Deployment note:** Local build and lint can be verified in this repository, but live login/subscription behavior also requires deploying the latest hosting files and Firestore rules to Firebase.
 
 ## Roles and Portals
@@ -52,6 +52,7 @@ Institution-admin manual login now uses a two-level Firestore record strategy:
 
 1. **Public lookup index:** `institutionLogins/{usernameLower}` is readable by the login page and stores the institution/festival pointer, role, subscription state, and manual credential metadata needed for login validation.
 2. **Scoped user record:** `institutions/{institutionId}/festivals/{festivalId}/manualUsers/{usernameLower}` stores the workspace-bound manual user profile.
+3. **Firebase session bridge:** after the manual password matches, the app signs in anonymously and writes a safe `users/{anonymousUid}` session profile with the institution/festival IDs. Firestore rules then enforce that the admin, team, and judge pages can read/write only that institution workspace.
 
 On login failure, the login script distinguishes common causes where possible:
 
@@ -122,9 +123,10 @@ git diff --check
    ```bash
    firebase deploy --only firestore:indexes
    ```
-5. Confirm there is a Super Admin Firebase Auth user with `users/{uid}.role = "superAdmin"` and `active = true`.
-6. In the Super Admin portal, create or update an institution and confirm `institutionLogins/{usernameLower}` and the scoped `manualUsers/{usernameLower}` record are both written.
-7. Test copied admin, public, team, and judge links in a fresh browser profile or incognito window.
+5. Enable Firebase Authentication Email/Password and Anonymous providers.
+6. Confirm there is a Super Admin Firebase Auth user with `users/{uid}.role = "superAdmin"` and `active = true`.
+7. In the Super Admin portal, create or update an institution and confirm `institutionLogins/{usernameLower}` and the scoped `manualUsers/{usernameLower}` record are both written.
+8. Test copied admin, public, team, and judge links in a fresh browser profile or incognito window.
 
 ## Production Hardening Roadmap
 

@@ -19,6 +19,7 @@ MeeladPulse must operate as a SaaS competition platform where the application ow
 - Copy Link opens a modal with a complete readonly share message and an edit-format mode for Super Admin customization.
 - Shared links include institution and festival query parameters for admin, team, judge, and public pages.
 - Institution-admin manual login writes/reads a public `institutionLogins/{usernameLower}` lookup and a scoped `manualUsers/{usernameLower}` record.
+- Manual login creates an anonymous Firebase session profile in `users/{uid}` so Firestore rules can enforce scoped institution access after the password is verified.
 - `role-guard.js` accepts `institutionAdmin` for admin routes and validates subscription state from the login lookup.
 - Firestore rules support public reads of `institutionLogins` while limiting writes to Super Admin.
 - Legacy top-level festival access is no longer the preferred SaaS path.
@@ -80,13 +81,14 @@ git diff --check
 Then verify against Firebase:
 
 1. Deploy hosting files and Firestore rules together.
-2. Hard-refresh or open a private browser window to avoid stale cached JavaScript.
-3. Confirm the Super Admin profile exists in `users/{uid}` with `role: "superAdmin"` and `active: true`.
-4. Create a test institution with `subscriptionStatus: active` and unlimited duration.
-5. Verify both `institutionLogins/{usernameLower}` and scoped `manualUsers/{usernameLower}` are created.
-6. Copy the generated admin link and sign in from a clean browser profile.
-7. Repeat with trial, expired trial, active paid, expired paid, and suspended states.
-8. Confirm public/team/judge copied links open the correct scoped workspace.
+2. Enable Firebase Authentication Email/Password and Anonymous providers.
+3. Hard-refresh or open a private browser window to avoid stale cached JavaScript.
+4. Confirm the Super Admin profile exists in `users/{uid}` with `role: "superAdmin"` and `active: true`.
+5. Create a test institution with `subscriptionStatus: active` and unlimited duration.
+6. Verify both `institutionLogins/{usernameLower}` and scoped `manualUsers/{usernameLower}` are created.
+7. Copy the generated admin link and sign in from a clean browser profile.
+8. Repeat with trial, expired trial, active paid, expired paid, and suspended states.
+9. Confirm public/team/judge copied links open the correct scoped workspace.
 
 ## Security Hardening Before Real Production
 
