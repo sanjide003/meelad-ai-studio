@@ -77,6 +77,79 @@
               </div>
             </div>
           </div>
+
+          <!-- Festival Blueprint & Professional Setup Flow -->
+          <div class="bg-white rounded-2xl border border-emerald-100 p-6 shadow-xs space-y-5">
+            <div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
+              <div>
+                <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Step 01 · Festival Blueprint</p>
+                <h2 class="text-base font-bold text-slate-900 font-display">Festival Type, Category Logic & Competition Sections</h2>
+                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Set the professional structure first. Teams, categories, students, competitions, judges, and results should follow this blueprint so each institution keeps a clean festival layout.</p>
+              </div>
+              <span class="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[10px] font-extrabold text-emerald-700 uppercase">Foundation Setup</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="space-y-1.5">
+                <label for="festivalType" class="text-xs font-bold text-slate-700">Festival Participant Type</label>
+                <select id="festivalType" class="form-input">
+                  <option value="boysOnly">Boys Only · ആൺകുട്ടികൾ മാത്രം</option>
+                  <option value="girlsOnly">Girls Only · പെൺകുട്ടികൾ മാത്രം</option>
+                  <option value="boysAndGirls">Boys & Girls · ആൺകുട്ടികളും പെൺകുട്ടികളും</option>
+                  <option value="general">Open / General · പൊതുവായ ഫെസ്റ്റ്</option>
+                </select>
+                <p class="text-[10px] text-slate-400">Controls whether the same category/competition tree is used for everyone or split by gender.</p>
+              </div>
+
+              <div class="space-y-1.5" id="gender-competition-mode-row">
+                <label for="genderCompetitionMode" class="text-xs font-bold text-slate-700">Boys & Girls Competition Mode</label>
+                <select id="genderCompetitionMode" class="form-input">
+                  <option value="separate">Separate competitions for Boys and Girls</option>
+                  <option value="shared">Same competition, common participation</option>
+                </select>
+                <p class="text-[10px] text-slate-400">Visible when Boys & Girls is selected. Use this before creating competitions.</p>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="programmeScope" class="text-xs font-bold text-slate-700">Programme Scope</label>
+                <select id="programmeScope" class="form-input">
+                  <option value="artsAndSports">Arts & Sports · കലയും കായികവും</option>
+                  <option value="artsOnly">Arts Only · കല മാത്രം</option>
+                  <option value="sportsOnly">Sports Only · കായികം മാത്രം</option>
+                </select>
+                <p class="text-[10px] text-slate-400">Only matching competition section checkboxes will be shown below.</p>
+              </div>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-3">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Competition Sections</h3>
+                  <p class="text-[11px] text-slate-500">Tick the sections required for this festival. Add a custom section if it is not listed.</p>
+                </div>
+                <span id="section-count-badge" class="rounded-full bg-white border border-slate-200 px-3 py-1 text-[10px] font-bold text-slate-500">0 selected</span>
+              </div>
+              <div id="competition-sections-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+
+              <div class="grid grid-cols-1 md:grid-cols-[1fr_160px_auto] gap-3 pt-2 border-t border-slate-200">
+                <input id="custom-section-name" type="text" class="form-input" placeholder="Add custom section, e.g. Quiz Arena / Digital Arts">
+                <select id="custom-section-type" class="form-input">
+                  <option value="arts">Arts</option>
+                  <option value="sports">Sports</option>
+                  <option value="general">General</option>
+                </select>
+                <button id="add-custom-section-btn" type="button" class="btn btn-secondary px-4 py-2 text-xs font-bold border border-slate-200">Add Section</button>
+              </div>
+              <div id="custom-sections-list" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-[11px]">
+              <a href="../admin/teams.html" class="rounded-xl border border-slate-100 bg-white p-3 hover:border-emerald-200 transition"><span class="font-bold text-slate-900 block">Step 02 · Teams</span><span class="text-slate-500">Create teams and group leaders.</span></a>
+              <a href="../admin/categories.html" class="rounded-xl border border-slate-100 bg-white p-3 hover:border-emerald-200 transition"><span class="font-bold text-slate-900 block">Step 03 · Categories</span><span class="text-slate-500">Build age/category divisions.</span></a>
+              <a href="../admin/competition-rules.html" class="rounded-xl border border-slate-100 bg-white p-3 hover:border-emerald-200 transition"><span class="font-bold text-slate-900 block">Step 04 · Competitions</span><span class="text-slate-500">Add items using the blueprint.</span></a>
+              <a href="../admin/judges.html" class="rounded-xl border border-slate-100 bg-white p-3 hover:border-emerald-200 transition"><span class="font-bold text-slate-900 block">Step 05 · Judges</span><span class="text-slate-500">Create judges and assignments.</span></a>
+            </div>
+          </div>
           
           <!-- Student Registration Authority Modes -->
           <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
@@ -211,6 +284,17 @@
       { key: 'adminDecision', name: 'Fallback to Admin Decision / Unresolved', nameMl: 'അഡ്മിൻ തീരുമാനത്തിന് വിടുക', defaultPriority: 7 }
     ];
 
+    const SECTION_DEFS = [
+      { key: 'trackAthletics', name: 'Track Athletics', nameMl: 'ട്രാക്ക് അത്‌ലറ്റിക്സ്', type: 'sports', hint: 'Running track events and lanes.' },
+      { key: 'fieldAthletics', name: 'Field Athletics', nameMl: 'ഫീൽഡ് അത്‌ലറ്റിക്സ്', type: 'sports', hint: 'Jump, throw, and field events.' },
+      { key: 'teamGames', name: 'Team Games', nameMl: 'ടീം ഗെയിംസ്', type: 'sports', hint: 'Football, volleyball, kabaddi, and similar events.' },
+      { key: 'onStage', name: 'On Stage', nameMl: 'സ്റ്റേജ് മത്സരങ്ങൾ', type: 'arts', hint: 'Speech, song, recitation, and stage items.' },
+      { key: 'offStage', name: 'Off Stage', nameMl: 'ഓഫ് സ്റ്റേജ് മത്സരങ്ങൾ', type: 'arts', hint: 'Writing, drawing, quiz, and non-stage items.' },
+      { key: 'general', name: 'General / Common', nameMl: 'പൊതു വിഭാഗം', type: 'general', hint: 'Common activities not limited to arts or sports.' }
+    ];
+
+    let customCompetitionSections = [];
+
     let activeFestId = null;
 
     function renderTieBreakers(savedSequence) {
@@ -259,6 +343,126 @@
       }
     };
 
+    function allowedSectionTypes() {
+      const scope = document.getElementById('programmeScope')?.value || 'artsAndSports';
+      if (scope === 'artsOnly') return ['arts', 'general'];
+      if (scope === 'sportsOnly') return ['sports', 'general'];
+      return ['arts', 'sports', 'general'];
+    }
+
+    function getSelectedCompetitionSections() {
+      return Array.from(document.querySelectorAll('input[name="competitionSections"]:checked')).map(input => input.value);
+    }
+
+    function renderCompetitionSections(selectedKeys = []) {
+      const grid = document.getElementById('competition-sections-grid');
+      if (!grid) return;
+      const allowed = allowedSectionTypes();
+      grid.innerHTML = '';
+      SECTION_DEFS.filter(section => allowed.includes(section.type)).forEach(section => {
+        const checked = selectedKeys.includes(section.key) || (!selectedKeys.length && ['trackAthletics', 'onStage', 'offStage'].includes(section.key));
+        const label = document.createElement('label');
+        label.className = 'flex gap-3 rounded-xl border border-slate-200 bg-white p-3 cursor-pointer hover:border-emerald-200 transition';
+        label.innerHTML = `
+          <input type="checkbox" name="competitionSections" value="${section.key}" ${checked ? 'checked' : ''} class="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600">
+          <span>
+            <span class="block text-xs font-bold text-slate-900">${section.name}</span>
+            <span class="block text-[10px] font-bold text-emerald-600">${section.nameMl}</span>
+            <span class="block text-[10px] text-slate-400 mt-0.5">${section.hint}</span>
+          </span>
+        `;
+        grid.appendChild(label);
+      });
+      grid.querySelectorAll('input[name="competitionSections"]').forEach(input => {
+        input.addEventListener('change', updateSectionCountBadge);
+      });
+      updateSectionCountBadge();
+    }
+
+    function updateSectionCountBadge() {
+      const badge = document.getElementById('section-count-badge');
+      if (!badge) return;
+      const count = getSelectedCompetitionSections().length + customCompetitionSections.length;
+      badge.textContent = `${count} selected`;
+    }
+
+    function renderCustomSections() {
+      const list = document.getElementById('custom-sections-list');
+      if (!list) return;
+      list.innerHTML = '';
+      customCompetitionSections.forEach(section => {
+        const chip = document.createElement('span');
+        chip.className = 'inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 px-3 py-1 text-[10px] font-bold text-slate-600';
+        chip.innerHTML = `${section.name} <span class="text-slate-400 uppercase">${section.type}</span> <button type="button" class="text-red-500" data-remove-section="${section.key}">×</button>`;
+        list.appendChild(chip);
+      });
+      list.querySelectorAll('[data-remove-section]').forEach(button => {
+        button.addEventListener('click', () => {
+          customCompetitionSections = customCompetitionSections.filter(section => section.key !== button.dataset.removeSection);
+          renderCustomSections();
+          updateSectionCountBadge();
+        });
+      });
+      updateSectionCountBadge();
+    }
+
+    function updateGenderModeVisibility() {
+      const row = document.getElementById('gender-competition-mode-row');
+      const festivalType = document.getElementById('festivalType')?.value;
+      if (!row) return;
+      row.classList.toggle('hidden', festivalType !== 'boysAndGirls');
+    }
+
+    function setupBlueprintHandlers(settings = {}) {
+      const festivalType = document.getElementById('festivalType');
+      const genderMode = document.getElementById('genderCompetitionMode');
+      const programmeScope = document.getElementById('programmeScope');
+      if (festivalType) festivalType.value = settings.festivalType || 'boysAndGirls';
+      if (genderMode) genderMode.value = settings.genderCompetitionMode || 'separate';
+      if (programmeScope) programmeScope.value = settings.programmeScope || 'artsAndSports';
+      customCompetitionSections = Array.isArray(settings.customCompetitionSections) ? settings.customCompetitionSections : [];
+
+      renderCompetitionSections(settings.competitionSections || []);
+      renderCustomSections();
+      updateGenderModeVisibility();
+
+      festivalType?.addEventListener('change', updateGenderModeVisibility);
+      programmeScope?.addEventListener('change', () => {
+        renderCompetitionSections(getSelectedCompetitionSections());
+        customCompetitionSections = customCompetitionSections.filter(section => allowedSectionTypes().includes(section.type));
+        renderCustomSections();
+      });
+
+      document.getElementById('add-custom-section-btn')?.addEventListener('click', () => {
+        const input = document.getElementById('custom-section-name');
+        const type = document.getElementById('custom-section-type')?.value || 'general';
+        const name = input.value.trim();
+        if (!name) return;
+        if (!allowedSectionTypes().includes(type)) {
+          alert('This custom section type is not available for the selected Programme Scope.');
+          return;
+        }
+        const key = `custom-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || Date.now()}`;
+        if (!customCompetitionSections.some(section => section.key === key)) {
+          customCompetitionSections.push({ key, name, type });
+          renderCustomSections();
+        }
+        input.value = '';
+      });
+    }
+
+    function collectBlueprintSettings() {
+      const festivalType = document.getElementById('festivalType').value;
+      return {
+        festivalType,
+        genderCompetitionMode: festivalType === 'boysAndGirls' ? document.getElementById('genderCompetitionMode').value : 'notApplicable',
+        programmeScope: document.getElementById('programmeScope').value,
+        competitionSections: getSelectedCompetitionSections(),
+        customCompetitionSections,
+        setupBlueprintCompleted: true
+      };
+    }
+
     async function initPage() {
       try {
         await verifyUserRole(['admin']);
@@ -282,13 +486,14 @@
     }
 
     async function loadSettings() {
-      const settings = await getFestivalSettings(activeFestId);
-      if (!settings) return;
+      const settings = await getFestivalSettings(activeFestId) || {};
 
       // Set branding fields
       document.getElementById('madrasaName').value = settings.madrasaName || '';
       document.getElementById('festivalTitle').value = settings.festivalTitle || '';
       document.getElementById('venueLocation').value = settings.venueLocation || '';
+
+      setupBlueprintHandlers(settings);
 
       // Set radio options
       const mode = settings.studentRegistrationMode || 'adminOnly';
@@ -393,6 +598,7 @@
             madrasaName,
             festivalTitle,
             venueLocation,
+            ...collectBlueprintSettings(),
             championshipTieBreakers
           });
 

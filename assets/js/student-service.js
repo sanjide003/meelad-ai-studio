@@ -68,6 +68,12 @@ export async function updateFestivalSettings(settings) {
       madrasaName: settings.madrasaName || '',
       festivalTitle: settings.festivalTitle || '',
       venueLocation: settings.venueLocation || '',
+      festivalType: settings.festivalType || 'boysAndGirls',
+      genderCompetitionMode: settings.genderCompetitionMode || 'separate',
+      programmeScope: settings.programmeScope || 'artsAndSports',
+      competitionSections: Array.isArray(settings.competitionSections) ? settings.competitionSections : [],
+      customCompetitionSections: Array.isArray(settings.customCompetitionSections) ? settings.customCompetitionSections : [],
+      setupBlueprintCompleted: settings.setupBlueprintCompleted === true,
       championshipTieBreakers: settings.championshipTieBreakers || [
         'totalPoints',
         'firstPlaceCount',
@@ -84,14 +90,14 @@ export async function updateFestivalSettings(settings) {
 
     // Audit logs for settings changes
     const changes = [];
-    if (oldSettings.studentRegistrationMode !== payload.studentRegistrationMode) {
-      changes.push(`mode: ${oldSettings.studentRegistrationMode} -> ${payload.studentRegistrationMode}`);
+    if ((oldSettings?.studentRegistrationMode || 'adminOnly') !== payload.studentRegistrationMode) {
+      changes.push(`mode: ${oldSettings?.studentRegistrationMode || 'adminOnly'} -> ${payload.studentRegistrationMode}`);
     }
-    if (oldSettings.studentRegistrationOpen !== payload.studentRegistrationOpen) {
-      changes.push(`open: ${oldSettings.studentRegistrationOpen} -> ${payload.studentRegistrationOpen}`);
+    if ((oldSettings?.studentRegistrationOpen !== false) !== payload.studentRegistrationOpen) {
+      changes.push(`open: ${oldSettings?.studentRegistrationOpen !== false} -> ${payload.studentRegistrationOpen}`);
     }
-    if (oldSettings.teamLeaderStudentApprovalRequired !== payload.teamLeaderStudentApprovalRequired) {
-      changes.push(`approvalRequired: ${oldSettings.teamLeaderStudentApprovalRequired} -> ${payload.teamLeaderStudentApprovalRequired}`);
+    if ((oldSettings?.teamLeaderStudentApprovalRequired === true) !== payload.teamLeaderStudentApprovalRequired) {
+      changes.push(`approvalRequired: ${oldSettings?.teamLeaderStudentApprovalRequired === true} -> ${payload.teamLeaderStudentApprovalRequired}`);
     }
 
     if (changes.length > 0) {
