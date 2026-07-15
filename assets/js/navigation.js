@@ -3,6 +3,124 @@ import { auth, db } from "./firebase-init.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+
+const ADMIN_TEXT_TRANSLATIONS = {
+  'Portal': 'പോർട്ടൽ',
+  'Admin': 'അഡ്മിൻ',
+  'Selected Institution': 'തിരഞ്ഞെടുത്ത സ്ഥാപനം',
+  'Admin Portal': 'അഡ്മിൻ പോർട്ടൽ',
+  'Dashboard': 'ഡാഷ്ബോർഡ്',
+  'Setup': 'സജ്ജീകരണം',
+  'Students': 'വിദ്യാർത്ഥികൾ',
+  'People & Access': 'ഉപയോക്താക്കളും ആക്സസും',
+  'Judging': 'വിധിനിർണ്ണയം',
+  'Results': 'ഫലങ്ങൾ',
+  'Reports & Certificates': 'റിപ്പോർട്ടുകളും സർട്ടിഫിക്കറ്റുകളും',
+  'Reports': 'റിപ്പോർട്ടുകൾ',
+  'Certificates': 'സർട്ടിഫിക്കറ്റുകൾ',
+  'My Account': 'എന്റെ അക്കൗണ്ട്',
+  'Accounts': 'അക്കൗണ്ടുകൾ',
+  'Invitations': 'ക്ഷണങ്ങൾ',
+  'Workspace locked': 'സ്ഥാപനത്തിലേക്ക് ലോക്ക് ചെയ്തു',
+  'Sign Out': 'സൈൻ ഔട്ട്',
+  'Public Links & Account': 'പബ്ലിക് ലിങ്കുകളും അക്കൗണ്ടും',
+  'Invite User': 'ഉപയോക്താവിനെ ക്ഷണിക്കുക',
+  'Manage setup, people, judging, results, publishing, and official outputs from one workspace.': 'സജ്ജീകരണം, ആളുകൾ, വിധിനിർണ്ണയം, ഫലങ്ങൾ, പ്രസിദ്ധീകരണം, ഔദ്യോഗിക ഔട്ട്പുട്ടുകൾ എന്നിവ ഒരൊറ്റ വർക്ക്‌സ്‌പേസിൽ നിയന്ത്രിക്കുക.',
+  'Command Center': 'കമാൻഡ് സെന്റർ',
+  'Start with the setup checklist': 'സജ്ജീകരണ ചെക്ക്ലിസ്റ്റിൽ നിന്ന് ആരംഭിക്കുക',
+  'The dashboard shows what must be completed before judges can enter marks and results can be published.': 'ജഡ്ജിമാർക്ക് മാർക്ക് നൽകാനും ഫലങ്ങൾ പ്രസിദ്ധീകരിക്കാനും മുമ്പ് പൂർത്തിയാക്കേണ്ട കാര്യങ്ങൾ ഡാഷ്ബോർഡ് കാണിക്കുന്നു.',
+  'Needs Review': 'പരിശോധന വേണം',
+  'Validate before publishing': 'പ്രസിദ്ധീകരിക്കുന്നതിന് മുമ്പ് പരിശോധിക്കുക',
+  'Review submitted marks, tie-breaks, and pending sheets before approving public results.': 'പബ്ലിക് ഫലങ്ങൾ അംഗീകരിക്കുന്നതിന് മുമ്പ് സമർപ്പിച്ച മാർക്കുകൾ, ടൈ-ബ്രേക്കുകൾ, പെൻഡിംഗ് ഷീറ്റുകൾ എന്നിവ പരിശോധിക്കുക.',
+  'Official Outputs': 'ഔദ്യോഗിക ഔട്ട്പുട്ടുകൾ',
+  'Generate documents after approval': 'അംഗീകാരത്തിന് ശേഷം ഡോക്യുമെന്റുകൾ സൃഷ്ടിക്കുക',
+  'Use reports, certificates, ID cards, and backups once the data is verified.': 'ഡാറ്റ സ്ഥിരീകരിച്ച ശേഷം റിപ്പോർട്ടുകൾ, സർട്ടിഫിക്കറ്റുകൾ, ഐഡി കാർഡുകൾ, ബാക്കപ്പുകൾ എന്നിവ ഉപയോഗിക്കുക.',
+  'Registered Users': 'രജിസ്റ്റർ ചെയ്ത ഉപയോക്താക്കൾ',
+  'Pending Invites': 'പെൻഡിംഗ് ക്ഷണങ്ങൾ',
+  'Active Teams': 'സജീവ ടീമുകൾ',
+  'Competitions': 'മത്സരങ്ങൾ',
+  'Setup Checklist': 'സജ്ജീകരണ ചെക്ക്ലിസ്റ്റ്',
+  'Festival Readiness': 'ഫെസ്റ്റിവൽ തയ്യാറെടുപ്പ്',
+  'Complete these steps in order before opening judging and publishing official results.': 'വിധിനിർണ്ണയം തുറക്കുന്നതിനും ഔദ്യോഗിക ഫലങ്ങൾ പ്രസിദ്ധീകരിക്കുന്നതിനും മുമ്പ് ഈ ഘട്ടങ്ങൾ ക്രമത്തിൽ പൂർത്തിയാക്കുക.',
+  'Workspace locked to this institution': 'വർക്ക്‌സ്‌പേസ് ഈ സ്ഥാപനത്തിലേക്ക് ലോക്ക് ചെയ്തിരിക്കുന്നു',
+  'Step 01': 'ഘട്ടം 01',
+  'Step 02': 'ഘട്ടം 02',
+  'Festival Settings': 'ഫെസ്റ്റിവൽ ക്രമീകരണങ്ങൾ',
+  'Teams': 'ടീമുകൾ',
+  'Confirm festival profile, venue, registration mode, and public visibility settings.': 'ഫെസ്റ്റിവൽ പ്രൊഫൈൽ, വേദി, രജിസ്ട്രേഷൻ മോഡ്, പബ്ലിക് വിസിബിലിറ്റി ക്രമീകരണങ്ങൾ സ്ഥിരീകരിക്കുക.',
+  'Create team groups and confirm team identifiers before registering students.': 'വിദ്യാർത്ഥികളെ രജിസ്റ്റർ ചെയ്യുന്നതിന് മുമ്പ് ടീം ഗ്രൂപ്പുകളും ടീം ഐഡന്റിഫയറുകളും സ്ഥിരീകരിക്കുക.',
+  'Next step: complete this section, review warnings, and continue through the admin lifecycle from setup to publishing.': 'അടുത്ത ഘട്ടം: ഈ വിഭാഗം പൂർത്തിയാക്കി മുന്നറിയിപ്പുകൾ പരിശോധിച്ച് സജ്ജീകരണത്തിൽ നിന്ന് പ്രസിദ്ധീകരണം വരെ അഡ്മിൻ ലൈഫ്‌സൈക്കിൾ തുടരുക.',
+};
+
+const ADMIN_REVERSE_TEXT_TRANSLATIONS = Object.fromEntries(
+  Object.entries(ADMIN_TEXT_TRANSLATIONS).map(([english, malayalam]) => [malayalam, english])
+);
+
+export function applyAdminTranslations(root = document, lang = localStorage.getItem('meeladpulse_lang') || 'en') {
+  const normalizedLang = lang === 'ml' ? 'ml' : 'en';
+  const doc = root.nodeType === 9 ? root : root.ownerDocument || document;
+  if (doc.documentElement) doc.documentElement.lang = normalizedLang;
+  const scope = root.nodeType === 9 ? root.body : root;
+  if (!scope) return;
+  const map = normalizedLang === 'ml' ? ADMIN_TEXT_TRANSLATIONS : ADMIN_REVERSE_TEXT_TRANSLATIONS;
+  const filterApi = doc.defaultView?.NodeFilter || window.NodeFilter;
+  const walker = doc.createTreeWalker(scope, filterApi.SHOW_TEXT, {
+    acceptNode(node) {
+      if (!node.nodeValue?.trim()) return filterApi.FILTER_REJECT;
+      const parent = node.parentElement;
+      if (parent?.closest('script,style,textarea,input,option')) return filterApi.FILTER_REJECT;
+      if (parent?.classList?.contains('selected-festival-title')) return filterApi.FILTER_REJECT;
+      if (parent?.classList?.contains('user-profile-name')) return filterApi.FILTER_REJECT;
+      return filterApi.FILTER_ACCEPT;
+    }
+  });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach((node) => {
+    const original = node.nodeValue;
+    const trimmed = original.trim();
+    const translated = map[trimmed];
+    if (translated) node.nodeValue = original.replace(trimmed, translated);
+  });
+}
+
+function setupLanguageSwitcher(root = document) {
+  const langEnBtn = root.getElementById?.('lang-btn-en');
+  const langMlBtn = root.getElementById?.('lang-btn-ml');
+  let currentLang = localStorage.getItem('meeladpulse_lang') || 'en';
+  const updateLangButtons = () => {
+    if (!langEnBtn || !langMlBtn) return;
+    if (currentLang === 'ml') {
+      langMlBtn.className = "px-2 py-1 text-[10px] font-extrabold rounded-lg bg-indigo-600 text-white transition cursor-pointer";
+      langEnBtn.className = "px-2 py-1 text-[10px] font-extrabold rounded-lg text-slate-400 hover:text-slate-600 transition cursor-pointer";
+    } else {
+      langEnBtn.className = "px-2 py-1 text-[10px] font-extrabold rounded-lg bg-indigo-600 text-white transition cursor-pointer";
+      langMlBtn.className = "px-2 py-1 text-[10px] font-extrabold rounded-lg text-slate-400 hover:text-slate-600 transition cursor-pointer";
+    }
+  };
+  const setLanguage = (lang) => {
+    currentLang = lang === 'ml' ? 'ml' : 'en';
+    localStorage.setItem('meeladpulse_lang', currentLang);
+    applyAdminTranslations(document, currentLang);
+    const frameDoc = document.getElementById('admin-content-frame')?.contentDocument;
+    if (frameDoc) applyAdminTranslations(frameDoc, currentLang);
+    updateLangButtons();
+    window.dispatchEvent(new CustomEvent('meelad_language_changed', { detail: currentLang }));
+  };
+  updateLangButtons();
+  applyAdminTranslations(document, currentLang);
+  if (langEnBtn && langMlBtn && langEnBtn.dataset.langBound !== '1') {
+    langEnBtn.dataset.langBound = '1';
+    langMlBtn.dataset.langBound = '1';
+    langEnBtn.addEventListener('click', () => setLanguage('en'));
+    langMlBtn.addEventListener('click', () => setLanguage('ml'));
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.meeladPulseApplyAdminTranslations = applyAdminTranslations;
+}
+
 function appUrl(path) {
   return new URL(path.replace(/^\//, ""), new URL(/* @vite-ignore */ "../../", import.meta.url)).href;
 }
@@ -229,7 +347,10 @@ export function initializeNavigation() {
   // 8. Improve common admin table empty/loading states without touching page logic.
   enhanceAdminEmptyStates();
 
-  // 6. Logout Listener Bindings
+  // 9. Keep the admin shell language switcher in sync without requiring a reload.
+  setupLanguageSwitcher(document);
+
+  // 10. Logout Listener Bindings
   const logoutBtns = document.querySelectorAll('.logout-action-btn');
   logoutBtns.forEach(btn => {
     btn.addEventListener('click', async (e) => {
@@ -418,8 +539,8 @@ export async function initializePublicNavigation() {
         localStorage.setItem('meeladpulse_lang', 'en');
         document.documentElement.lang = 'en';
         updateLangButtons();
+        applyAdminTranslations(document, 'en');
         window.dispatchEvent(new CustomEvent('meelad_language_changed', { detail: 'en' }));
-        location.reload(); // Reload to translate everything perfectly
       }
     });
 
@@ -429,8 +550,8 @@ export async function initializePublicNavigation() {
         localStorage.setItem('meeladpulse_lang', 'ml');
         document.documentElement.lang = 'ml';
         updateLangButtons();
+        applyAdminTranslations(document, 'ml');
         window.dispatchEvent(new CustomEvent('meelad_language_changed', { detail: 'ml' }));
-        location.reload(); // Reload to translate everything perfectly
       }
     });
   }
