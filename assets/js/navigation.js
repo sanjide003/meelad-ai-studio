@@ -20,6 +20,7 @@ function applyAdminPageGuidance() {
     'categories.html': ['Categories', 'Create category groups used for competition eligibility and result grouping.', 'Setup'],
     'students.html': ['Students', 'Register, search, and manage student records for the selected festival.', 'Students'],
     'student-review.html': ['Student Review', 'Review pending student registration data before it becomes official.', 'Students'],
+    'account-settings.html': ['My Account', 'Update the primary admin login and copy public portal links safely.', 'People & Access'],
     'users.html': ['Accounts', 'Manage administrators, judges, and portal users with the correct access level.', 'People & Access'],
     'user-invitations.html': ['Invitations', 'Invite new users with the right role before they access the portal.', 'People & Access'],
     'judges.html': ['Judges', 'Create and verify judge profiles before assigning competitions.', 'People & Access'],

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account - MeeladPulse</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-slate-700">Loading account settings...</p>
+    </div>
+  </div>
+
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <div id="portal-sidebar"></div>
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <div id="portal-header"></div>
+      <main class="flex-1 p-4 lg:p-8 space-y-8">
+        <section class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-2">
+          <p class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-600">Institution Administration</p>
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">My Account</h1>
+          <p class="text-xs text-slate-500 font-medium">Review your institution identity, subscription details, admin credentials, and public portal links.</p>
+        </section>
+
+        <section class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-extrabold text-slate-900 font-display">Current Admin Identity</h2>
+                <p class="text-xs text-slate-500 mt-1">This is the primary admin account issued by the application owner.</p>
+              </div>
+              <span id="identity-status" class="inline-flex w-fit rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-600">Loading</span>
+            </div>
+            <div id="identity-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-5">
+            <div>
+              <h2 class="text-lg font-extrabold text-slate-900 font-display">Credential Update</h2>
+              <p class="text-xs text-slate-500 mt-1">Change the admin username or password without changing public links.</p>
+            </div>
+            <form id="credential-form" class="space-y-3">
+              <label class="block text-xs font-bold text-slate-600 space-y-1">Current Password
+                <input id="current-password" type="password" required autocomplete="current-password" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="Required">
+              </label>
+              <label class="block text-xs font-bold text-slate-600 space-y-1">New Username / Email
+                <input id="new-username" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="admin username or email">
+              </label>
+              <label class="block text-xs font-bold text-slate-600 space-y-1">New Password
+                <input id="new-password" type="password" autocomplete="new-password" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="Leave blank to keep current password">
+              </label>
+              <label class="block text-xs font-bold text-slate-600 space-y-1">Confirm New Password
+                <input id="confirm-password" type="password" autocomplete="new-password" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800" placeholder="Repeat new password">
+              </label>
+              <button type="submit" class="btn btn-primary w-full rounded-xl py-2.5 text-xs font-extrabold text-white">Save Credential Changes</button>
+              <p id="credential-message" class="hidden rounded-xl p-3 text-xs font-bold"></p>
+            </form>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-5">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-extrabold text-slate-900 font-display">Public Link Panel</h2>
+              <p class="text-xs text-slate-500 mt-1">Share these links with participants and the public. They remain stable when admin credentials change.</p>
+            </div>
+            <button id="copy-public-summary" type="button" class="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-xs font-extrabold text-emerald-700 hover:bg-emerald-100">Copy Link Summary</button>
+          </div>
+          <div id="public-links-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-3"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { verifyUserRole } from '../assets/js/role-guard.js';
+    import { loadPortalLayout } from '../assets/js/component-loader.js';
+    import { initializeNavigation } from '../assets/js/navigation.js';
+    import { getInstitutionAccountContext, updateInstitutionAdminCredentials } from '../assets/js/manual-account-service.js';
+
+    let accountContext = null;
+
+    function fmt(value, fallback = 'Not set') {
+      if (value === undefined || value === null || value === '') return fallback;
+      if (value?.toDate) return value.toDate().toLocaleDateString();
+      return String(value);
+    }
+
+    function money(amount, currency = 'INR') {
+      if (!amount) return `0 ${currency}`;
+      return `${amount} ${currency}`;
+    }
+
+    function statusBadge(active, status) {
+      const ok = active !== false && status !== 'suspended';
+      return {
+        text: ok ? `${status || 'active'} / Active` : `${status || 'suspended'} / Blocked`,
+        className: ok ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'
+      };
+    }
+
+    function infoCard(label, value) {
+      return `<div class="rounded-2xl border border-slate-100 bg-slate-50 p-4"><span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">${label}</span><div class="mt-1 text-sm font-extrabold text-slate-900 break-words">${value}</div></div>`;
+    }
+
+    function renderIdentity() {
+      const { institution, profile, scope } = accountContext;
+      const badge = statusBadge(institution.active, institution.subscriptionStatus);
+      const identityStatus = document.getElementById('identity-status');
+      identityStatus.textContent = badge.text;
+      identityStatus.className = `inline-flex w-fit rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider ${badge.className}`;
+      document.getElementById('new-username').value = profile.usernameLower || profile.username || profile.email || '';
+      document.getElementById('identity-grid').innerHTML = [
+        infoCard('Institution', fmt(institution.title || institution.name || scope.institutionId)),
+        infoCard('Admin Name', fmt(profile.name)),
+        infoCard('Username / Email', fmt(profile.usernameLower || profile.username || profile.email)),
+        infoCard('Role', fmt(profile.role)),
+        infoCard('Institution ID', fmt(scope.institutionId)),
+        infoCard('Festival ID', fmt(scope.festivalId)),
+        infoCard('Subscription Status', fmt(institution.subscriptionStatus || institution.plan || 'active')),
+        infoCard('Purchase Date', fmt(institution.purchaseDate)),
+        infoCard('Expiry Date', fmt(institution.subscriptionEndsAt || institution.trialEndsAt || (institution.billingCycle === 'unlimited' ? 'Unlimited' : 'Not set'))),
+        infoCard('Billing Cycle', fmt(institution.billingCycle)),
+        infoCard('Amount Paid', money(institution.paymentAmount, institution.paymentCurrency || 'INR')),
+        infoCard('Payment Reference', fmt(institution.paymentReference)),
+        infoCard('Trial Starts', fmt(institution.trialStartsAt)),
+        infoCard('Trial Ends', fmt(institution.trialEndsAt)),
+        infoCard('Notes', fmt(institution.purchaseNotes || institution.notes))
+      ].join('');
+    }
+
+    function linkCard(label, href) {
+      return `<div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-3"><div><span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">${label}</span><div class="mt-1 text-xs font-bold text-slate-700 break-all">${href}</div></div><div class="flex gap-2"><a href="${href}" target="_blank" class="rounded-xl bg-slate-900 px-3 py-2 text-[10px] font-extrabold text-white">Open</a><button type="button" class="copy-link rounded-xl border border-slate-200 px-3 py-2 text-[10px] font-extrabold text-slate-600" data-link="${href}">Copy</button></div></div>`;
+    }
+
+    function renderLinks() {
+      const links = accountContext.links;
+      document.getElementById('public-links-grid').innerHTML = [
+        linkCard('One Login Page', links.login),
+        linkCard('Public Home', links.publicHome),
+        linkCard('Public Direct', links.publicDirect),
+        linkCard('Schedule', links.schedule),
+        linkCard('Latest Results', links.latestResults),
+        linkCard('Result Search', links.resultSearch),
+        linkCard('Downloads', links.downloads)
+      ].join('');
+      document.querySelectorAll('.copy-link').forEach((button) => {
+        button.addEventListener('click', async () => {
+          await navigator.clipboard.writeText(button.dataset.link);
+          button.textContent = 'Copied';
+          setTimeout(() => { button.textContent = 'Copy'; }, 1200);
+        });
+      });
+    }
+
+    async function loadAccountPage() {
+      accountContext = await getInstitutionAccountContext();
+      renderIdentity();
+      renderLinks();
+      document.getElementById('global-page-loader').classList.add('hidden');
+    }
+
+    function showMessage(message, ok = true) {
+      const box = document.getElementById('credential-message');
+      box.textContent = message;
+      box.className = `rounded-xl p-3 text-xs font-bold ${ok ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`;
+    }
+
+    document.getElementById('credential-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const currentPassword = document.getElementById('current-password').value;
+      const newUsername = document.getElementById('new-username').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      if (newPassword !== confirmPassword) return showMessage('New password and confirmation do not match.', false);
+      try {
+        await updateInstitutionAdminCredentials({ currentPassword, newUsername, newPassword });
+        document.getElementById('current-password').value = '';
+        document.getElementById('new-password').value = '';
+        document.getElementById('confirm-password').value = '';
+        showMessage('Admin credentials updated successfully. Use the new credentials from the next login.');
+        await loadAccountPage();
+      } catch (err) {
+        showMessage(err.message || 'Could not update credentials.', false);
+      }
+    });
+
+    document.getElementById('copy-public-summary').addEventListener('click', async () => {
+      const links = accountContext.links;
+      const text = `Public Portal Links\nLogin: ${links.login}\nPublic Home: ${links.publicHome}\nSchedule: ${links.schedule}\nLatest Results: ${links.latestResults}\nResult Search: ${links.resultSearch}\nDownloads: ${links.downloads}`;
+      await navigator.clipboard.writeText(text);
+      document.getElementById('copy-public-summary').textContent = 'Copied Summary';
+      setTimeout(() => { document.getElementById('copy-public-summary').textContent = 'Copy Link Summary'; }, 1200);
+    });
+
+    (async () => {
+      try {
+        await verifyUserRole(['admin']);
+        await loadPortalLayout('admin');
+        initializeNavigation();
+        await loadAccountPage();
+      } catch (err) {
+        console.error('Account settings failed:', err);
+      }
+    })();
+  </script>
+</body>
+</html>

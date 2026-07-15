@@ -105,8 +105,20 @@ service cloud.firestore {
     // --- Public manual login index for institution admins. Passwords must be stored only as hashes. ---
     match /institutionLogins/{loginId} {
       allow read: if true;
-      allow create, update: if isSuperAdmin() && !request.resource.data.keys().hasAny(['password']);
-      allow delete: if isSuperAdmin();
+      allow create: if (isSuperAdmin() || (
+        isAdmin() &&
+        request.resource.data.institutionId == getUserData().institutionId &&
+        request.resource.data.usernameLower == loginId &&
+        request.resource.data.role in ['institutionAdmin', 'admin']
+      )) && !request.resource.data.keys().hasAny(['password']);
+      allow update: if (isSuperAdmin() || (
+        isAdmin() &&
+        resource.data.institutionId == getUserData().institutionId &&
+        request.resource.data.institutionId == resource.data.institutionId &&
+        request.resource.data.usernameLower == loginId &&
+        request.resource.data.role in ['institutionAdmin', 'admin']
+      )) && !request.resource.data.keys().hasAny(['password']);
+      allow delete: if isSuperAdmin() || (isAdmin() && resource.data.institutionId == getUserData().institutionId && resource.data.role in ['institutionAdmin', 'admin']);
     }
 
     // --- Premium SaaS Institutions Collection ---
