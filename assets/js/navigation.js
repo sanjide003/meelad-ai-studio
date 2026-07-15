@@ -47,25 +47,24 @@ function applyAdminPageGuidance() {
 }
 
 
-function enforceAdminDesktopExperience() {
+function enhanceAdminResponsiveExperience() {
   if (!window.location.pathname.includes('/admin/')) return;
-  const overlayId = 'admin-desktop-required-overlay';
+  const noticeId = 'admin-responsive-advisory';
   const render = () => {
     const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
-    let overlay = document.getElementById(overlayId);
+    let notice = document.getElementById(noticeId);
     if (isDesktop) {
-      overlay?.remove();
-      document.body.classList.remove('admin-desktop-locked');
+      notice?.remove();
       return;
     }
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = overlayId;
-      overlay.className = 'admin-desktop-required-overlay';
-      overlay.innerHTML = `<div class="admin-desktop-required-card"><span class="status-badge status-badge-pending">Desktop Required</span><h1>Use a desktop or laptop</h1><p>The admin portal is optimized and restricted for desktop management workflows. Please open this page on a screen that is at least 1024px wide.</p></div>`;
-      document.body.appendChild(overlay);
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.id = noticeId;
+      notice.className = 'admin-responsive-advisory';
+      notice.innerHTML = `<span class="status-badge status-badge-info">Desktop Friendly</span><p>This admin workspace is designed for desktop screens, but it remains available on this device. Use landscape mode for large tables and reports.</p><button type="button" aria-label="Dismiss responsive advisory">×</button>`;
+      notice.querySelector('button')?.addEventListener('click', () => notice.remove());
+      document.body.appendChild(notice);
     }
-    document.body.classList.add('admin-desktop-locked');
   };
   render();
   window.addEventListener('resize', render);
@@ -206,8 +205,8 @@ export function initializeNavigation() {
   // 6. Add consistent admin page purpose guidance where pages do not already provide it.
   applyAdminPageGuidance();
 
-  // 7. Admin is intentionally desktop-first for management accuracy.
-  enforceAdminDesktopExperience();
+  // 7. Admin is desktop-friendly while remaining usable on smaller devices.
+  enhanceAdminResponsiveExperience();
 
   // 6. Logout Listener Bindings
   const logoutBtns = document.querySelectorAll('.logout-action-btn');
