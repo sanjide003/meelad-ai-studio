@@ -35,14 +35,33 @@
         <!-- Welcome Banner -->
         <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
           <div class="space-y-1">
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">System Overview</h1>
-            <p class="text-xs text-slate-400 font-medium">Head Administrator Terminal • Connected Festival Workspace</p>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Dashboard</h1>
+            <p class="text-xs text-slate-400 font-medium">Manage setup, people, judging, results, publishing, and official outputs from one workspace.</p>
           </div>
           <div class="flex items-center space-x-2 shrink-0">
             <a href="../admin/user-invitations.html" class="btn btn-accent py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-              <span>Invite New User</span>
+              <span>Invite User</span>
             </a>
+          </div>
+        </div>
+
+        <!-- Admin next-step guidance -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="admin-guidance-card border-l-4 border-l-emerald-500">
+            <span class="status-badge status-badge-active">Command Center</span>
+            <h2 class="text-sm font-extrabold text-slate-900 mt-3">Start with the setup checklist</h2>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">The dashboard shows what must be completed before judges can enter marks and results can be published.</p>
+          </div>
+          <div class="admin-guidance-card border-l-4 border-l-amber-500">
+            <span class="status-badge status-badge-pending">Needs Review</span>
+            <h2 class="text-sm font-extrabold text-slate-900 mt-3">Validate before publishing</h2>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Review submitted marks, tie-breaks, and pending sheets before approving public results.</p>
+          </div>
+          <div class="admin-guidance-card border-l-4 border-l-cyan-500">
+            <span class="status-badge status-badge-info">Official Outputs</span>
+            <h2 class="text-sm font-extrabold text-slate-900 mt-3">Generate documents after approval</h2>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Use reports, certificates, ID cards, and backups once the data is verified.</p>
           </div>
         </div>
 
@@ -102,22 +121,22 @@
         <div class="bg-white rounded-2xl border border-emerald-100 p-6 shadow-xs space-y-5">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
-              <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Implementation Board</p>
-              <h2 class="text-lg font-extrabold text-slate-900 font-display">Festival Setup Roadmap</h2>
-              <p class="text-xs text-slate-500">Follow this professional setup order: blueprint, teams, categories, competition items, students, judges, assignments, then publishing.</p>
+              <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Setup Checklist</p>
+              <h2 class="text-lg font-extrabold text-slate-900 font-display">Festival Readiness</h2>
+              <p class="text-xs text-slate-500">Complete these steps in order before opening judging and publishing official results.</p>
             </div>
             <span class="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700">Workspace locked to this institution</span>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3" id="setup-roadmap-board">
             <a href="../admin/festival-settings.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="blueprint">
               <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 01</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Festival Blueprint</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Create the fest type, gender mode, arts/sports scope, and section checklist first.</p>
+              <h3 class="text-sm font-bold text-slate-900 mt-1">Festival Settings</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Confirm festival profile, venue, registration mode, and public visibility settings.</p>
             </a>
             <a href="../admin/teams.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="teams">
               <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 02</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Teams & Group Leaders</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Create teams, group leaders, chest series, and login credentials.</p>
+              <h3 class="text-sm font-bold text-slate-900 mt-1">Teams</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Create team groups and confirm team identifiers before registering students.</p>
             </a>
             <a href="../admin/categories.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="categories">
               <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 03</span>
@@ -126,13 +145,13 @@
             </a>
             <a href="../admin/competition-rules.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="competitions">
               <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 04</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Competition Items</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Add Track, On Stage, Off Stage, or custom items using the saved blueprint.</p>
+              <h3 class="text-sm font-bold text-slate-900 mt-1">Competition Rules</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Configure competition items, rules, scoring mode, and eligibility details.</p>
             </a>
             <a href="../admin/students.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="students">
               <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 05</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Student Roster</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Add students into the correct team/category after the structure is ready.</p>
+              <h3 class="text-sm font-bold text-slate-900 mt-1">Students</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Register students after teams, divisions, and categories are ready.</p>
             </a>
             <a href="../admin/judges.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="judges">
               <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 06</span>
@@ -146,8 +165,8 @@
             </a>
             <a href="../admin/publish.html" class="roadmap-step block rounded-xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition" data-step="publish">
               <span class="text-[10px] font-mono font-bold text-emerald-600">STEP 08</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">Publish & Share</h3>
-              <p class="text-[11px] text-slate-500 mt-1">Review marks, publish results, and share scoped public links.</p>
+              <h3 class="text-sm font-bold text-slate-900 mt-1">Publish Results</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Review approved results and publish only when validation checks are complete.</p>
             </a>
           </div>
         </div>
@@ -158,7 +177,7 @@
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
               <p class="text-[10px] font-bold text-sky-600 uppercase tracking-widest">Share Links</p>
-              <h2 class="text-lg font-extrabold text-slate-900 font-display">Scoped Portal Links</h2>
+              <h2 class="text-lg font-extrabold text-slate-900 font-display">Portal Links</h2>
               <p class="text-xs text-slate-500">Share these links only after selecting the correct institution/festival workspace.</p>
             </div>
             <button id="copy-public-link-btn" class="btn btn-secondary text-xs font-bold px-4 py-2 border border-slate-200">Copy Public Result Link</button>
@@ -173,18 +192,18 @@
 
         <!-- Portal Info Panel -->
         <div class="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
-          <h2 class="text-lg font-bold text-slate-900 font-display">Administrator Control Center</h2>
+          <h2 class="text-lg font-bold text-slate-900 font-display">Admin Guidance</h2>
           <p class="text-xs text-slate-500 leading-relaxed">
-            Welcome to the MeeladPulse system terminal. Use the left sidebar panel to browse active rosters, modify user activation keys, or issue fresh cryptographic invitations. Restrict access parameters strictly to authorized festival nodes.
+            Use the lifecycle sidebar from top to bottom: finish setup, register students, manage access, monitor judging, review results, publish outputs, and keep system backups current.
           </p>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
             <a href="../admin/users.html" class="block p-4 border border-slate-100 hover:border-slate-300 rounded-xl transition-all">
-              <span class="text-xs font-bold text-slate-800 block">Manage Active Accounts</span>
-              <span class="text-[11px] text-slate-400 mt-1 block">Toggle activation keys, audit profile parameters, and modify user states.</span>
+              <span class="text-xs font-bold text-slate-800 block">Accounts</span>
+              <span class="text-[11px] text-slate-400 mt-1 block">Review administrators, judges, and support users. Disable access when a user no longer needs the portal.</span>
             </a>
             <a href="../admin/user-invitations.html" class="block p-4 border border-slate-100 hover:border-slate-300 rounded-xl transition-all">
-              <span class="text-xs font-bold text-slate-800 block">Cryptographic User Invitations</span>
-              <span class="text-[11px] text-slate-400 mt-1 block">Generate 32-byte secure activation tokens, hash them, and invite Judges or Team Leaders.</span>
+              <span class="text-xs font-bold text-slate-800 block">Invitations</span>
+              <span class="text-[11px] text-slate-400 mt-1 block">Invite admins, judges, and team users with clear roles and expiry-aware onboarding.</span>
             </a>
           </div>
         </div>

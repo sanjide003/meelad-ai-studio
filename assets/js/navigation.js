@@ -7,6 +7,45 @@ function appUrl(path) {
   return new URL(path.replace(/^\//, ""), new URL(/* @vite-ignore */ "../../", import.meta.url)).href;
 }
 
+
+function applyAdminPageGuidance() {
+  if (!window.location.pathname.includes('/admin/')) return;
+  if (document.querySelector('[data-admin-guidance="auto"]')) return;
+  const page = window.location.pathname.split('/').pop();
+  const guidance = {
+    'festival-settings.html': ['Festival Settings', 'Confirm the active festival profile, registration rules, and public visibility before creating competitions.', 'Setup'],
+    'teams.html': ['Teams', 'Create and maintain team groups before registering students.', 'Setup'],
+    'divisions.html': ['Divisions', 'Define the main competition divisions used for eligibility and reporting.', 'Setup'],
+    'subdivisions.html': ['Subdivisions', 'Refine divisions into smaller groups when your festival rules require it.', 'Setup'],
+    'categories.html': ['Categories', 'Create category groups used for competition eligibility and result grouping.', 'Setup'],
+    'students.html': ['Students', 'Register, search, and manage student records for the selected festival.', 'Students'],
+    'student-review.html': ['Student Review', 'Review pending student registration data before it becomes official.', 'Students'],
+    'users.html': ['Accounts', 'Manage administrators, judges, and portal users with the correct access level.', 'People & Access'],
+    'user-invitations.html': ['Invitations', 'Invite new users with the right role before they access the portal.', 'People & Access'],
+    'judges.html': ['Judges', 'Create and verify judge profiles before assigning competitions.', 'People & Access'],
+    'judge-assignments.html': ['Judge Assignments', 'Assign verified judges to competitions and control mark sheet access.', 'People & Access'],
+    'mark-monitor.html': ['Mark Sheets Monitor', 'Track mark entry progress and identify missing or returned submissions.', 'Judging'],
+    'submitted-marks.html': ['Submitted Marks', 'Review submitted mark sheets before result approval.', 'Judging'],
+    'mark-review.html': ['Mark Review', 'Verify scoring differences, missing criteria, and judge submissions.', 'Judging'],
+    'result-review.html': ['Result Review', 'Approve, hold, or recalculate results before public publishing.', 'Results'],
+    'result-publish.html': ['Publish Results', 'Publish approved results only after validation is complete.', 'Results'],
+    'published-results.html': ['Published Results', 'Review public result versions and correction history.', 'Results'],
+    'reports.html': ['Reports', 'Generate official summaries, exports, and printable records.', 'Reports & Certificates'],
+    'certificates.html': ['Certificates', 'Generate certificates after winners and official results are finalized.', 'Reports & Certificates'],
+    'recalculation.html': ['Recalculation', 'Recalculate rankings carefully after confirming rules and backups.', 'System'],
+    'backup-restore.html': ['Backup & Restore', 'Protect festival data before high-impact maintenance actions.', 'System']
+  };
+  const item = guidance[page];
+  if (!item) return;
+  const main = document.querySelector('main');
+  if (!main) return;
+  const panel = document.createElement('section');
+  panel.className = 'admin-guidance-card mb-5 border-l-4 border-l-emerald-500';
+  panel.dataset.adminGuidance = 'auto';
+  panel.innerHTML = `<div class="flex flex-col md:flex-row md:items-center justify-between gap-3"><div><span class="status-badge status-badge-info">${item[2]}</span><h1 class="text-xl font-extrabold text-slate-900 mt-3 font-display">${item[0]}</h1><p class="text-xs text-slate-500 mt-1 leading-relaxed">${item[1]}</p></div><p class="text-[11px] text-slate-500 max-w-sm">Next step: complete this section, review warnings, and continue through the admin lifecycle from setup to publishing.</p></div>`;
+  main.prepend(panel);
+}
+
 export function initializeNavigation() {
   // 1. Mobile Hamburger Menu Setup
   const hamburgerBtn = document.getElementById('mobile-hamburger-btn');
@@ -138,6 +177,9 @@ export function initializeNavigation() {
 
   // 5. Update dynamic user profile information
   updateProfileDetails();
+
+  // 6. Add consistent admin page purpose guidance where pages do not already provide it.
+  applyAdminPageGuidance();
 
   // 6. Logout Listener Bindings
   const logoutBtns = document.querySelectorAll('.logout-action-btn');
@@ -306,6 +348,7 @@ export async function initializePublicNavigation() {
   const langEnBtn = document.getElementById('lang-btn-en');
   const langMlBtn = document.getElementById('lang-btn-ml');
   let currentLang = localStorage.getItem('meeladpulse_lang') || 'en';
+  document.documentElement.lang = currentLang === 'ml' ? 'ml' : 'en';
 
   function updateLangButtons() {
     if (!langEnBtn || !langMlBtn) return;
@@ -325,6 +368,7 @@ export async function initializePublicNavigation() {
       if (currentLang !== 'en') {
         currentLang = 'en';
         localStorage.setItem('meeladpulse_lang', 'en');
+        document.documentElement.lang = 'en';
         updateLangButtons();
         window.dispatchEvent(new CustomEvent('meelad_language_changed', { detail: 'en' }));
         location.reload(); // Reload to translate everything perfectly
@@ -335,6 +379,7 @@ export async function initializePublicNavigation() {
       if (currentLang !== 'ml') {
         currentLang = 'ml';
         localStorage.setItem('meeladpulse_lang', 'ml');
+        document.documentElement.lang = 'ml';
         updateLangButtons();
         window.dispatchEvent(new CustomEvent('meelad_language_changed', { detail: 'ml' }));
         location.reload(); // Reload to translate everything perfectly
