@@ -79,6 +79,23 @@ html.loading-state body {
 }
 
 /* Sidebar Navigation Items */
+.admin-nav-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.625rem;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+.nav-group-content .admin-nav-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-right: 0.5rem;
+}
+.nav-link-item span,
+.nav-group-trigger span span {
+  min-width: 0;
+}
+/* Sidebar Navigation Items */
 .nav-link-item {
   display: flex;
   align-items: center;
