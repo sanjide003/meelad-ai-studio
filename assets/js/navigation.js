@@ -70,6 +70,21 @@ function enhanceAdminResponsiveExperience() {
   window.addEventListener('resize', render);
 }
 
+
+function enhanceAdminEmptyStates() {
+  if (!window.location.pathname.includes('/admin/')) return;
+  document.querySelectorAll('tbody').forEach((tbody) => {
+    if (tbody.dataset.emptyStateEnhanced === '1') return;
+    const onlyRow = tbody.querySelector('tr:only-child');
+    const onlyCell = onlyRow?.querySelector('td[colspan]');
+    if (!onlyCell) return;
+    const text = onlyCell.textContent?.trim() || '';
+    if (!/no |not found|empty|failed|loading/i.test(text)) return;
+    onlyCell.classList.add('admin-empty-state-cell');
+    tbody.dataset.emptyStateEnhanced = '1';
+  });
+}
+
 export function initializeNavigation() {
   // 1. Mobile Hamburger Menu Setup
   const hamburgerBtn = document.getElementById('mobile-hamburger-btn');
@@ -207,6 +222,9 @@ export function initializeNavigation() {
 
   // 7. Admin is desktop-friendly while remaining usable on smaller devices.
   enhanceAdminResponsiveExperience();
+
+  // 8. Improve common admin table empty/loading states without touching page logic.
+  enhanceAdminEmptyStates();
 
   // 6. Logout Listener Bindings
   const logoutBtns = document.querySelectorAll('.logout-action-btn');
