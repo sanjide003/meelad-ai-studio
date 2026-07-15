@@ -149,7 +149,7 @@ export function initializeNavigation() {
     const hrefPath = new URL(href, window.location.href).pathname;
     if (currentPath === hrefPath || currentPath.endsWith(hrefPath.split('/').pop())) {
       link.classList.remove('text-slate-400', 'text-slate-500', 'text-slate-600');
-      link.classList.add('bg-emerald-100', 'text-emerald-800', 'font-extrabold', 'shadow-sm');
+      link.classList.add('bg-emerald-100', 'text-emerald-800', 'font-extrabold', 'shadow-sm', 'admin-active-tab');
       link.setAttribute('aria-current', 'page');
       
       // Auto expand parent group if it exists
@@ -160,6 +160,8 @@ export function initializeNavigation() {
         if (trigger) {
           trigger.setAttribute('aria-expanded', 'true');
           trigger.classList.add('bg-emerald-50', 'text-emerald-800', 'font-bold');
+          trigger.setAttribute('aria-current', 'section');
+          localStorage.setItem(`meeladpulse_nav_${parentGroup.id}`, 'open');
         }
       }
     }

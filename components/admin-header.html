@@ -1,49 +1,45 @@
-<header class="sticky top-0 z-40 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between shadow-xs lg:px-6">
-  <!-- Left Section (Logo & App Title on Mobile) -->
-  <div class="flex items-center space-x-3 lg:space-x-0">
-    <!-- Hamburger button (Visible on Mobile/Tablet only) -->
-    <button id="mobile-hamburger-btn" class="lg:hidden p-1 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition cursor-pointer" aria-expanded="false" aria-label="Toggle navigation menu">
-      <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-      </svg>
-    </button>
-    
-    <!-- Title Area (Mobile only) -->
-    <div class="flex items-center space-x-2 lg:hidden">
-      <span class="bg-emerald-500 text-white p-1 rounded-md text-xs font-bold font-display">MP</span>
-      <span class="font-display font-extrabold text-slate-900 tracking-tight text-sm">MeeladPulse</span>
-    </div>
-
-    <!-- Desktop Breadcrumbs (Desktop only) -->
-    <div class="hidden lg:flex items-center space-x-2 text-xs text-slate-500 font-medium">
-      <span class="text-slate-400">Portal</span>
-      <span class="text-slate-300">/</span>
-      <span class="text-slate-800 font-semibold uppercase tracking-wider">Dashboard</span>
-    </div>
-  </div>
-
-  <!-- Right Section (Festival Info & Profile) -->
-  <div class="flex items-center space-x-4">
-    <!-- Festival Selection Title Badge -->
-    <div class="hidden sm:flex items-center bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1 space-x-1.5">
-      <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-      <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wide selected-festival-title">Loading...</span>
-    </div>
-
-    <!-- Profile Dropdown Display -->
-    <div class="flex items-center space-x-2 border-l border-slate-100 pl-4">
-      <div class="text-right hidden sm:block">
-        <p class="text-xs font-bold text-slate-800 user-profile-name">...</p>
-        <p class="text-[9px] font-mono font-semibold text-slate-400 uppercase tracking-wider user-profile-role">...</p>
+<header class="admin-top-header sticky top-0 z-40 bg-white border-b border-slate-100 px-4 py-3 shadow-xs lg:px-6">
+  <div class="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+    <div class="flex items-center space-x-3 lg:space-x-0 min-w-0">
+      <button id="mobile-hamburger-btn" class="lg:hidden p-1 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition cursor-pointer" aria-expanded="false" aria-label="Toggle navigation menu">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      <div class="flex items-center space-x-2 lg:hidden">
+        <span class="bg-emerald-500 text-white p-1 rounded-md text-xs font-bold font-display">MP</span>
+        <span class="font-display font-extrabold text-slate-900 tracking-tight text-sm">MeeladPulse</span>
       </div>
-      <div class="h-8 w-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs font-display">
-        A
+      <div class="hidden lg:flex items-center space-x-2 text-xs text-slate-500 font-medium">
+        <span class="text-slate-400">Portal</span>
+        <span class="text-slate-300">/</span>
+        <span class="text-slate-800 font-semibold uppercase tracking-wider">Admin</span>
+      </div>
+    </div>
+
+    <div class="flex justify-center min-w-0">
+      <div class="max-w-full flex items-center bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1 space-x-1.5 shadow-xs">
+        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+        <span class="text-[11px] font-extrabold text-emerald-800 uppercase tracking-wide selected-festival-title truncate">Loading...</span>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end space-x-2 sm:space-x-3 min-w-0">
+      <div class="language-switcher inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1" aria-label="Language switcher">
+        <button id="lang-btn-en" type="button" class="px-2 py-1 text-[10px] font-extrabold rounded-lg bg-indigo-600 text-white transition cursor-pointer">EN</button>
+        <button id="lang-btn-ml" type="button" class="px-2 py-1 text-[10px] font-extrabold rounded-lg text-slate-400 hover:text-slate-600 transition cursor-pointer">ML</button>
+      </div>
+      <div class="flex items-center space-x-2 border-l border-slate-100 pl-3">
+        <div class="text-right hidden sm:block">
+          <p class="text-xs font-bold text-slate-800 user-profile-name">...</p>
+          <p class="text-[9px] font-mono font-semibold text-slate-400 uppercase tracking-wider user-profile-role">...</p>
+        </div>
+        <div class="h-8 w-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs font-display">A</div>
       </div>
     </div>
   </div>
 </header>
 
-<!-- Mobile Navigation Dropdown Menu (Opens directly below top header, pushes content down, NO overlay) -->
 <nav id="mobile-dropdown-menu" class="lg:hidden mobile-nav-transition max-h-0 opacity-0 pointer-events-none w-full bg-white border-b border-slate-200 overflow-hidden text-xs flex flex-col divide-y divide-slate-100">
   <div class="p-3 space-y-2">
     <a href="../admin/dashboard.html" class="nav-link-item flex items-center py-2 px-3 hover:bg-slate-50 rounded-lg">
