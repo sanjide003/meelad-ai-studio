@@ -9,7 +9,7 @@ All notable changes for the SaaS institution-management version are documented h
 - Added the Super Admin Institution Portal as the SaaS owner control center for creating institutions, admin credentials, subscription status, payment details, and scoped festival workspaces.
 - Added visible Super Admin header tabs for All Institutions, Purchased, Trial, Deactivated, Profile, and Logout.
 - Added institution table actions for editing, copying share links, deactivating/reactivating, and deleting institutions.
-- Added a professional Copy Link modal that generates a complete share message with admin login, admin portal, public portal, team login, judge login, and credentials.
+- Added a professional Copy Link modal that generates a complete share message with one universal login page, a short public institution link, a backup public link, and credentials.
 - Added editable share-message formatting so Super Admin can customize the copied message before sharing.
 - Added Super Admin profile viewing from the portal header.
 - Added public `institutionLogins/{usernameLower}` lookup support for manual institution-admin login.
@@ -30,6 +30,7 @@ All notable changes for the SaaS institution-management version are documented h
 - Fixed the previous institution-admin login failure caused by relying on client-only manual session state that Firestore rules could not recognize.
 - Fixed admin route fallback issues by preserving `institutionId` and `festivalId` from copied links and successful manual login.
 - Fixed unclear login failures by documenting username, password, subscription, and rules-deployment failure categories.
+- Added root short-link handling so `index.html?institution=<slug>` opens the scoped public portal.
 - Fixed stale documentation that still described the app as blocked or as a legacy top-level festival system.
 
 ### Removed

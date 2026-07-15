@@ -537,19 +537,16 @@
     }
 
     function buildPortalLinks(festival) {
-      const festivalId = festival.defaultFestivalId || festival.id;
-      const scopedUrl = (path) => {
+      const institutionSlug = festival.id;
+      const shortUrl = (path, params = {}) => {
         const url = new URL(path, window.location.href);
-        url.searchParams.set('institution', festival.id);
-        url.searchParams.set('festival', festivalId);
+        Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
         return url.href;
       };
       return {
-        adminLogin: scopedUrl('login.html'),
-        adminPortal: scopedUrl('admin/app.html'),
-        publicHome: scopedUrl('public/index.html'),
-        teamLogin: scopedUrl('login.html?portal=team'),
-        judgeLogin: scopedUrl('login.html?portal=judge')
+        universalLogin: shortUrl('login.html'),
+        publicHome: shortUrl('index.html', { institution: institutionSlug }),
+        publicDirect: shortUrl('public/index.html', { institution: institutionSlug })
       };
     }
 
@@ -560,25 +557,19 @@
 
 ${institutionName} institution portal is ready on MeeladPulse. MeeladPulse helps manage competitions, teams, judges, entries, result publishing, public result pages, certificates, reports, and live access links in one secured platform.
 
-Admin Login:
-${links.adminLogin}
+One Login Page (Admin / Team / Judge):
+${links.universalLogin}
 
-Admin Portal:
-${links.adminPortal}
-
-Public Results/Home:
+Public Results/Home (Short Link):
 ${links.publicHome}
 
-Team Login:
-${links.teamLogin}
-
-Judge Login:
-${links.judgeLogin}
+Backup Public Direct Link:
+${links.publicDirect}
 
 Admin Username: ${festival.ownerUsername || festival.ownerEmail || 'not set'}
 Admin Password: ${festival.ownerPassword || 'not set'}
 
-Please keep these credentials safe and share only with authorized users.`;
+Use the same login page for every user. MeeladPulse will identify the user from the username/password and open the correct institution page automatically. Please keep these credentials safe and share only with authorized users.`;
     }
 
     function openShareModal(festival) {

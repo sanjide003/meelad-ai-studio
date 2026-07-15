@@ -8,7 +8,7 @@ MeeladPulse is a Firebase-backed, static multi-page competition management platf
 - **Backend services:** Firebase Authentication and Cloud Firestore, secured by `firestore.rules`.
 - **Tenant model:** Institution data is scoped under `institutions/{institutionId}/festivals/{festivalId}` so one institution cannot mix data with another.
 - **Super Admin portal:** `select-fest.html` is the SaaS owner control center for institution onboarding, subscription/payment control, activation/suspension, profile viewing, and formatted link sharing.
-- **Institution admin login:** Institution admins can sign in from `login.html` using the username/password created by the Super Admin. Successful manual institution-admin login creates an anonymous Firebase session bridge, stores the selected institution/festival context, and opens `admin/app.html`.
+- **Universal login:** Admins, team leaders, and judges can all sign in from `login.html`; the username/password is matched against the Super Admin-created login index, then the app opens the correct role page for that institution. Successful manual login creates an anonymous Firebase session bridge, stores the selected institution/festival context, and opens the correct portal.
 - **Deployment note:** Local build and lint can be verified in this repository, but live login/subscription behavior also requires deploying the latest hosting files and Firestore rules to Firebase.
 
 ## Roles and Portals
@@ -16,10 +16,15 @@ MeeladPulse is a Firebase-backed, static multi-page competition management platf
 | Role | Main entry | Current behavior |
 | --- | --- | --- |
 | Super Admin | `select-fest.html` | Manages all institutions, tabs, profile, subscriptions, credentials, and share links. |
-| Institution Admin | `login.html?institution=<institutionId>&festival=<festivalId>` | Logs in with Super Admin-created manual credentials and enters `admin/app.html` for the scoped festival. |
-| Team Leader | `login.html?institution=<institutionId>&festival=<festivalId>` | Uses scoped manual/team credentials for the institution workspace. |
-| Judge | `login.html?institution=<institutionId>&festival=<festivalId>` | Uses scoped judge credentials and assigned competition access. |
-| Public visitor | `public/index.html?institution=<institutionId>&festival=<festivalId>` | Reads public schedules, announcements, rankings, and results for the selected workspace. |
+| Institution Admin | `login.html` | Logs in with Super Admin-created manual credentials and enters `admin/app.html` for the scoped festival. |
+| Team Leader | `login.html` | Uses manual/team credentials and is routed to the team workspace automatically. |
+| Judge | `login.html` | Uses judge credentials and is routed to assigned competition access automatically. |
+| Public visitor | `index.html?institution=<institutionSlug>` | Redirects to the public home for the selected institution workspace. |
+
+
+## Short Public Links
+
+Super Admin share messages now use short institution links. A URL like `index.html?institution=<institutionSlug>` or `index.html?i=<institutionSlug>` redirects visitors to that institution's public results/home page. The longer direct public URL remains available as a backup, but customers normally only need the website link plus the institution slug.
 
 ## Super Admin Control Center
 

@@ -279,7 +279,21 @@
     import { subscribeLatestPublicResults, subscribePublicRankings, searchPublicResults } from "./assets/js/public-result-service.js";
     import { subscribePublicAnnouncements, subscribePublicSchedule } from "./assets/js/public-home-service.js";
 
-    const festId = getActiveFestivalId();
+    function redirectShortInstitutionLink() {
+      const params = new URLSearchParams(window.location.search);
+      const institutionSlug = params.get('institution') || params.get('i') || params.get('school');
+      const isRootHome = /(?:^|\/)index\.html$/.test(window.location.pathname) || window.location.pathname.endsWith('/');
+      if (institutionSlug && isRootHome) {
+        const publicUrl = new URL('public/index.html', window.location.href);
+        publicUrl.searchParams.set('institution', institutionSlug);
+        window.location.replace(publicUrl.href);
+        return true;
+      }
+      return false;
+    }
+
+    const redirectedToScopedPublicPortal = redirectShortInstitutionLink();
+    const festId = redirectedToScopedPublicPortal ? null : getActiveFestivalId();
 
     // Init page states
     async function loadBranding() {
@@ -585,7 +599,7 @@
       setupHamburger();
     }
 
-    start();
+    if (!redirectedToScopedPublicPortal) start();
   </script>
 </body>
 </html>

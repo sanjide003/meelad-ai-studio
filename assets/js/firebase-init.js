@@ -22,8 +22,12 @@ function normalizeScopeValue(value) {
   return value ? String(value).trim() : '';
 }
 
+function readInstitutionScopeParam() {
+  return normalizeScopeValue(readScopeParam('institution') || readScopeParam('i') || readScopeParam('school'));
+}
+
 function persistScopeFromUrl() {
-  const institutionId = normalizeScopeValue(readScopeParam('institution'));
+  const institutionId = readInstitutionScopeParam();
   const festivalId = normalizeScopeValue(readScopeParam('festival'));
   if (institutionId) localStorage.setItem('meeladpulse_selected_institution_id', institutionId);
   if (festivalId) localStorage.setItem('meeladpulse_selected_fest_id', festivalId);
@@ -34,7 +38,7 @@ persistScopeFromUrl();
 
 window.meeladPulseGetActiveScope = function meeladPulseGetActiveScope() {
   const urlFestivalId = normalizeScopeValue(readScopeParam('festival'));
-  const urlInstitutionId = normalizeScopeValue(readScopeParam('institution'));
+  const urlInstitutionId = readInstitutionScopeParam();
   const festivalId = urlFestivalId || localStorage.getItem('meeladpulse_selected_fest_id') || urlInstitutionId || 'main-festival';
   const institutionId = urlInstitutionId || localStorage.getItem('meeladpulse_selected_institution_id') || festivalId;
   return { institutionId, festivalId };
