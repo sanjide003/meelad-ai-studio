@@ -103,7 +103,7 @@
         activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
         if (!activeFestId) {
           alert("Please select a festival scope first.");
-          window.location.replace('../select-fest.html');
+          window.location.replace('../unauthorized.html?reason=no_scope');
           return;
         }
 

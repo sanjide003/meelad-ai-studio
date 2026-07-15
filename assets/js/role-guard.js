@@ -78,8 +78,8 @@ export async function verifyUserRole(allowedRoles) {
         if (!currentPath.includes('select-fest.html') && !currentPath.includes('unauthorized.html')) {
           const selectedFestId = localStorage.getItem('meeladpulse_selected_fest_id');
           if (!selectedFestId) {
-            window.location.replace(appUrlWithCurrentScope('select-fest.html'));
-            throw new Error('No festival selected');
+            window.location.replace(appUrl('unauthorized.html?reason=no_scope'));
+            throw new Error('No institution workspace scope selected');
           }
           const available = await isSelectedFestivalAvailable(selectedFestId, manualProfile.role, manualProfile);
           if (!available) {
@@ -140,11 +140,12 @@ export async function verifyUserRole(allowedRoles) {
         if (!currentPath.includes('select-fest.html') && !currentPath.includes('unauthorized.html')) {
           const selectedFestId = localStorage.getItem('meeladpulse_selected_fest_id');
           if (!selectedFestId) {
-            const isAdminDashboard = ['admin', 'superAdmin', 'institutionAdmin'].includes(userData.role) && (currentPath.includes('admin/dashboard.html') || currentPath.includes('admin/app.html'));
-            if (!isAdminDashboard) {
+            if (userData.role === 'superAdmin') {
               window.location.replace(appUrlWithCurrentScope('select-fest.html'));
               return reject('No festival selected');
             }
+            window.location.replace(appUrl('unauthorized.html?reason=no_scope'));
+            return reject('No institution workspace scope selected');
           } else {
             const available = await isSelectedFestivalAvailable(selectedFestId, userData.role, userData);
             if (!available) {
