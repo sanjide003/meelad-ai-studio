@@ -544,6 +544,8 @@ export async function saveCompetition(compData) {
       genderMode: compData.genderMode || 'flexible',
       resultMode: compData.resultMode || 'combinedResult',
       competitionType: compData.competitionType || 'individual',
+      programmeType: compData.programmeType || '',
+      sourceMode: compData.sourceMode || 'admin',
       performanceType: compData.performanceType || 'stage',
       roundType: compData.roundType || 'directFinal',
       minParticipantsPerEntry: Number(compData.minParticipantsPerEntry) || 1,
