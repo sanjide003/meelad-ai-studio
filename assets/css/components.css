@@ -332,7 +332,22 @@ html.loading-state body {
   color: #64748b;
 }
 .admin-confirm-dialog {
-  width: min(28rem, calc(100vw - 2rem));
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+}
+.admin-confirm-dialog.hidden {
+  display: none;
+}
+.admin-confirm-dialog__panel {
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
   border-radius: 1.5rem;
   border: 1px solid #e2e8f0;
   background: #ffffff;

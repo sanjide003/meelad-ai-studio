@@ -42,7 +42,7 @@ This document records the product rules and working decisions given during chat 
 - Categories should include default presets and custom category creation.
 - Setup may be skipped, but admins must be warned that core setup should be corrected before adding students and competitions.
 - After students or competitions are created, core setup fields should become locked or add-only where necessary.
-- Reset must be destructive only after admin password confirmation and clear warning.
+- Reset must be destructive only after admin password confirmation and clear warning, and it must delete festival operational data while preserving institution/festival profile records.
 
 ## Team Management rules
 
@@ -65,6 +65,7 @@ This document records the product rules and working decisions given during chat 
 - Save workflows should preview data before database write where practical.
 - Duplicate student submissions should be warned/prevented by team/category/gender/name where possible.
 - Public registrants should be able to check status with phone number.
+- Public registration portal must open only when public registration mode is enabled and the admin open/close schedule allows it.
 - Public registration-only mode must be accepted as `publicRegistrationOnly` wherever student registration mode is validated.
 - Public submissions may be stored without chest number first, but approval must assign the correct category/gender/team chest number automatically.
 
@@ -86,6 +87,7 @@ This document records the product rules and working decisions given during chat 
 - Entry rejection requires a reason and the reason must remain visible.
 - Duplicate student entry into the same competition must be prevented.
 - Competition entry service must validate selected students server-side/client-service-side, not only in the UI.
+- Team-leader competition entries must use the same shared service validation as admin entries and show rejection reasons back to leaders.
 
 ## Security and SaaS rules
 

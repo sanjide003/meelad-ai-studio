@@ -451,9 +451,9 @@
       if (!valid) return showResetError('Password is incorrect.');
       $('#confirm-reset').disabled = true;
       const base = `institutions/${state.scope.institutionId}/festivals/${state.scope.festivalId}`;
-      const collections = ['students', 'competitions', 'teams', 'categories', 'competitionSections', 'divisions', 'subdivisions', 'judges', 'judgeAssignments', 'marks', 'results', 'publishedResults', 'announcements', 'idCards', 'reports'];
+      const collections = ['festStudents', 'students', 'competitions', 'entries', 'teams', 'categories', 'competitionSections', 'divisions', 'subdivisions', 'judges', 'judgeAssignments', 'marks', 'judgeMarks', 'results', 'publishedResults', 'teamTotals', 'champions', 'announcements', 'idCards', 'certificates', 'reports', 'userInvitations', 'manualUsers'];
       for (const name of collections) await deleteCollection(`${base}/${name}`);
-      await setDoc(doc(db, `institutions/${state.scope.institutionId}/festivals`, state.scope.festivalId), { setupCompleted: false, setupWizard: { completed: false, resetAt: serverTimestamp() }, updatedAt: serverTimestamp() }, { merge: true });
+      await setDoc(doc(db, `institutions/${state.scope.institutionId}/festivals`, state.scope.festivalId), { setupCompleted: false, setupBlueprintCompleted: false, setupWizard: { completed: false, resetAt: serverTimestamp() }, studentRegistrationOpen: false, studentRegistrationMode: 'adminOnly', studentRegistrationCloseAt: '', updatedAt: serverTimestamp() }, { merge: true });
       localStorage.removeItem(`meeladpulse_setup_done_${state.scope.institutionId}_${state.scope.festivalId}`);
       $('#reset-dialog').classList.add('hidden');
       $('#confirm-reset').disabled = false;

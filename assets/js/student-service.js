@@ -31,6 +31,7 @@ export async function getFestivalSettings(festId) {
         id: snap.id,
         studentRegistrationMode: data.studentRegistrationMode || 'adminOnly',
         studentRegistrationOpen: data.studentRegistrationOpen !== false,
+        studentRegistrationCloseAt: data.studentRegistrationCloseAt || '',
         teamLeaderStudentApprovalRequired: data.teamLeaderStudentApprovalRequired === true,
         championshipTieBreakers: data.championshipTieBreakers || [
           'totalPoints',
@@ -64,6 +65,7 @@ export async function updateFestivalSettings(settings) {
     const payload = {
       studentRegistrationMode: settings.studentRegistrationMode || 'adminOnly',
       studentRegistrationOpen: settings.studentRegistrationOpen !== false,
+      studentRegistrationCloseAt: settings.studentRegistrationCloseAt || '',
       teamLeaderStudentApprovalRequired: settings.teamLeaderStudentApprovalRequired === true,
       madrasaName: settings.madrasaName || '',
       festivalTitle: settings.festivalTitle || '',
@@ -179,6 +181,15 @@ function isPublicStudentMode(mode = 'adminOnly') {
   return ['publicRegistrationOnly', 'registration', 'all'].includes(mode);
 }
 
+export function isStudentRegistrationPortalOpen(settings = {}) {
+  if (settings.studentRegistrationOpen === false) return false;
+  if (settings.studentRegistrationCloseAt) {
+    const closeTime = new Date(settings.studentRegistrationCloseAt).getTime();
+    if (!Number.isNaN(closeTime) && Date.now() > closeTime) return false;
+  }
+  return true;
+}
+
 async function allocateChestNumberForStudent(studentData) {
   if (!studentData.teamId) throw new Error('Team group selection is required before assigning a chest number.');
   if (!studentData.categoryId) throw new Error('Category selection is required before assigning a chest number.');
@@ -215,7 +226,7 @@ export async function createFestivalStudent(studentData) {
   }
 
   // Ensure registration is open
-  if (!settings.studentRegistrationOpen) {
+  if (!isStudentRegistrationPortalOpen(settings)) {
     throw new Error("Student registration is currently closed.");
   }
 
@@ -338,7 +349,7 @@ export async function createPublicStudentRegistration(studentData, { institution
   const settingsRef = doc(db, scopedPath);
   const settingsSnap = await getDoc(settingsRef);
   const settings = settingsSnap.exists() ? settingsSnap.data() : {};
-  if (settings.studentRegistrationOpen === false) {
+  if (!isStudentRegistrationPortalOpen(settings)) {
     throw new Error('Public registration is currently closed.');
   }
   const mode = settings.studentRegistrationMode || 'adminOnly';
@@ -409,7 +420,7 @@ export async function updateFestivalStudent(studentId, studentData) {
   }
 
   // Ensure registration is open
-  if (!settings.studentRegistrationOpen) {
+  if (!isStudentRegistrationPortalOpen(settings)) {
     throw new Error("Student registration is currently closed.");
   }
 

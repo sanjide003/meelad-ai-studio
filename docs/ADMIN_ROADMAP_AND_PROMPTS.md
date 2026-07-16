@@ -67,12 +67,12 @@ Completed items:
 - Added skip/previous/done flow with setup completion state.
 - Added lock-state concept for preventing core setup changes after students or competitions are created.
 - Added reset concept for returning setup to incomplete state.
+- Centered the final Complete Master Setup confirmation dialog so the save action is visible before writing setup data.
+- Connected destructive reset to admin password confirmation and deletion of festival operational data while preserving institution/festival profile documents.
 
 Remaining work:
 
 - Enforce all lock rules strongly at service and Firestore-rule level.
-- Require admin password confirmation before destructive reset.
-- Connect reset to safe deletion of dependent data when required.
 - Add audit logging for reset and setup-lock changes.
 - Improve visual review screen before final setup completion.
 - Add full Malayalam translation coverage.
@@ -119,7 +119,8 @@ Completed items:
   - All methods
 - Added setting for whether team leader submissions require admin approval.
 - Added public registration/status link generation foundation.
-- Added registration open/closed setting foundation.
+- Added registration open/closed setting foundation with optional portal close date/time.
+- Public registration portal now opens only when public registration mode is enabled and the close date/time has not expired.
 - Added public registration form and public phone-based status lookup.
 - Added approval/rejection reason visibility for public status lookup.
 - Corrected the participating public link to open the actual registration page, not only the status page.
@@ -202,7 +203,7 @@ Remaining work:
 
 ### 7. Competition Entries / Participant Registration
 
-**Status:** Production foundation implemented; team-leader/public entry submission polish remains.
+**Status:** Admin and team-leader production foundation implemented; optional public competition-entry flow remains.
 
 Completed items:
 
@@ -218,14 +219,14 @@ Completed items:
 - Added approve and reject actions with mandatory rejection reason.
 - Added scoped entry payload with institutionId, festivalId, competitionId, teamId, studentIds, source, status, and audit metadata.
 - Added printable/exportable list foundation.
+- Integrated team-leader competition entry submission with the shared entry service so source-mode, eligibility, duplicate, and pending-approval rules are enforced consistently.
+- Team-leader entry list now shows pending/approved/rejected status and rejection reasons.
 
 Remaining work:
 
-- Add team-leader competition entry page integration using the same service rules.
 - Add public/registration-driven competition entry flow if needed.
 - Add richer entry edit/delete/archive workflow.
 - Add entry conflict review UI before save.
-- Extend the same validation UI into team-leader and public entry screens if those screens are enabled.
 - Add final printable entry sheets grouped by competition, team, chest number, and category.
 
 ---
