@@ -11,10 +11,12 @@ The application has moved from a generic admin panel toward a lifecycle-driven f
 1. Master Setup
 2. Team Management
 3. Participating Settings
-4. Student Intake
-5. Competition Item Setup
+4. Student Intake and Approval
+5. Public Student Registration
+6. Competition Item Setup
+7. Competition Entries / Participant Registration
 
-These pieces provide the base data model and admin workflow needed before moving into participant approvals, competition entries, judging, results, certificates, reports, and public publishing.
+These pieces provide the base data model and admin workflow needed before moving into judge assignment, mark entry, results, certificates, reports, and public publishing.
 
 ---
 
@@ -118,25 +120,25 @@ Completed items:
 - Added setting for whether team leader submissions require admin approval.
 - Added public registration/status link generation foundation.
 - Added registration open/closed setting foundation.
+- Added public registration form and public phone-based status lookup.
+- Added approval/rejection reason visibility for public status lookup.
 
 Remaining work:
 
-- Build full public registration form.
-- Build full registration status page with phone lookup and clear status messages.
-- Add approval and rejection reason workflow.
-- Show rejected reason to team leaders and public registrants.
-- Add admin share panel for public registration links.
-- Add duplicate phone/student validation.
+- Add richer admin share panel for public registration links.
+- Add team-leader notification UI for rejected submissions.
+- Add more advanced duplicate review UI for public and bulk submissions.
 
 ---
 
-### 5. Student Intake / Add Students
+### 5. Student Intake / Add Students / Approval
 
-**Status:** Core add flow implemented; review and approval workflows still remain.
+**Status:** Production foundation implemented; advanced edit/transfer and full team-leader notification polish remain.
 
 Completed items:
 
 - Added Add Students page redesign foundation.
+- Added professional All Students and Approvals page.
 - Added selection flow for team, category, and gender based on Master Setup.
 - Added manual student entry.
 - Added support for adding multiple student names line by line.
@@ -145,18 +147,20 @@ Completed items:
 - Added uppercase normalization for English student names.
 - Added automatic chest number generation based on category/gender/team configuration.
 - Added student registration mode checks in the service layer.
+- Added filters for team, category, gender, status, and registration source.
+- Added approval queue for pending students.
+- Added approve and reject actions with mandatory rejection reason.
+- Added public registration page and phone-based registration status lookup.
+- Added duplicate checks for same name/team/category/gender where possible.
 
 Remaining work:
 
-- Redesign All Students page to match the new admin design system.
-- Add pending/approved/rejected status filters.
-- Add student approval queue for team leader and public submissions.
-- Add reject-with-reason dialog.
-- Add duplicate checks during manual and bulk save.
 - Add complete Excel `.xlsx` import support if CSV is not enough.
 - Add downloadable sample template with real team/category examples.
-- Add student edit/delete/transfer rules.
-- Add lock behavior after competition entries are created.
+- Add advanced student edit/delete/transfer rules.
+- Add team-leader notification UI for rejected students.
+- Add stronger lock behavior after competition entries are created.
+- Add more detailed duplicate review UI before saving bulk imports.
 
 ---
 
@@ -188,15 +192,39 @@ Remaining work:
 - Add competition edit/delete/archive workflow.
 - Add duplicate event validation.
 - Add event code/item number generation.
-- Add competition registration/entry flow.
-- Add participant selection for single items.
-- Add group member selection for group items.
-- Enforce min/max group constraints.
-- Connect competitions to judging, schedules, result calculation, certificates, and reports.
+- Connect competitions and approved entries to judging, schedules, result calculation, certificates, and reports.
 
 ---
 
-### 7. Security, Tenant Scope, and Credentials
+### 7. Competition Entries / Participant Registration
+
+**Status:** Production foundation implemented; team-leader/public entry submission polish remains.
+
+Completed items:
+
+- Added Competition Entries admin page.
+- Added competition, team, and status filters.
+- Added approved-student picker based on selected team and competition.
+- Added category and gender eligibility checks, including General category behavior.
+- Added single/group participant limit enforcement in the service layer.
+- Added duplicate student entry prevention for the same competition.
+- Added max entries per team enforcement.
+- Added entry status support: approved, pending approval, and rejected.
+- Added approve and reject actions with mandatory rejection reason.
+- Added scoped entry payload with institutionId, festivalId, competitionId, teamId, studentIds, source, status, and audit metadata.
+- Added printable/exportable list foundation.
+
+Remaining work:
+
+- Add team-leader competition entry page integration using the same service rules.
+- Add public/registration-driven competition entry flow if needed.
+- Add richer entry edit/delete/archive workflow.
+- Add entry conflict review UI before save.
+- Add final printable entry sheets grouped by competition, team, chest number, and category.
+
+---
+
+### 8. Security, Tenant Scope, and Credentials
 
 **Status:** Foundation implemented; new workflows need continued hardening.
 
@@ -221,6 +249,8 @@ Remaining work:
 ## Recommended Roadmap
 
 ### Phase 1: Finish Student Management and Approval Workflows
+
+Status: Completed production foundation. Advanced polish remains.
 
 Goal: Make student intake production-ready before competition entries begin.
 
@@ -271,6 +301,8 @@ Deliverables:
 ---
 
 ### Phase 2: Build Competition Entry / Participant Registration
+
+Status: Completed admin-side production foundation. Team-leader/public entry polish remains.
 
 Goal: Connect students to competition items.
 
@@ -495,12 +527,14 @@ Deliverables:
 
 ## Suggested Next Immediate Task
 
-The next recommended implementation task is **Phase 1: Finish Student Management and Approval Workflows**.
+The next recommended implementation task is **Phase 3: Build Judging Setup and Mark Entry workflow**.
 
 Reason:
 
-- Teams are already created.
-- Students are already partially supported.
-- Competition items are already created.
-- Before competition entry, judging, and results can work correctly, the student data must be complete, approved, duplicate-safe, and properly scoped.
+- Master Setup is implemented.
+- Team Management is implemented.
+- Student intake, approval, and public registration foundations are implemented.
+- Competition Items are implemented.
+- Admin-side Competition Entries are implemented.
+- Judging is the next required workflow before results, ranking, certificates, and public publishing can be completed.
 
