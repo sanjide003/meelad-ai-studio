@@ -45,8 +45,8 @@ const ADMIN_TEXT_TRANSLATIONS = {
   'Workspace locked to this institution': 'വർക്ക്‌സ്‌പേസ് ഈ സ്ഥാപനത്തിലേക്ക് ലോക്ക് ചെയ്തിരിക്കുന്നു',
   'Step 01': 'ഘട്ടം 01',
   'Step 02': 'ഘട്ടം 02',
-  'Festival Settings': 'ഫെസ്റ്റിവൽ ക്രമീകരണങ്ങൾ',
-  'Teams': 'ടീമുകൾ',
+  'Master Setup': 'മാസ്റ്റർ സെറ്റപ്പ്',
+  'Team Management': 'ടീം മാനേജ്മെന്റ്',
   'Confirm festival profile, venue, registration mode, and public visibility settings.': 'ഫെസ്റ്റിവൽ പ്രൊഫൈൽ, വേദി, രജിസ്ട്രേഷൻ മോഡ്, പബ്ലിക് വിസിബിലിറ്റി ക്രമീകരണങ്ങൾ സ്ഥിരീകരിക്കുക.',
   'Create team groups and confirm team identifiers before registering students.': 'വിദ്യാർത്ഥികളെ രജിസ്റ്റർ ചെയ്യുന്നതിന് മുമ്പ് ടീം ഗ്രൂപ്പുകളും ടീം ഐഡന്റിഫയറുകളും സ്ഥിരീകരിക്കുക.',
   'Next step: complete this section, review warnings, and continue through the admin lifecycle from setup to publishing.': 'അടുത്ത ഘട്ടം: ഈ വിഭാഗം പൂർത്തിയാക്കി മുന്നറിയിപ്പുകൾ പരിശോധിച്ച് സജ്ജീകരണത്തിൽ നിന്ന് പ്രസിദ്ധീകരണം വരെ അഡ്മിൻ ലൈഫ്‌സൈക്കിൾ തുടരുക.',
@@ -182,8 +182,8 @@ function applyAdminPageGuidance() {
   if (document.querySelector('[data-admin-guidance="auto"]')) return;
   const page = window.location.pathname.split('/').pop();
   const guidance = {
-    'festival-settings.html': ['Festival Settings', 'Confirm the active festival profile, registration rules, and public visibility before creating competitions.', 'Setup'],
-    'teams.html': ['Teams', 'Create and maintain team groups before registering students.', 'Setup'],
+    'festival-settings.html': ['Master Setup', 'Configure institution, festival, modes, sections, and categories before registrations.', 'Setup'],
+    'teams.html': ['Team Management', 'Create teams, chest-number series, leaders, and team logins before registering students.', 'Setup'],
     'divisions.html': ['Divisions', 'Define the main competition divisions used for eligibility and reporting.', 'Setup'],
     'subdivisions.html': ['Subdivisions', 'Refine divisions into smaller groups when your festival rules require it.', 'Setup'],
     'categories.html': ['Categories', 'Create category groups used for competition eligibility and result grouping.', 'Setup'],
