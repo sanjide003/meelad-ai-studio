@@ -202,6 +202,7 @@
     <div class="admin-confirm-dialog__panel">
       <h2 class="text-xl font-extrabold text-slate-950">Complete Master Setup?</h2>
       <p class="text-sm text-slate-600 leading-relaxed mt-2">You can change these setup choices later from Master Setup before adding students and competitions. After students/events are created, core setup will be locked and only new items can be added.</p>
+      <p id="confirm-save-status" class="hidden text-xs font-bold mt-3"></p>
       <div class="mt-5 flex justify-end gap-2"><button id="cancel-confirm" class="btn border border-slate-200 bg-white text-slate-700 px-4 py-2 text-xs font-bold">Cancel</button><button id="save-setup" class="btn bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold">Confirm & Save</button></div>
     </div>
   </div>
@@ -269,8 +270,8 @@
 
     function bindEvents() {
       $('#prev-step').addEventListener('click', () => goStep(state.step - 1));
-      $('#skip-step').addEventListener('click', () => { state.skipped.add(state.step); goStep(Math.min(steps.length - 1, state.step + 1)); });
-      $('#next-step').addEventListener('click', () => goStep(state.step + 1));
+      $('#skip-step').addEventListener('click', async () => { state.skipped.add(state.step); await goStep(Math.min(steps.length - 1, state.step + 1)); });
+      $('#next-step').addEventListener('click', async () => goStep(state.step + 1));
       $('#done-step').addEventListener('click', () => $('#confirm-dialog').classList.remove('hidden'));
       $('#cancel-confirm').addEventListener('click', () => $('#confirm-dialog').classList.add('hidden'));
       $('#save-setup').addEventListener('click', saveSetup);
@@ -281,7 +282,7 @@
       $('#addSportsSection').addEventListener('click', () => addCustom('customSportsSection', 'customSports', 'customSportsList'));
       $('#addCategory').addEventListener('click', () => addCustom('customCategory', 'customCategories', 'customCategoryList'));
       $$('input').forEach(input => input.addEventListener('change', render));
-      $$('[data-go-step]').forEach(button => button.addEventListener('click', () => goStep(Number(button.dataset.goStep))));
+      $$('[data-go-step]').forEach(button => button.addEventListener('click', async () => goStep(Number(button.dataset.goStep))));
     }
 
     async function loadExistingSetup() {
@@ -337,7 +338,15 @@
     function setRadio(name, val) { const radio = $(`input[name="${name}"][value="${val}"]`); if (radio) radio.checked = true; }
     function restoreChecks(name, values) { $$(`input[name="${name}"]`).forEach(input => { input.checked = values.includes(input.value); }); }
 
-    function goStep(next) { state.step = Math.max(0, Math.min(steps.length - 1, next)); render(); }
+    async function goStep(next) {
+      const target = Math.max(0, Math.min(steps.length - 1, next));
+      if (target > state.step) {
+        try { await saveSetupDraft(); }
+        catch (error) { console.error('Master Setup draft save failed:', error); alert(`Could not save this step: ${error.message || error}`); return; }
+      }
+      state.step = target;
+      render();
+    }
 
     function render() {
       $$('.wizard-step').forEach((section, index) => section.classList.toggle('hidden', index !== state.step));
@@ -407,10 +416,8 @@
 
     function checkedValues(name) { return $$(`input[name="${name}"]:checked`).map(input => input.value); }
 
-    async function saveSetup() {
-      const data = collectSetup();
+    async function saveProfileAndFestival(data, { completed = false } = {}) {
       const { institutionId, festivalId } = state.scope;
-      $('#save-setup').disabled = true;
       await setDoc(doc(db, 'institutions', institutionId), { ...data.institution, defaultFestivalId: festivalId, updatedAt: serverTimestamp() }, { merge: true });
       await setDoc(doc(db, `institutions/${institutionId}/festivals`, festivalId), {
         ...data.fest,
@@ -418,17 +425,41 @@
         institutionId,
         festivalId,
         institutionName: data.institution.name,
-        setupWizard: { ...data, completed: true, skippedSteps: Array.from(state.skipped), completedAt: serverTimestamp(), lockedBecause: state.counts },
-        setupCompleted: true,
+        setupWizard: { ...data, completed, draft: !completed, skippedSteps: Array.from(state.skipped), completedAt: completed ? serverTimestamp() : null, draftSavedAt: serverTimestamp(), lockedBecause: state.counts },
+        setupCompleted: completed,
         updatedAt: serverTimestamp()
       }, { merge: true });
-      if (!state.locked) await seedSetupRecords(data);
-      localStorage.setItem(`meeladpulse_setup_done_${institutionId}_${festivalId}`, '1');
-      if (data.fest.name) localStorage.setItem('meeladpulse_selected_fest_title', data.fest.name);
-      $('#confirm-dialog').classList.add('hidden');
-      $('#success-banner').classList.remove('hidden');
-      $('#save-setup').disabled = false;
-      setTimeout(() => { window.location.href = '../admin/app.html?page=dashboard.html'; }, 700);
+    }
+
+    async function saveSetupDraft() {
+      const data = collectSetup();
+      await saveProfileAndFestival(data, { completed: false });
+    }
+
+    async function saveSetup() {
+      const status = $('#confirm-save-status');
+      const data = collectSetup();
+      const { institutionId, festivalId } = state.scope;
+      $('#save-setup').disabled = true;
+      status.className = 'text-xs font-bold mt-3 text-slate-600';
+      status.textContent = 'Saving Master Setup...';
+      status.classList.remove('hidden');
+      try {
+        await saveProfileAndFestival(data, { completed: true });
+        if (!state.locked) await seedSetupRecords(data);
+        localStorage.setItem(`meeladpulse_setup_done_${institutionId}_${festivalId}`, '1');
+        if (data.fest.name) localStorage.setItem('meeladpulse_selected_fest_title', data.fest.name);
+        $('#confirm-dialog').classList.add('hidden');
+        $('#success-banner').classList.remove('hidden');
+        status.classList.add('hidden');
+        setTimeout(() => { window.location.href = '../admin/app.html?page=dashboard.html'; }, 700);
+      } catch (error) {
+        console.error('Master Setup save failed:', error);
+        status.className = 'text-xs font-bold mt-3 text-rose-700';
+        status.textContent = `Save failed: ${error.message || error}`;
+      } finally {
+        $('#save-setup').disabled = false;
+      }
     }
 
     async function seedSetupRecords(data) {

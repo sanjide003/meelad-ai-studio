@@ -52,6 +52,22 @@ service cloud.firestore {
       return isAuthenticated() && request.resource.data.institutionId is string && getUserData().institutionId == request.resource.data.institutionId;
     }
 
+    function institutionProfileKeys() {
+      return ['name', 'place', 'registerNumber', 'logoUrl', 'runBy', 'defaultFestivalId', 'updatedAt'];
+    }
+
+    function canCreateInstitutionProfile(institutionId) {
+      return isAuthenticated() && getUserData().institutionId == institutionId &&
+        !request.resource.data.keys().hasAny(['ownerPassword', 'password', 'passwordHash']) &&
+        request.resource.data.keys().hasOnly(institutionProfileKeys());
+    }
+
+    function canUpdateInstitutionProfile(institutionId) {
+      return isAuthenticated() && getUserData().institutionId == institutionId &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['ownerPassword', 'password', 'passwordHash']) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(institutionProfileKeys());
+    }
+
     // --- Users Collection ---
     match /users/{userId} {
       allow get: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin() || isSameInstitutionResource());
@@ -124,7 +140,8 @@ service cloud.firestore {
     // --- Premium SaaS Institutions Collection ---
     match /institutions/{institutionId} {
       allow read: if isSuperAdmin() || isInstitutionMember(institutionId);
-      allow create, update: if isSuperAdmin() && !request.resource.data.keys().hasAny(['ownerPassword']);
+      allow create: if (isSuperAdmin() && !request.resource.data.keys().hasAny(['ownerPassword'])) || canCreateInstitutionProfile(institutionId);
+      allow update: if (isSuperAdmin() && !request.resource.data.keys().hasAny(['ownerPassword'])) || canUpdateInstitutionProfile(institutionId);
       allow delete: if isSuperAdmin();
 
       match /admins/{adminId} {
