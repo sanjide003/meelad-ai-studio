@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Festival Setup - Admin Portal</title>
+  <title>Teams - Admin Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../assets/css/main.css">
 </head>
@@ -11,7 +11,7 @@
   <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
     <div class="flex flex-col items-center space-y-3">
       <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
-      <p class="text-xs font-bold text-slate-700">Loading Festival Setup...</p>
+      <p class="text-xs font-bold text-slate-700">Loading Teams...</p>
     </div>
   </div>
 
@@ -19,79 +19,93 @@
     <div id="portal-sidebar"></div>
     <div class="flex-1 flex flex-col min-w-0 main-content-layout">
       <div id="portal-header"></div>
-      <main class="flex-1 p-4 lg:p-8 space-y-8">
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div class="space-y-1">
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Festival Setup</h1>
-            <p class="text-xs text-slate-500 font-medium">Manage groups, divisions, subdivisions, and categories from one setup entry point before registering students or competitions.</p>
+      <main class="flex-1 p-4 lg:p-8 space-y-6 max-w-7xl">
+        <section class="admin-section-card setup-hero">
+          <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+            <div class="space-y-2">
+              <p class="text-[11px] font-extrabold text-emerald-700 uppercase tracking-[0.22em]">Step V · Team setup</p>
+              <h1 class="text-3xl font-extrabold text-slate-950 tracking-tight font-display">Teams</h1>
+              <p class="text-sm text-slate-500 max-w-3xl leading-relaxed">Create the participating team, chest-number series, logo, colour identity, and one or more public-facing team leaders with login credentials.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-center">
+              <div class="admin-status-card px-4 py-3"><p class="text-[10px] font-extrabold text-slate-400 uppercase">Teams</p><strong id="team-count-card" class="text-2xl font-black text-slate-950">0</strong></div>
+              <div class="admin-status-card px-4 py-3"><p class="text-[10px] font-extrabold text-slate-400 uppercase">Mode</p><strong id="chest-mode-card" class="text-sm font-black text-emerald-700">Common</strong></div>
+            </div>
           </div>
-        </div>
+        </section>
 
+        <div id="team-message" class="hidden p-4 text-sm font-bold rounded-2xl"></div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <a href="../admin/teams.html" class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-xs font-bold text-emerald-800 shadow-sm">Team Groups<br><span class="font-medium text-emerald-600">Current page</span></a>
-          <a href="../admin/divisions.html" class="bg-white border border-slate-100 rounded-2xl p-4 text-xs font-bold text-slate-800 hover:border-emerald-200 hover:bg-emerald-50 transition">Divisions<br><span class="font-medium text-slate-500">Arts / Sports etc.</span></a>
-          <a href="../admin/subdivisions.html" class="bg-white border border-slate-100 rounded-2xl p-4 text-xs font-bold text-slate-800 hover:border-emerald-200 hover:bg-emerald-50 transition">Subdivisions<br><span class="font-medium text-slate-500">Sub groups under divisions</span></a>
-          <a href="../admin/categories.html" class="bg-white border border-slate-100 rounded-2xl p-4 text-xs font-bold text-slate-800 hover:border-emerald-200 hover:bg-emerald-50 transition">Categories<br><span class="font-medium text-slate-500">Age/category setup</span></a>
-        </div>
+        <div class="grid grid-cols-1 2xl:grid-cols-[480px_1fr] gap-6 items-start">
+          <section class="admin-section-card space-y-5">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-[11px] font-extrabold text-emerald-700 uppercase tracking-widest">Create / edit team</p>
+                <h2 class="text-xl font-extrabold text-slate-950">Team Profile</h2>
+                <p class="text-sm text-slate-500 mt-1">Team name, chest number, logo, colour, leaders, and login details.</p>
+              </div>
+              <button id="reset-form" type="button" class="btn border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700">New</button>
+            </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
-          <section class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-5">
-            <h2 class="text-sm font-bold text-slate-800 font-display">Create / Edit Group</h2>
-            <form id="team-form" class="space-y-4">
+            <form id="team-form" class="space-y-5">
               <input type="hidden" id="team-id">
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-700">Group Name</label>
-                <input id="team-name" required class="form-input" placeholder="e.g. Team Green / Darul Huda">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label class="setup-field md:col-span-2"><span>Team Name</span><input id="team-name" required class="form-input" placeholder="e.g. Green House / Darul Huda"></label>
+                <label class="setup-field"><span>Team Short Code</span><input id="team-code" class="form-input uppercase" placeholder="GREEN"></label>
+                <label class="setup-field"><span>Team Colour</span><input id="team-colour" type="color" class="form-input h-11 p-1" value="#10b981"></label>
+                <label class="setup-field md:col-span-2"><span>Team Logo URL</span><input id="team-logo" class="form-input" placeholder="Paste team logo URL"></label>
               </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-1.5">
-                  <label class="text-xs font-bold text-slate-700">Group Code</label>
-                  <input id="team-code" required class="form-input uppercase" placeholder="GREEN">
+
+              <div class="admin-info-card p-4 space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 class="text-sm font-extrabold text-slate-950">Chest number start</h3>
+                    <p id="chest-helper" class="text-xs text-slate-600">Common chest series for this team.</p>
+                  </div>
+                  <span id="chest-mode-badge" class="rounded-full bg-white border border-cyan-100 px-3 py-1 text-[10px] font-extrabold text-cyan-700 uppercase">Common</span>
                 </div>
-                <div class="space-y-1.5">
-                  <label class="text-xs font-bold text-slate-700">Colour</label>
-                  <input id="team-colour" type="color" class="form-input h-10 p-1" value="#10b981">
+                <div id="common-chest-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label class="setup-field"><span>Chest Start Number</span><input id="team-chest-start" type="number" min="1" class="form-input" value="1"></label>
+                  <label class="setup-field"><span>Next Chest Number</span><input id="team-next-chest" type="number" min="1" class="form-input" value="1"></label>
                 </div>
-              </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-1.5">
-                  <label class="text-xs font-bold text-slate-700">Chest Start No.</label>
-                  <input id="team-chest-start" type="number" min="1" required class="form-input" value="1">
-                </div>
-                <div class="space-y-1.5">
-                  <label class="text-xs font-bold text-slate-700">Next Chest No.</label>
-                  <input id="team-next-chest" type="number" min="1" class="form-input" value="1">
+                <div id="gender-chest-fields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label class="setup-field"><span>Boys Chest Start Number</span><input id="boys-chest-start" type="number" min="1" class="form-input" value="1"></label>
+                  <label class="setup-field"><span>Girls Chest Start Number</span><input id="girls-chest-start" type="number" min="1" class="form-input" value="1"></label>
                 </div>
               </div>
-              <div class="border-t border-slate-100 pt-4 space-y-3">
-                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Team Leader Login</p>
-                <div class="grid grid-cols-2 gap-4">
-                  <input id="leader-name" class="form-input" placeholder="Leader name">
-                  <input id="leader-role" class="form-input" value="Team Leader" placeholder="Role">
-                  <input id="leader-username" class="form-input" placeholder="Username">
-                  <input id="leader-password" type="password" class="form-input" placeholder="Password">
+
+              <div class="admin-success-card p-4 space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 class="text-sm font-extrabold text-slate-950">Team Leaders</h3>
+                    <p class="text-xs text-slate-600">Add one or more leaders. Order number controls public listing order.</p>
+                  </div>
+                  <button id="add-leader" type="button" class="btn bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2">+ Add</button>
                 </div>
-                <input id="leader-photo" class="form-input" placeholder="Photo URL (optional)">
+                <div id="leaders-list" class="space-y-3"></div>
               </div>
+
               <label class="flex items-center gap-2 text-xs font-bold text-slate-700">
-                <input id="team-active" type="checkbox" checked class="rounded border-slate-300 text-emerald-500"> Active group
+                <input id="team-active" type="checkbox" checked class="rounded border-slate-300 text-emerald-500"> Active team
               </label>
-              <div class="flex gap-2 pt-2">
-                <button class="btn btn-primary text-xs font-bold text-white px-4 py-2">Save Group</button>
-                <button id="team-cancel" type="button" class="hidden btn btn-secondary text-xs font-bold px-4 py-2">Cancel</button>
+              <div class="flex flex-wrap gap-2 pt-1">
+                <button class="btn btn-primary text-xs font-bold text-white px-5 py-2.5">Save Team</button>
+                <button id="team-cancel" type="button" class="hidden btn btn-secondary text-xs font-bold px-4 py-2.5">Cancel Edit</button>
               </div>
             </form>
           </section>
 
-          <section class="xl:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
-            <div class="p-5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
-              <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Configured Groups</h2>
-              <span id="team-count" class="text-xs font-bold bg-slate-100 text-slate-600 py-1 px-2.5 rounded-full">0</span>
+          <section class="admin-section-card overflow-hidden p-0">
+            <div class="p-5 border-b border-slate-100 bg-slate-50/70 flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
+                <h2 class="text-sm font-extrabold text-slate-900">Configured Teams</h2>
+                <p class="text-xs text-slate-500">Team leader passwords are stored as hashes; they are never shown again after saving.</p>
+              </div>
+              <span id="team-count" class="text-xs font-bold bg-slate-100 text-slate-600 py-1 px-2.5 rounded-full">0 teams</span>
             </div>
             <div class="table-container">
               <table class="w-full text-left border-collapse">
-                <thead><tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest"><th class="px-6 py-4">Code</th><th class="px-6 py-4">Name</th><th class="px-6 py-4">Chest Series</th><th class="px-6 py-4">Leader</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Actions</th></tr></thead>
+                <thead><tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest"><th class="px-6 py-4">Team</th><th class="px-6 py-4">Chest</th><th class="px-6 py-4">Leaders</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Actions</th></tr></thead>
                 <tbody id="teams-body" class="divide-y divide-slate-100 text-xs"></tbody>
               </table>
             </div>
@@ -101,61 +115,152 @@
     </div>
   </div>
 
+  <template id="leader-template">
+    <div class="leader-row rounded-2xl border border-emerald-100 bg-white p-4 space-y-3">
+      <div class="flex items-center justify-between gap-3">
+        <strong class="leader-title text-xs font-extrabold text-slate-900 uppercase tracking-wide">Leader</strong>
+        <button type="button" class="remove-leader text-xs font-extrabold text-rose-600">Remove</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <label class="setup-field"><span>Name</span><input data-field="name" class="form-input" placeholder="Leader name"></label>
+        <label class="setup-field"><span>Role</span><input data-field="role" class="form-input" placeholder="Manager / Coach / Team Leader"></label>
+        <label class="setup-field"><span>Order Number</span><input data-field="order" type="number" min="1" class="form-input" value="1"></label>
+        <label class="setup-field"><span>Photo URL</span><input data-field="photoUrl" class="form-input" placeholder="Leader photo URL"></label>
+        <label class="setup-field"><span>Username</span><input data-field="username" class="form-input" placeholder="Login username"></label>
+        <label class="setup-field"><span>Password</span><input data-field="password" type="password" class="form-input" placeholder="Set / change password"></label>
+      </div>
+    </div>
+  </template>
+
   <script type="module">
+    import { db } from "../assets/js/firebase-init.js";
     import { verifyUserRole } from "../assets/js/role-guard.js";
     import { loadPortalLayout } from "../assets/js/component-loader.js";
     import { initializeNavigation } from "../assets/js/navigation.js";
-    import { getTeams, saveTeam, deleteTeam } from "../assets/js/firestore-service.js";
+    import { getActiveScope, getTeams, saveTeam, deleteTeam } from "../assets/js/firestore-service.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const form = document.getElementById('team-form');
     const body = document.getElementById('teams-body');
+    const leaderTemplate = document.getElementById('leader-template');
     let teams = [];
+    let chestMode = 'common';
 
     async function initPage() {
       await verifyUserRole(['admin']);
       await loadPortalLayout('admin');
       initializeNavigation();
+      await loadSetupMode();
+      addLeaderRow();
       await loadTeams();
       form.onsubmit = saveCurrentTeam;
       document.getElementById('team-cancel').onclick = resetForm;
+      document.getElementById('reset-form').onclick = resetForm;
+      document.getElementById('add-leader').onclick = () => addLeaderRow();
       document.getElementById('global-page-loader').classList.add('hidden');
     }
 
+    async function loadSetupMode() {
+      const scope = getActiveScope();
+      const snap = await getDoc(doc(db, `institutions/${scope.institutionId}/festivals`, scope.festivalId));
+      const wizard = snap.exists() ? snap.data().setupWizard || {} : {};
+      const participantMode = wizard.participantMode;
+      const genderMode = wizard.genderCompetitionMode;
+      chestMode = participantMode === 'boysAndGirls' && (genderMode === 'separate' || genderMode === 'separateAndSingle') ? 'gender' : 'common';
+      document.getElementById('common-chest-fields').classList.toggle('hidden', chestMode === 'gender');
+      document.getElementById('gender-chest-fields').classList.toggle('hidden', chestMode !== 'gender');
+      document.getElementById('chest-mode-badge').textContent = chestMode === 'gender' ? 'Separate boys / girls' : 'Common';
+      document.getElementById('chest-mode-card').textContent = chestMode === 'gender' ? 'Separate' : 'Common';
+      document.getElementById('chest-helper').textContent = chestMode === 'gender' ? 'Master Setup is separate/mixed, so boys and girls use different chest number starts.' : 'Master Setup is single/common, so one chest series is enough.';
+    }
+
     async function loadTeams() {
-      teams = (await getTeams() || []).sort((a, b) => (a.code || '').localeCompare(b.code || ''));
-      document.getElementById('team-count').textContent = teams.length;
-      body.innerHTML = teams.length ? '' : '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-400">No groups created yet.</td></tr>';
+      teams = (await getTeams() || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      document.getElementById('team-count').textContent = `${teams.length} teams`;
+      document.getElementById('team-count-card').textContent = teams.length;
+      body.innerHTML = teams.length ? '' : '<tr><td colspan="5" class="px-6 py-12"><div class="admin-empty-state"><strong>No teams created yet.</strong><span>Use the form to create your first team with leaders and login credentials.</span></div></td></tr>';
       teams.forEach(team => {
+        const leaders = Array.isArray(team.leaders) && team.leaders.length ? team.leaders : (team.leader?.name || team.leader?.username ? [team.leader] : []);
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/70';
-        tr.innerHTML = `<td class="px-6 py-4 font-mono font-bold" style="color:${team.colour || '#10b981'}">${team.code || team.id}</td><td class="px-6 py-4 font-bold text-slate-800">${team.name || '-'}</td><td class="px-6 py-4 font-mono text-slate-600">${team.chestStartNumber || 1} → ${team.nextChestNumber || team.chestStartNumber || 1}</td><td class="px-6 py-4 text-slate-600">${team.leader?.name || '-'}<div class="text-[10px] font-mono text-slate-400">${team.leader?.username || ''}</div></td><td class="px-6 py-4"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${team.active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${team.active !== false ? 'Active' : 'Inactive'}</span></td><td class="px-6 py-4 text-right space-x-2"><button class="edit-team text-emerald-600 font-bold">Edit</button><button class="delete-team text-rose-600 font-bold">Delete</button></td>`;
+        tr.innerHTML = `<td class="px-6 py-4"><div class="flex items-center gap-3"><div class="h-10 w-10 rounded-2xl border border-slate-100 bg-slate-50 grid place-items-center overflow-hidden" style="border-color:${team.colour || '#10b981'}">${team.logoUrl ? `<img src="${team.logoUrl}" class="h-full w-full object-cover" alt="">` : `<span class="font-black" style="color:${team.colour || '#10b981'}">${(team.code || team.name || 'T').slice(0,2).toUpperCase()}</span>`}</div><div><p class="font-extrabold text-slate-900">${team.name || '-'}</p><p class="text-[10px] font-mono text-slate-400">${team.code || team.id}</p></div></div></td><td class="px-6 py-4 font-mono text-slate-600">${formatChest(team)}</td><td class="px-6 py-4 text-slate-600">${leaders.length ? leaders.map(leader => `<div class="font-bold">${leader.name || leader.username || '-'} <span class="text-[10px] text-slate-400">${leader.role || ''}</span></div>`).join('') : '-'}</td><td class="px-6 py-4"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${team.active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${team.active !== false ? 'Active' : 'Inactive'}</span></td><td class="px-6 py-4 text-right space-x-2"><button class="edit-team text-emerald-600 font-bold">Edit</button><button class="delete-team text-rose-600 font-bold">Delete</button></td>`;
         tr.querySelector('.edit-team').onclick = () => fillForm(team);
-        tr.querySelector('.delete-team').onclick = async () => { if (confirm('Delete this group?')) { await deleteTeam(team.id); await loadTeams(); } };
+        tr.querySelector('.delete-team').onclick = async () => { if (confirm('Delete this team? Team leader login documents are not automatically removed.')) { await deleteTeam(team.id); await loadTeams(); showMessage('Team deleted.', 'warning'); } };
         body.appendChild(tr);
       });
     }
 
+    function formatChest(team) {
+      if (team.chestMode === 'gender') return `Boys ${team.chestStartNumbers?.boys || 1} · Girls ${team.chestStartNumbers?.girls || 1}`;
+      return `${team.chestStartNumber || 1} → ${team.nextChestNumber || team.chestStartNumber || 1}`;
+    }
+
     async function saveCurrentTeam(e) {
       e.preventDefault();
-      await saveTeam({ id: document.getElementById('team-id').value, name: document.getElementById('team-name').value.trim(), code: document.getElementById('team-code').value.trim().toUpperCase(), colour: document.getElementById('team-colour').value, chestStartNumber: document.getElementById('team-chest-start').value, nextChestNumber: document.getElementById('team-next-chest').value, leaderName: document.getElementById('leader-name').value.trim(), leaderRole: document.getElementById('leader-role').value.trim(), leaderUsername: document.getElementById('leader-username').value.trim(), leaderPassword: document.getElementById('leader-password').value, leaderPhotoUrl: document.getElementById('leader-photo').value.trim(), active: document.getElementById('team-active').checked });
+      const leaders = getLeaderRows();
+      await saveTeam({
+        id: document.getElementById('team-id').value,
+        name: document.getElementById('team-name').value.trim(),
+        code: (document.getElementById('team-code').value.trim() || document.getElementById('team-name').value.trim()).toUpperCase().replace(/[^A-Z0-9]+/g, '-'),
+        logoUrl: document.getElementById('team-logo').value.trim(),
+        colour: document.getElementById('team-colour').value,
+        chestMode,
+        chestStartNumber: document.getElementById('team-chest-start').value,
+        nextChestNumber: document.getElementById('team-next-chest').value,
+        boysChestStartNumber: document.getElementById('boys-chest-start').value,
+        girlsChestStartNumber: document.getElementById('girls-chest-start').value,
+        leaders,
+        active: document.getElementById('team-active').checked
+      });
       resetForm();
       await loadTeams();
+      showMessage('Team saved. Leader passwords were hashed before saving.', 'success');
+    }
+
+    function getLeaderRows() {
+      return Array.from(document.querySelectorAll('.leader-row')).map((row, index) => ({
+        name: row.querySelector('[data-field="name"]').value.trim(),
+        role: row.querySelector('[data-field="role"]').value.trim() || 'Team Leader',
+        order: Number(row.querySelector('[data-field="order"]').value) || index + 1,
+        photoUrl: row.querySelector('[data-field="photoUrl"]').value.trim(),
+        username: row.querySelector('[data-field="username"]').value.trim(),
+        password: row.querySelector('[data-field="password"]').value
+      })).filter(leader => leader.name || leader.username);
+    }
+
+    function addLeaderRow(leader = {}, removable = true) {
+      const node = leaderTemplate.content.firstElementChild.cloneNode(true);
+      node.querySelector('[data-field="name"]').value = leader.name || '';
+      node.querySelector('[data-field="role"]').value = leader.role || 'Team Leader';
+      node.querySelector('[data-field="order"]').value = leader.order || document.querySelectorAll('.leader-row').length + 1;
+      node.querySelector('[data-field="photoUrl"]').value = leader.photoUrl || '';
+      node.querySelector('[data-field="username"]').value = leader.username || '';
+      node.querySelector('.remove-leader').classList.toggle('hidden', !removable);
+      node.querySelector('.remove-leader').onclick = () => { node.remove(); renumberLeaders(); };
+      document.getElementById('leaders-list').appendChild(node);
+      renumberLeaders();
+    }
+
+    function renumberLeaders() {
+      document.querySelectorAll('.leader-row').forEach((row, index) => { row.querySelector('.leader-title').textContent = `Leader ${index + 1}`; });
     }
 
     function fillForm(team) {
       document.getElementById('team-id').value = team.id;
       document.getElementById('team-name').value = team.name || '';
       document.getElementById('team-code').value = team.code || team.id;
-      document.getElementById('team-colour').value = team.colour || '#10b981';
+      document.getElementById('team-logo').value = team.logoUrl || '';
+      document.getElementById('team-colour').value = team.colour || team.color || '#10b981';
       document.getElementById('team-chest-start').value = team.chestStartNumber || 1;
       document.getElementById('team-next-chest').value = team.nextChestNumber || team.chestStartNumber || 1;
-      document.getElementById('leader-name').value = team.leader?.name || '';
-      document.getElementById('leader-role').value = team.leader?.role || 'Team Leader';
-      document.getElementById('leader-username').value = team.leader?.username || '';
-      document.getElementById('leader-password').value = '';
-      document.getElementById('leader-photo').value = team.leader?.photoUrl || '';
+      document.getElementById('boys-chest-start').value = team.chestStartNumbers?.boys || team.chestStartNumber || 1;
+      document.getElementById('girls-chest-start').value = team.chestStartNumbers?.girls || team.chestStartNumber || 1;
       document.getElementById('team-active').checked = team.active !== false;
+      document.getElementById('leaders-list').innerHTML = '';
+      const leaders = Array.isArray(team.leaders) && team.leaders.length ? team.leaders : (team.leader?.name || team.leader?.username ? [team.leader] : [{}]);
+      leaders.forEach((leader, index) => addLeaderRow(leader, index > 0));
       document.getElementById('team-cancel').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function resetForm() {
@@ -164,12 +269,23 @@
       document.getElementById('team-colour').value = '#10b981';
       document.getElementById('team-chest-start').value = 1;
       document.getElementById('team-next-chest').value = 1;
-      document.getElementById('leader-role').value = 'Team Leader';
+      document.getElementById('boys-chest-start').value = 1;
+      document.getElementById('girls-chest-start').value = 1;
       document.getElementById('team-active').checked = true;
+      document.getElementById('leaders-list').innerHTML = '';
+      addLeaderRow({}, false);
       document.getElementById('team-cancel').classList.add('hidden');
     }
 
-    initPage().catch(err => { console.error(err); alert(err.message); });
+    function showMessage(message, type) {
+      const box = document.getElementById('team-message');
+      box.textContent = message;
+      box.className = `${type === 'success' ? 'admin-success-card' : 'admin-warning-card'} p-4 text-sm font-bold rounded-2xl`;
+      box.classList.remove('hidden');
+      setTimeout(() => box.classList.add('hidden'), 3500);
+    }
+
+    initPage().catch(err => { console.error(err); alert(err.message || err); });
   </script>
 </body>
 </html>

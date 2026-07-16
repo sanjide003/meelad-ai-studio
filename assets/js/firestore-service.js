@@ -375,48 +375,91 @@ export async function getTeams() {
 export async function saveTeam(teamData) {
   assertAdminRole();
   const festId = getActiveFestivalId();
-  const id = (teamData.id || teamData.code || doc(collection(db, 'dummy')).id).toString().trim().toLowerCase();
+  const scope = getActiveScope();
+  const id = (teamData.id || teamData.code || teamData.name || doc(collection(db, 'dummy')).id).toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || doc(collection(db, 'dummy')).id;
   const path = window.meeladPulseScopedFestivalPath(`teams/${id}`);
   const chestStartNumber = Math.max(1, Number(teamData.chestStartNumber) || 1);
   const nextChestNumber = Math.max(chestStartNumber, Number(teamData.nextChestNumber) || chestStartNumber);
-  const leaderUsername = (teamData.leaderUsername || '').trim().toLowerCase();
+  const chestStartNumbers = {
+    common: chestStartNumber,
+    boys: Math.max(1, Number(teamData.boysChestStartNumber) || chestStartNumber),
+    girls: Math.max(1, Number(teamData.girlsChestStartNumber) || chestStartNumber)
+  };
+  const leaders = Array.isArray(teamData.leaders) ? teamData.leaders
+    .map((leader, index) => ({
+      id: leader.id || `${id}-leader-${index + 1}`,
+      name: (leader.name || '').trim(),
+      role: (leader.role || 'Team Leader').trim(),
+      order: Math.max(1, Number(leader.order) || index + 1),
+      photoUrl: (leader.photoUrl || '').trim(),
+      username: (leader.username || '').trim(),
+      usernameLower: (leader.username || '').trim().toLowerCase(),
+      active: leader.active !== false
+    }))
+    .filter(leader => leader.name || leader.username)
+    .sort((a, b) => a.order - b.order)
+    : [];
+  const primaryLeader = leaders[0] || {
+    role: teamData.leaderRole || 'Team Leader',
+    name: teamData.leaderName || '',
+    username: teamData.leaderUsername || '',
+    usernameLower: (teamData.leaderUsername || '').trim().toLowerCase(),
+    photoUrl: teamData.leaderPhotoUrl || '',
+    active: teamData.leaderActive !== false,
+    order: 1
+  };
   try {
     const payload = {
       id,
       name: teamData.name,
       code: teamData.code || id.toUpperCase(),
-      colour: teamData.colour || '#10b981',
+      logoUrl: teamData.logoUrl || '',
+      colour: teamData.colour || teamData.color || '#10b981',
+      color: teamData.colour || teamData.color || '#10b981',
+      chestMode: teamData.chestMode || 'common',
       chestStartNumber,
       nextChestNumber,
-      leader: {
-        role: teamData.leaderRole || 'teamLeader',
-        name: teamData.leaderName || '',
-        username: teamData.leaderUsername || '',
-        usernameLower: leaderUsername,
-        photoUrl: teamData.leaderPhotoUrl || '',
-        active: teamData.leaderActive !== false
-      },
+      chestStartNumbers,
+      leaders,
+      leader: primaryLeader,
       active: teamData.active !== false,
       updatedAt: serverTimestamp()
     };
     await setDoc(doc(db, window.meeladPulseScopedFestivalPath('teams'), id), payload, { merge: true });
 
-    if (leaderUsername && teamData.leaderPassword) {
+    const leadersWithPasswords = Array.isArray(teamData.leaders) ? teamData.leaders.filter(leader => leader.username && leader.password) : [];
+    if (!leadersWithPasswords.length && teamData.leaderUsername && teamData.leaderPassword) {
+      leadersWithPasswords.push({
+        name: teamData.leaderName,
+        role: teamData.leaderRole,
+        username: teamData.leaderUsername,
+        password: teamData.leaderPassword,
+        photoUrl: teamData.leaderPhotoUrl,
+        order: 1,
+        active: teamData.leaderActive !== false
+      });
+    }
+
+    for (const leader of leadersWithPasswords) {
+      const leaderUsername = (leader.username || '').trim().toLowerCase();
+      if (!leaderUsername) continue;
       const manualUserPayload = {
-        uid: `manual_team_${id}_${leaderUsername}`,
+        uid: `manual_team_${id}_${leaderUsername.replace(/[^a-z0-9]+/g, '_')}`,
         role: 'teamLeader',
-        institutionId: getActiveScope().institutionId,
+        teamRole: leader.role || 'Team Leader',
+        institutionId: scope.institutionId,
         festivalId: festId,
         teamId: id,
-        name: teamData.leaderName || teamData.name || leaderUsername,
-        username: teamData.leaderUsername,
+        name: leader.name || teamData.name || leaderUsername,
+        username: leader.username,
         usernameLower: leaderUsername,
         password: deleteField(),
-        passwordHash: await hashManualPassword(teamData.leaderPassword),
+        passwordHash: await hashManualPassword(leader.password),
         passwordUpdatedAt: serverTimestamp(),
         legacyPasswordMigrated: true,
-        photoUrl: teamData.leaderPhotoUrl || '',
-        active: teamData.leaderActive !== false,
+        photoUrl: leader.photoUrl || '',
+        order: Math.max(1, Number(leader.order) || 1),
+        active: leader.active !== false,
         updatedAt: serverTimestamp()
       };
       await setDoc(doc(db, getScopedFestivalPath(`manualUsers/${leaderUsername}`)), manualUserPayload, { merge: true });
