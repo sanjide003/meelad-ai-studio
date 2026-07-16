@@ -374,3 +374,67 @@ html.loading-state body {
   font-family: var(--font-mono);
   font-size: 0.7rem;
 }
+
+/* Master setup wizard */
+.setup-hero {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 48%, #ecfeff 100%);
+}
+.setup-step-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: rgba(255,255,255,0.82);
+  padding: 0.875rem;
+  text-align: left;
+  transition: all 0.18s ease;
+}
+.setup-step-chip span {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 900;
+  font-size: 0.75rem;
+}
+.setup-step-chip strong { display: block; color: #0f172a; font-size: 0.82rem; }
+.setup-step-chip small { display: block; color: #64748b; font-size: 0.68rem; margin-top: 0.1rem; }
+.setup-step-chip.is-active { border-color: #10b981; background: #ecfdf5; box-shadow: 0 12px 28px rgba(16,185,129,0.12); }
+.setup-step-chip.is-active span, .setup-step-chip.is-done span { background: #059669; color: #fff; }
+.setup-field { display: flex; flex-direction: column; gap: 0.45rem; }
+.setup-field span { color: #334155; font-size: 0.74rem; font-weight: 800; }
+.setup-option-card, .setup-check-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: #fff;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.setup-option-card { display: flex; flex-direction: column; gap: 0.45rem; min-height: 8.25rem; }
+.setup-option-card input, .setup-check-card input { accent-color: #059669; }
+.setup-option-card span, .setup-check-card span { color: #0f172a; font-weight: 900; }
+.setup-option-card small { color: #64748b; line-height: 1.45; }
+.setup-option-card.selected, .setup-check-card.selected { border-color: #34d399; background: #ecfdf5; box-shadow: 0 10px 24px rgba(16,185,129,0.10); }
+.setup-check-card { display: flex; align-items: center; gap: 0.65rem; }
+.setup-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid #bae6fd;
+  border-radius: 999px;
+  background: #f0f9ff;
+  color: #0369a1;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.setup-pill button { color: #0f172a; font-weight: 900; }
+@media (max-width: 768px) {
+  .setup-step-chip { padding: 0.75rem; }
+  .setup-option-card { min-height: auto; }
+}

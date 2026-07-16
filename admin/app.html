@@ -29,17 +29,38 @@
     import { verifyUserRole } from "../assets/js/role-guard.js";
     import { loadPortalLayout } from "../assets/js/component-loader.js";
     import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const frame = document.getElementById('admin-content-frame');
     const defaultPage = 'dashboard.html';
+    const setupPage = 'festival-settings.html?setup=1';
 
     async function initShell() {
       await verifyUserRole(['admin']);
       await loadPortalLayout('admin');
       initializeNavigation();
       wireShellNavigation();
-      loadAdminPage(new URLSearchParams(window.location.search).get('page') || defaultPage, false);
+      const requestedPage = new URLSearchParams(window.location.search).get('page') || defaultPage;
+      const firstPage = await resolveInitialPage(requestedPage);
+      loadAdminPage(firstPage, false);
       document.getElementById('global-page-loader').classList.add('hidden');
+    }
+
+
+    async function resolveInitialPage(requestedPage) {
+      const normalized = normalizePage(requestedPage);
+      if (normalized.startsWith('festival-settings.html')) return normalized;
+      const festivalId = localStorage.getItem('meeladpulse_selected_fest_id');
+      const institutionId = localStorage.getItem('meeladpulse_selected_institution_id') || localStorage.getItem('selectedInstitutionId') || festivalId;
+      if (!festivalId || !institutionId) return setupPage;
+      if (localStorage.getItem(`meeladpulse_setup_done_${institutionId}_${festivalId}`) === '1') return normalized;
+      const snap = await getDoc(doc(db, `institutions/${institutionId}/festivals`, festivalId));
+      if (snap.exists() && (snap.data().setupCompleted || snap.data().setupWizard?.completed)) {
+        localStorage.setItem(`meeladpulse_setup_done_${institutionId}_${festivalId}`, '1');
+        return normalized;
+      }
+      return setupPage;
     }
 
     function normalizePage(rawPage) {
