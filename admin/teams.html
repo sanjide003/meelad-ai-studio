@@ -72,6 +72,7 @@
                   <label class="setup-field"><span>Boys Chest Start Number</span><input id="boys-chest-start" type="number" min="1" class="form-input" value="1"></label>
                   <label class="setup-field"><span>Girls Chest Start Number</span><input id="girls-chest-start" type="number" min="1" class="form-input" value="1"></label>
                 </div>
+                <div id="category-chest-list" class="space-y-3 pt-3 border-t border-cyan-100"></div>
               </div>
 
               <div class="admin-success-card p-4 space-y-4">
@@ -137,7 +138,7 @@
     import { verifyUserRole } from "../assets/js/role-guard.js";
     import { loadPortalLayout } from "../assets/js/component-loader.js";
     import { initializeNavigation } from "../assets/js/navigation.js";
-    import { getActiveScope, getTeams, saveTeam, deleteTeam } from "../assets/js/firestore-service.js";
+    import { getActiveScope, getTeams, saveTeam, deleteTeam, getCategories } from "../assets/js/firestore-service.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const form = document.getElementById('team-form');
@@ -145,12 +146,15 @@
     const leaderTemplate = document.getElementById('leader-template');
     let teams = [];
     let chestMode = 'common';
+    let categories = [];
 
     async function initPage() {
       await verifyUserRole(['admin']);
       await loadPortalLayout('admin');
       initializeNavigation();
       await loadSetupMode();
+      await loadCategories();
+      renderCategoryChestInputs();
       addLeaderRow();
       await loadTeams();
       form.onsubmit = saveCurrentTeam;
@@ -172,6 +176,39 @@
       document.getElementById('chest-mode-badge').textContent = chestMode === 'gender' ? 'Separate boys / girls' : 'Common';
       document.getElementById('chest-mode-card').textContent = chestMode === 'gender' ? 'Separate' : 'Common';
       document.getElementById('chest-helper').textContent = chestMode === 'gender' ? 'Master Setup is separate/mixed, so boys and girls use different chest number starts.' : 'Master Setup is single/common, so one chest series is enough.';
+    }
+
+
+    async function loadCategories() {
+      categories = (await getCategories() || []).filter(category => category.active !== false);
+    }
+
+    function renderCategoryChestInputs(team = {}) {
+      const box = document.getElementById('category-chest-list');
+      box.innerHTML = categories.length ? '<p class="text-xs font-extrabold text-slate-700">Category-wise chest starts</p>' : '<p class="text-xs text-slate-500">Create categories in Master Setup before assigning category-wise chest starts.</p>';
+      categories.forEach(category => {
+        const name = category.name || category.code || category.id;
+        const saved = team.categoryChestStartNumbers?.[category.id] || {};
+        const row = document.createElement('div');
+        row.className = 'rounded-xl bg-white border border-cyan-100 p-3 space-y-2';
+        row.dataset.categoryChest = category.id;
+        row.innerHTML = chestMode === 'gender'
+          ? `<div class="text-xs font-extrabold text-slate-900">${name}</div><div class="grid grid-cols-2 gap-2"><input data-gender="boys" type="number" min="1" class="form-input" value="${saved.boys || 1}" placeholder="Boys start"><input data-gender="girls" type="number" min="1" class="form-input" value="${saved.girls || 1}" placeholder="Girls start"></div>`
+          : `<div class="text-xs font-extrabold text-slate-900">${name}</div><input data-gender="common" type="number" min="1" class="form-input" value="${saved.common || 1}" placeholder="Chest start">`;
+        box.appendChild(row);
+      });
+    }
+
+    function collectCategoryChestStarts() {
+      const result = {};
+      document.querySelectorAll('[data-category-chest]').forEach(row => {
+        const categoryId = row.dataset.categoryChest;
+        result[categoryId] = {};
+        row.querySelectorAll('[data-gender]').forEach(input => {
+          result[categoryId][input.dataset.gender] = Math.max(1, Number(input.value) || 1);
+        });
+      });
+      return result;
     }
 
     async function loadTeams() {
@@ -210,6 +247,7 @@
         boysChestStartNumber: document.getElementById('boys-chest-start').value,
         girlsChestStartNumber: document.getElementById('girls-chest-start').value,
         leaders,
+        categoryChestStartNumbers: collectCategoryChestStarts(),
         active: document.getElementById('team-active').checked
       });
       resetForm();
@@ -255,6 +293,7 @@
       document.getElementById('team-next-chest').value = team.nextChestNumber || team.chestStartNumber || 1;
       document.getElementById('boys-chest-start').value = team.chestStartNumbers?.boys || team.chestStartNumber || 1;
       document.getElementById('girls-chest-start').value = team.chestStartNumbers?.girls || team.chestStartNumber || 1;
+      renderCategoryChestInputs(team);
       document.getElementById('team-active').checked = team.active !== false;
       document.getElementById('leaders-list').innerHTML = '';
       const leaders = Array.isArray(team.leaders) && team.leaders.length ? team.leaders : (team.leader?.name || team.leader?.username ? [team.leader] : [{}]);
@@ -271,6 +310,7 @@
       document.getElementById('team-next-chest').value = 1;
       document.getElementById('boys-chest-start').value = 1;
       document.getElementById('girls-chest-start').value = 1;
+      renderCategoryChestInputs();
       document.getElementById('team-active').checked = true;
       document.getElementById('leaders-list').innerHTML = '';
       addLeaderRow({}, false);

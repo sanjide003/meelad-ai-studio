@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Participating - Admin Portal</title><script src="https://cdn.tailwindcss.com"></script><link rel="stylesheet" href="../assets/css/main.css"></head>
+<body class="bg-slate-50 min-h-screen">
+<div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center"><div class="flex flex-col items-center space-y-3"><div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div><p class="text-xs font-bold text-slate-700">Loading participating settings...</p></div></div>
+<div class="min-h-screen flex flex-col lg:flex-row"><div id="portal-sidebar"></div><div class="flex-1 flex flex-col min-w-0 main-content-layout"><div id="portal-header"></div><main class="flex-1 p-4 lg:p-8 space-y-6 max-w-6xl">
+<section class="admin-section-card setup-hero"><p class="text-[11px] font-extrabold text-emerald-700 uppercase tracking-[0.22em]">Setup · Participating</p><h1 class="text-3xl font-extrabold text-slate-950 tracking-tight font-display">Participating</h1><p class="text-sm text-slate-500 max-w-3xl leading-relaxed">Choose how students/participants enter the festival: admin add, group leaders add, public registration, or all three. Non-admin submissions require admin approval with reject reason support.</p></section>
+<section class="admin-section-card space-y-5">
+  <h2 class="text-xl font-extrabold text-slate-950">Student entry mode</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <label class="setup-option-card"><input type="radio" name="mode" value="adminOnly"><span>Admin Add</span><small>Only institution admin can add students directly.</small></label>
+    <label class="setup-option-card"><input type="radio" name="mode" value="teamLeadersOnly"><span>Group Leaders Add</span><small>Team leaders submit students; admin approves/rejects.</small></label>
+    <label class="setup-option-card"><input type="radio" name="mode" value="publicRegistrationOnly"><span>Registration</span><small>Public applicants register; admin approves/rejects.</small></label>
+    <label class="setup-option-card"><input type="radio" name="mode" value="all"><span>All Three</span><small>Admin, group leaders, and public registration are enabled.</small></label>
+  </div>
+  <label class="flex items-center gap-2 text-xs font-bold text-slate-700"><input id="registration-open" type="checkbox" class="rounded border-slate-300 text-emerald-500"> Registration open</label>
+  <label class="flex items-center gap-2 text-xs font-bold text-slate-700"><input id="approval-required" type="checkbox" checked class="rounded border-slate-300 text-emerald-500"> Require admin approval for non-admin submissions</label>
+  <div class="admin-info-card p-4"><p class="text-xs font-bold text-slate-900">Public registration/status link</p><div class="flex gap-2 mt-2"><input id="public-link" class="admin-link-input" readonly><button id="copy-link" class="btn btn-secondary text-xs font-bold px-4" type="button">Copy</button></div><p class="text-xs text-slate-600 mt-2">Applicants can use phone number on this page to check status and see rejection reason.</p></div>
+  <button id="save-settings" class="btn btn-primary text-xs font-bold text-white px-5 py-2.5" type="button">Save Participating Settings</button>
+</section>
+</main></div></div>
+<script type="module">
+import { verifyUserRole } from "../assets/js/role-guard.js";
+import { loadPortalLayout } from "../assets/js/component-loader.js";
+import { initializeNavigation } from "../assets/js/navigation.js";
+import { getFestivalSettings, updateFestivalSettings } from "../assets/js/student-service.js";
+import { getActiveScope } from "../assets/js/firestore-service.js";
+const $=id=>document.getElementById(id);
+async function init(){await verifyUserRole(['admin']);await loadPortalLayout('admin');initializeNavigation();const settings=await getFestivalSettings();document.querySelector(`input[name="mode"][value="${settings?.studentRegistrationMode||'adminOnly'}"]`)?.click();$('registration-open').checked=settings?.studentRegistrationOpen!==false;$('approval-required').checked=settings?.teamLeaderStudentApprovalRequired!==false;const scope=getActiveScope();const url=new URL('../public/registration-status.html',location.href);url.searchParams.set('institution',scope.institutionId);url.searchParams.set('festival',scope.festivalId);$('public-link').value=url.href;document.querySelectorAll('input[name="mode"]').forEach(input=>input.addEventListener('change',styleCards));styleCards();$('save-settings').onclick=save;$('copy-link').onclick=()=>navigator.clipboard?.writeText($('public-link').value);$('global-page-loader').classList.add('hidden');}
+function styleCards(){document.querySelectorAll('.setup-option-card').forEach(card=>card.classList.toggle('selected',card.querySelector('input')?.checked));}
+async function save(){const current=await getFestivalSettings();await updateFestivalSettings({...current,studentRegistrationMode:document.querySelector('input[name="mode"]:checked')?.value||'adminOnly',studentRegistrationOpen:$('registration-open').checked,teamLeaderStudentApprovalRequired:$('approval-required').checked});alert('Participating settings saved.');}
+init().catch(err=>{console.error(err);alert(err.message||err);});
+</script></body></html>

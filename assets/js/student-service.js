@@ -125,11 +125,11 @@ export async function canCurrentUserCreateStudent() {
   if (!settings.studentRegistrationOpen) return false;
 
   if (profile.role === 'admin') {
-    return settings.studentRegistrationMode === 'adminOnly';
+    return ['adminOnly', 'all'].includes(settings.studentRegistrationMode || 'adminOnly');
   }
 
   if (profile.role === 'teamLeader') {
-    return settings.studentRegistrationMode === 'teamLeadersOnly';
+    return ['teamLeadersOnly', 'all'].includes(settings.studentRegistrationMode || 'adminOnly');
   }
 
   return false;
@@ -161,6 +161,12 @@ export async function canCurrentUserEditStudent(student) {
   return false;
 }
 
+
+function normalizeStudentName(name = '') {
+  const clean = name.trim().replace(/\s+/g, ' ');
+  return /^[A-Za-z .'-]+$/.test(clean) ? clean.toUpperCase() : clean;
+}
+
 /**
  * Creates a new Festival Student.
  */
@@ -179,11 +185,12 @@ export async function createFestivalStudent(studentData) {
   }
 
   // Validate permission by mode
-  if (profile.role === 'admin' && settings.studentRegistrationMode !== 'adminOnly') {
-    throw new Error("Student registration mode is set to Team Leaders Only. Admins cannot normally register students.");
+  const mode = settings.studentRegistrationMode || 'adminOnly';
+  if (profile.role === 'admin' && !['adminOnly', 'all'].includes(mode)) {
+    throw new Error("Student registration mode does not allow admin-added students.");
   }
-  if (profile.role === 'teamLeader' && settings.studentRegistrationMode !== 'teamLeadersOnly') {
-    throw new Error("Student registration mode is set to Admin Only. Team Leaders cannot register students.");
+  if (profile.role === 'teamLeader' && !['teamLeadersOnly', 'all'].includes(mode)) {
+    throw new Error("Student registration mode does not allow team-leader-added students.");
   }
 
   if (!studentData.teamId) {
@@ -201,9 +208,14 @@ export async function createFestivalStudent(studentData) {
       throw new Error("Selected team group was not found.");
     }
     const team = teamSnap.data();
-    const nextNumber = Number(team.nextChestNumber || team.chestStartNumber || 1);
+    const gender = (studentData.gender || '').toLowerCase();
+    const categoryKey = team.chestMode === 'gender' && gender ? `${studentData.categoryId}_${gender}` : studentData.categoryId;
+    const fallbackStart = team.chestMode === 'gender'
+      ? Number(team.categoryChestStartNumbers?.[studentData.categoryId]?.[gender] || team.chestStartNumbers?.[gender] || team.chestStartNumber || 1)
+      : Number(team.categoryChestStartNumbers?.[studentData.categoryId]?.common || team.chestStartNumber || 1);
+    const nextNumber = Number(team.nextChestByCategory?.[categoryKey] || fallbackStart || 1);
     chestNumber = String(nextNumber).padStart(3, '0');
-    await updateDoc(teamRef, { nextChestNumber: nextNumber + 1, updatedAt: serverTimestamp() });
+    await updateDoc(teamRef, { [`nextChestByCategory.${categoryKey}`]: nextNumber + 1, updatedAt: serverTimestamp() });
   }
 
   // Check if chest number is unique in this festival
@@ -219,8 +231,8 @@ export async function createFestivalStudent(studentData) {
 
   // Determine initial status based on role and settings
   let status = 'active';
-  if (profile.role === 'teamLeader' && settings.teamLeaderStudentApprovalRequired) {
-    status = 'pending_approval';
+  if (profile.role !== 'admin' || settings.teamLeaderStudentApprovalRequired) {
+    status = profile.role === 'admin' ? 'active' : 'pending_approval';
   }
 
   const payload = {
@@ -230,12 +242,15 @@ export async function createFestivalStudent(studentData) {
     teamId: studentData.teamId,
     categoryId: studentData.categoryId,
     subdivisionId: studentData.subdivisionId || '',
-    name: studentData.name.trim(),
+    name: normalizeStudentName(studentData.name),
+    gender: studentData.gender || '',
+    orderNumber: Number(studentData.orderNumber) || 0,
+    phone: studentData.phone || '',
     chestNumber,
     status,
     createdBy: profile.uid,
     createdByRole: profile.role,
-    registrationSource: profile.role,
+    registrationSource: studentData.registrationSource || profile.role,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   };

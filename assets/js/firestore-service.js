@@ -420,6 +420,8 @@ export async function saveTeam(teamData) {
       chestStartNumber,
       nextChestNumber,
       chestStartNumbers,
+      categoryChestStartNumbers: teamData.categoryChestStartNumbers || {},
+      nextChestByCategory: teamData.nextChestByCategory || {},
       leaders,
       leader: primaryLeader,
       active: teamData.active !== false,

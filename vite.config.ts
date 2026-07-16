@@ -29,6 +29,7 @@ export default defineConfig(() => {
           adminUsers: path.resolve(__dirname, 'admin/users.html'),
           adminStudents: path.resolve(__dirname, 'admin/students.html'),
           adminStudentCreate: path.resolve(__dirname, 'admin/student-create.html'),
+          adminParticipating: path.resolve(__dirname, 'admin/participating.html'),
           adminStudentEdit: path.resolve(__dirname, 'admin/student-edit.html'),
           adminTeams: path.resolve(__dirname, 'admin/teams.html'),
           adminCategories: path.resolve(__dirname, 'admin/categories.html'),
@@ -71,6 +72,7 @@ export default defineConfig(() => {
           publicSchedule: path.resolve(__dirname, 'public/schedule.html'),
           publicResultSearch: path.resolve(__dirname, 'public/result-search.html'),
           publicDownloads: path.resolve(__dirname, 'public/downloads.html'),
+          publicRegistrationStatus: path.resolve(__dirname, 'public/registration-status.html'),
           publicTeamResults: path.resolve(__dirname, 'public/team-results.html'),
           publicCompetitionResults: path.resolve(__dirname, 'public/competition-results.html'),
         }

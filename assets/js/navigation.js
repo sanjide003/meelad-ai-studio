@@ -183,6 +183,7 @@ function applyAdminPageGuidance() {
   const page = window.location.pathname.split('/').pop();
   const guidance = {
     'festival-settings.html': ['Master Setup', 'Configure institution, festival, modes, sections, and categories before registrations.', 'Setup'],
+    'participating.html': ['Participating', 'Manage admin, team leader, and public registration entry modes.', 'Setup'],
     'teams.html': ['Team Management', 'Create teams, chest-number series, leaders, and team logins before registering students.', 'Setup'],
     'divisions.html': ['Divisions', 'Define the main competition divisions used for eligibility and reporting.', 'Setup'],
     'subdivisions.html': ['Subdivisions', 'Refine divisions into smaller groups when your festival rules require it.', 'Setup'],
