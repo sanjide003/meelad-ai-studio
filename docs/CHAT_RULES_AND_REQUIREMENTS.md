@@ -65,6 +65,8 @@ This document records the product rules and working decisions given during chat 
 - Save workflows should preview data before database write where practical.
 - Duplicate student submissions should be warned/prevented by team/category/gender/name where possible.
 - Public registrants should be able to check status with phone number.
+- Public registration-only mode must be accepted as `publicRegistrationOnly` wherever student registration mode is validated.
+- Public submissions may be stored without chest number first, but approval must assign the correct category/gender/team chest number automatically.
 
 ## Competition rules
 
@@ -83,6 +85,7 @@ This document records the product rules and working decisions given during chat 
 - Non-admin entries should be pending if approval is required.
 - Entry rejection requires a reason and the reason must remain visible.
 - Duplicate student entry into the same competition must be prevented.
+- Competition entry service must validate selected students server-side/client-service-side, not only in the UI.
 
 ## Security and SaaS rules
 

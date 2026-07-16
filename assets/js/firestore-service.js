@@ -16,6 +16,7 @@ import {
   deleteField,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { assertOnline } from "./network-status.js";
 
 
 async function hashManualPassword(password) {
@@ -534,6 +535,21 @@ export async function saveCompetition(compData) {
   const path = window.meeladPulseScopedFestivalPath(`competitions/${id}`);
   try {
     const docRef = doc(db, window.meeladPulseScopedFestivalPath('competitions'), id);
+    const existingSnap = await getDocs(query(
+      collection(db, window.meeladPulseScopedFestivalPath('competitions')),
+      where('name', '==', compData.name)
+    ));
+    const duplicate = existingSnap.docs.some((docSnap) => {
+      if (docSnap.id === id) return false;
+      const data = docSnap.data();
+      return (data.categoryId || '') === (compData.categoryId || '') &&
+        (data.genderMode || 'flexible') === (compData.genderMode || 'flexible') &&
+        (data.programmeType || '') === (compData.programmeType || '') &&
+        (data.performanceType || 'stage') === (compData.performanceType || 'stage');
+    });
+    if (duplicate) {
+      throw new Error('A competition with the same name, category, gender, programme, and section already exists.');
+    }
     const payload = {
       id,
       name: compData.name,
@@ -740,6 +756,25 @@ export async function getCompetitionEntries() {
   }
 }
 
+async function validateCompetitionEntryStudents(competition, teamId, studentIds) {
+  const students = [];
+  for (const studentId of studentIds) {
+    const snap = await getDoc(doc(db, window.meeladPulseScopedFestivalPath('festStudents'), studentId));
+    if (!snap.exists()) throw new Error(`Student ${studentId} was not found.`);
+    const student = { id: snap.id, ...snap.data() };
+    if (student.teamId !== teamId) throw new Error(`${student.name || studentId} does not belong to the selected team.`);
+    if ((student.status || 'active') !== 'active') throw new Error(`${student.name || studentId} is not approved yet.`);
+    const categoryOk = !competition.categoryId || competition.categoryId === 'general' || student.categoryId === competition.categoryId;
+    if (!categoryOk) throw new Error(`${student.name || studentId} is not eligible for this category.`);
+    const studentGender = (student.gender || 'general').toLowerCase();
+    const competitionGender = (competition.genderMode || 'general').toLowerCase();
+    const genderOk = ['general', 'mixed', 'flexible'].includes(competitionGender) || !studentGender || studentGender === 'general' || studentGender === competitionGender;
+    if (!genderOk) throw new Error(`${student.name || studentId} is not eligible for this gender mode.`);
+    students.push(student);
+  }
+  return students;
+}
+
 export async function saveCompetitionEntry(entryData) {
   assertOnline('Competition Entry Registration');
   const profile = window.currentUserProfile || {};
@@ -751,7 +786,16 @@ export async function saveCompetitionEntry(entryData) {
   if (!teamId) throw new Error('Team is required.');
   const competition = (await getDoc(doc(db, window.meeladPulseScopedFestivalPath('competitions'), competitionId))).data();
   if (!competition) throw new Error('Competition item was not found.');
+  const role = profile.role || entryData.source || 'public';
+  const sourceMode = competition.sourceMode || 'admin';
+  if (role === 'teamLeader' && !['teamLeader', 'all'].includes(sourceMode)) {
+    throw new Error('Team leader entries are not enabled for this competition.');
+  }
+  if (role === 'public' && !['registration', 'all'].includes(sourceMode)) {
+    throw new Error('Public entries are not enabled for this competition.');
+  }
   const studentIds = Array.isArray(entryData.studentIds) ? [...new Set(entryData.studentIds.filter(Boolean))] : [];
+  await validateCompetitionEntryStudents(competition, teamId, studentIds);
   const minMembers = Number(competition.minParticipantsPerEntry) || 1;
   const maxMembers = Number(competition.maxParticipantsPerEntry) || 1;
   if (studentIds.length < minMembers || studentIds.length > maxMembers) {
@@ -779,7 +823,6 @@ export async function saveCompetitionEntry(entryData) {
   if (!currentId && activeTeamEntryCount >= maxEntriesPerTeam) {
     throw new Error(`This team already reached the entry limit (${maxEntriesPerTeam}) for this item.`);
   }
-  const role = profile.role || entryData.source || 'public';
   const needsApproval = role !== 'admin';
   const id = currentId || doc(collection(db, 'dummy')).id;
   const payload = {

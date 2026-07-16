@@ -125,11 +125,11 @@ export async function canCurrentUserCreateStudent() {
   if (!settings.studentRegistrationOpen) return false;
 
   if (profile.role === 'admin') {
-    return ['adminOnly', 'all'].includes(settings.studentRegistrationMode || 'adminOnly');
+    return isAdminStudentMode(settings.studentRegistrationMode || 'adminOnly');
   }
 
   if (profile.role === 'teamLeader') {
-    return ['teamLeadersOnly', 'all'].includes(settings.studentRegistrationMode || 'adminOnly');
+    return isTeamLeaderStudentMode(settings.studentRegistrationMode || 'adminOnly');
   }
 
   return false;
@@ -147,13 +147,13 @@ export async function canCurrentUserEditStudent(student) {
   if (!settings.studentRegistrationOpen) return false;
 
   if (profile.role === 'admin') {
-    return settings.studentRegistrationMode === 'adminOnly';
+    return isAdminStudentMode(settings.studentRegistrationMode || 'adminOnly');
   }
 
   if (profile.role === 'teamLeader') {
     // Team Leader can edit if mode is teamLeadersOnly, and student belongs to their team, 
     // and is not already approved if approval is required.
-    if (settings.studentRegistrationMode !== 'teamLeadersOnly') return false;
+    if (!isTeamLeaderStudentMode(settings.studentRegistrationMode || 'adminOnly')) return false;
     if (student.teamId !== profile.teamId) return false;
     return true;
   }
@@ -165,6 +165,41 @@ export async function canCurrentUserEditStudent(student) {
 export function normalizeStudentName(name = '') {
   const clean = name.trim().replace(/\s+/g, ' ');
   return /^[A-Za-z .'-]+$/.test(clean) ? clean.toUpperCase() : clean;
+}
+
+function isAdminStudentMode(mode = 'adminOnly') {
+  return ['adminOnly', 'all'].includes(mode);
+}
+
+function isTeamLeaderStudentMode(mode = 'adminOnly') {
+  return ['teamLeadersOnly', 'all'].includes(mode);
+}
+
+function isPublicStudentMode(mode = 'adminOnly') {
+  return ['publicRegistrationOnly', 'registration', 'all'].includes(mode);
+}
+
+async function allocateChestNumberForStudent(studentData) {
+  if (!studentData.teamId) throw new Error('Team group selection is required before assigning a chest number.');
+  if (!studentData.categoryId) throw new Error('Category selection is required before assigning a chest number.');
+  const teamRef = doc(db, window.meeladPulseScopedFestivalPath('teams'), studentData.teamId);
+  const teamSnap = await getDoc(teamRef);
+  if (!teamSnap.exists()) throw new Error('Selected team group was not found.');
+  const team = teamSnap.data();
+  const gender = (studentData.gender || '').toLowerCase();
+  const categoryKey = team.chestMode === 'gender' && gender ? `${studentData.categoryId}_${gender}` : studentData.categoryId;
+  const fallbackStart = team.chestMode === 'gender'
+    ? Number(team.categoryChestStartNumbers?.[studentData.categoryId]?.[gender] || team.chestStartNumbers?.[gender] || team.chestStartNumber || 1)
+    : Number(team.categoryChestStartNumbers?.[studentData.categoryId]?.common || team.chestStartNumber || 1);
+  const nextNumber = Number(team.nextChestByCategory?.[categoryKey] || fallbackStart || 1);
+  const chestNumber = String(nextNumber).padStart(3, '0');
+  const qChest = query(collection(db, window.meeladPulseScopedFestivalPath('festStudents')), where('chestNumber', '==', chestNumber));
+  const snapChest = await getDocs(qChest);
+  if (!snapChest.empty) {
+    throw new Error(`Chest number ${chestNumber} is already assigned to another student in this festival.`);
+  }
+  await updateDoc(teamRef, { [`nextChestByCategory.${categoryKey}`]: nextNumber + 1, updatedAt: serverTimestamp() });
+  return chestNumber;
 }
 
 /**
@@ -186,10 +221,10 @@ export async function createFestivalStudent(studentData) {
 
   // Validate permission by mode
   const mode = settings.studentRegistrationMode || 'adminOnly';
-  if (profile.role === 'admin' && !['adminOnly', 'all'].includes(mode)) {
+  if (profile.role === 'admin' && !isAdminStudentMode(mode)) {
     throw new Error("Student registration mode does not allow admin-added students.");
   }
-  if (profile.role === 'teamLeader' && !['teamLeadersOnly', 'all'].includes(mode)) {
+  if (profile.role === 'teamLeader' && !isTeamLeaderStudentMode(mode)) {
     throw new Error("Student registration mode does not allow team-leader-added students.");
   }
 
@@ -212,28 +247,14 @@ export async function createFestivalStudent(studentData) {
 
   let chestNumber = (studentData.chestNumber || '').toString().trim();
   if (!chestNumber) {
-    const teamRef = doc(db, window.meeladPulseScopedFestivalPath('teams'), studentData.teamId);
-    const teamSnap = await getDoc(teamRef);
-    if (!teamSnap.exists()) {
-      throw new Error("Selected team group was not found.");
+    chestNumber = await allocateChestNumberForStudent(studentData);
+  } else {
+    const festStudentsCol = collection(db, window.meeladPulseScopedFestivalPath('festStudents'));
+    const qChest = query(festStudentsCol, where('chestNumber', '==', chestNumber));
+    const snapChest = await getDocs(qChest);
+    if (!snapChest.empty) {
+      throw new Error(`Chest number ${chestNumber} is already assigned to another student in this festival.`);
     }
-    const team = teamSnap.data();
-    const gender = (studentData.gender || '').toLowerCase();
-    const categoryKey = team.chestMode === 'gender' && gender ? `${studentData.categoryId}_${gender}` : studentData.categoryId;
-    const fallbackStart = team.chestMode === 'gender'
-      ? Number(team.categoryChestStartNumbers?.[studentData.categoryId]?.[gender] || team.chestStartNumbers?.[gender] || team.chestStartNumber || 1)
-      : Number(team.categoryChestStartNumbers?.[studentData.categoryId]?.common || team.chestStartNumber || 1);
-    const nextNumber = Number(team.nextChestByCategory?.[categoryKey] || fallbackStart || 1);
-    chestNumber = String(nextNumber).padStart(3, '0');
-    await updateDoc(teamRef, { [`nextChestByCategory.${categoryKey}`]: nextNumber + 1, updatedAt: serverTimestamp() });
-  }
-
-  // Check if chest number is unique in this festival
-  const festStudentsCol = collection(db, window.meeladPulseScopedFestivalPath('festStudents'));
-  const qChest = query(festStudentsCol, where('chestNumber', '==', chestNumber));
-  const snapChest = await getDocs(qChest);
-  if (!snapChest.empty) {
-    throw new Error(`Chest number ${chestNumber} is already assigned to another student in this festival.`);
   }
 
   const studentId = `stud_${studentData.teamId}_${chestNumber}`;
@@ -321,7 +342,7 @@ export async function createPublicStudentRegistration(studentData, { institution
     throw new Error('Public registration is currently closed.');
   }
   const mode = settings.studentRegistrationMode || 'adminOnly';
-  if (!['registration', 'all'].includes(mode)) {
+  if (!isPublicStudentMode(mode)) {
     throw new Error('Public registration is not enabled for this festival.');
   }
   if (!studentData.phone || !studentData.name || !studentData.teamId || !studentData.categoryId) {
@@ -464,12 +485,17 @@ export async function approveStudent(studentId) {
       throw new Error("Student not found.");
     }
 
-    await updateDoc(docRef, {
+    const current = snap.data();
+    const approvalPayload = {
       status: 'active',
       approvedBy: profile.uid,
       approvedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
-    });
+    };
+    if (!current.chestNumber) {
+      approvalPayload.chestNumber = await allocateChestNumberForStudent(current);
+    }
+    await updateDoc(docRef, approvalPayload);
 
     await logAuditEvent(
       'student_approved', 

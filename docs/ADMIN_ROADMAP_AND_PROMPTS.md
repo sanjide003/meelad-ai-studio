@@ -16,7 +16,7 @@ The application has moved from a generic admin panel toward a lifecycle-driven f
 6. Competition Item Setup
 7. Competition Entries / Participant Registration
 
-These pieces provide the base data model and admin workflow needed before moving into judge assignment, mark entry, results, certificates, reports, and public publishing.
+These pieces provide the base data model and admin workflow needed before moving into judge assignment, mark entry, results, certificates, reports, and public publishing. The latest audit also verified and corrected save-path problems in Participating, student approval, competition duplicate checks, and competition entry validation.
 
 ---
 
@@ -122,6 +122,8 @@ Completed items:
 - Added registration open/closed setting foundation.
 - Added public registration form and public phone-based status lookup.
 - Added approval/rejection reason visibility for public status lookup.
+- Corrected the participating public link to open the actual registration page, not only the status page.
+- Aligned public-registration mode values so the saved `publicRegistrationOnly` mode is accepted by the public registration service.
 
 Remaining work:
 
@@ -152,6 +154,8 @@ Completed items:
 - Added approve and reject actions with mandatory rejection reason.
 - Added public registration page and phone-based registration status lookup.
 - Added duplicate checks for same name/team/category/gender where possible.
+- Added automatic chest-number assignment during approval when public submissions arrive without a chest number.
+- Verified that admin-added students remain auto-approved while non-admin submissions can remain pending.
 
 Remaining work:
 
@@ -209,6 +213,7 @@ Completed items:
 - Added single/group participant limit enforcement in the service layer.
 - Added duplicate student entry prevention for the same competition.
 - Added max entries per team enforcement.
+- Added service-side student eligibility validation for team, approval status, category, gender, and competition source mode.
 - Added entry status support: approved, pending approval, and rejected.
 - Added approve and reject actions with mandatory rejection reason.
 - Added scoped entry payload with institutionId, festivalId, competitionId, teamId, studentIds, source, status, and audit metadata.
@@ -220,6 +225,7 @@ Remaining work:
 - Add public/registration-driven competition entry flow if needed.
 - Add richer entry edit/delete/archive workflow.
 - Add entry conflict review UI before save.
+- Extend the same validation UI into team-leader and public entry screens if those screens are enabled.
 - Add final printable entry sheets grouped by competition, team, chest number, and category.
 
 ---
