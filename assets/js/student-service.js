@@ -162,7 +162,7 @@ export async function canCurrentUserEditStudent(student) {
 }
 
 
-function normalizeStudentName(name = '') {
+export function normalizeStudentName(name = '') {
   const clean = name.trim().replace(/\s+/g, ' ');
   return /^[A-Za-z .'-]+$/.test(clean) ? clean.toUpperCase() : clean;
 }
@@ -200,6 +200,16 @@ export async function createFestivalStudent(studentData) {
     throw new Error("Category selection is required before adding students.");
   }
 
+  const duplicates = await findDuplicateFestivalStudents({
+    name: studentData.name,
+    teamId: studentData.teamId,
+    categoryId: studentData.categoryId,
+    gender: studentData.gender
+  });
+  if (duplicates?.length && !studentData.allowDuplicate) {
+    throw new Error("A matching student already exists in this team/category. Review duplicates before saving.");
+  }
+
   let chestNumber = (studentData.chestNumber || '').toString().trim();
   if (!chestNumber) {
     const teamRef = doc(db, window.meeladPulseScopedFestivalPath('teams'), studentData.teamId);
@@ -231,8 +241,8 @@ export async function createFestivalStudent(studentData) {
 
   // Determine initial status based on role and settings
   let status = 'active';
-  if (profile.role !== 'admin' || settings.teamLeaderStudentApprovalRequired) {
-    status = profile.role === 'admin' ? 'active' : 'pending_approval';
+  if (profile.role !== 'admin') {
+    status = settings.teamLeaderStudentApprovalRequired ? 'pending_approval' : 'active';
   }
 
   const payload = {
@@ -269,6 +279,100 @@ export async function createFestivalStudent(studentData) {
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
+}
+
+
+export function normalizeStudentStatus(status = 'active') {
+  if (status === 'pending') return 'pending_approval';
+  if (!status || status === 'active') return 'approved';
+  if (status === 'pending_approval') return 'pending';
+  return status;
+}
+
+export async function findDuplicateFestivalStudents({ name, teamId, categoryId, gender, excludeId = '' }) {
+  const cleanName = normalizeStudentName(name || '');
+  const path = window.meeladPulseScopedFestivalPath('festStudents');
+  try {
+    const snap = await getDocs(query(
+      collection(db, path),
+      where('teamId', '==', teamId || ''),
+      where('categoryId', '==', categoryId || '')
+    ));
+    return snap.docs
+      .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+      .filter((student) => student.id !== excludeId)
+      .filter((student) => normalizeStudentName(student.name || '') === cleanName)
+      .filter((student) => !gender || !student.gender || String(student.gender).toLowerCase() === String(gender).toLowerCase());
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, path);
+  }
+}
+
+export async function createPublicStudentRegistration(studentData, { institutionId, festivalId } = {}) {
+  assertOnline('Public Student Registration');
+  const currentScope = getActiveFestivalId ? null : null;
+  const scopedPath = institutionId && festivalId
+    ? `institutions/${institutionId}/festivals/${festivalId}`
+    : window.meeladPulseScopedFestivalPath();
+  const settingsRef = doc(db, scopedPath);
+  const settingsSnap = await getDoc(settingsRef);
+  const settings = settingsSnap.exists() ? settingsSnap.data() : {};
+  if (settings.studentRegistrationOpen === false) {
+    throw new Error('Public registration is currently closed.');
+  }
+  const mode = settings.studentRegistrationMode || 'adminOnly';
+  if (!['registration', 'all'].includes(mode)) {
+    throw new Error('Public registration is not enabled for this festival.');
+  }
+  if (!studentData.phone || !studentData.name || !studentData.teamId || !studentData.categoryId) {
+    throw new Error('Name, phone, team, and category are required.');
+  }
+  const duplicateSnap = await getDocs(query(
+    collection(db, `${scopedPath}/festStudents`),
+    where('phone', '==', studentData.phone.trim())
+  ));
+  const cleanName = normalizeStudentName(studentData.name);
+  const hasDuplicate = duplicateSnap.docs.some((docSnap) => {
+    const data = docSnap.data();
+    return normalizeStudentName(data.name || '') === cleanName && data.teamId === studentData.teamId && data.categoryId === studentData.categoryId;
+  });
+  if (hasDuplicate) {
+    throw new Error('A matching registration already exists for this phone number.');
+  }
+  const newRef = doc(collection(db, `${scopedPath}/festStudents`));
+  const payload = {
+    id: newRef.id,
+    studentId: newRef.id,
+    institutionId: institutionId || '',
+    festivalId: festivalId || '',
+    festId: festivalId || '',
+    teamId: studentData.teamId,
+    categoryId: studentData.categoryId,
+    gender: studentData.gender || '',
+    name: cleanName,
+    phone: studentData.phone.trim(),
+    guardianName: studentData.guardianName || '',
+    notes: studentData.notes || '',
+    chestNumber: '',
+    status: 'pending_approval',
+    registrationSource: 'public',
+    createdByRole: 'public',
+    rejectionReason: '',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+  await setDoc(newRef, payload);
+  return newRef.id;
+}
+
+export async function getPublicStudentRegistrationsByPhone(phone, { institutionId, festivalId } = {}) {
+  const scopedPath = institutionId && festivalId
+    ? `institutions/${institutionId}/festivals/${festivalId}`
+    : window.meeladPulseScopedFestivalPath();
+  const cleanPhone = (phone || '').trim();
+  if (!cleanPhone) return [];
+  const snap = await getDocs(query(collection(db, `${scopedPath}/festStudents`), where('phone', '==', cleanPhone)));
+  return snap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
 }
 
 /**

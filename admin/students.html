@@ -3,494 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Students - Admin Portal</title>
+  <title>All Students - Admin Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link class="main-css" rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
-  
-  <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
-    <div class="flex flex-col items-center space-y-3">
-      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
-      <p class="text-xs font-bold text-slate-700">Loading Students Database...</p>
+<div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center"><div class="flex flex-col items-center space-y-3"><div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div><p class="text-xs font-bold text-slate-700">Loading student approvals...</p></div></div>
+<div class="min-h-screen flex flex-col lg:flex-row"><div id="portal-sidebar"></div><div class="flex-1 flex flex-col min-w-0 main-content-layout"><div id="portal-header"></div><main class="flex-1 p-4 lg:p-8 space-y-6 max-w-7xl">
+  <section class="admin-section-card setup-hero flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+    <div><p class="text-[11px] font-extrabold text-emerald-700 uppercase tracking-[0.22em]">Student intake</p><h1 class="text-3xl font-extrabold text-slate-950 tracking-tight font-display">All Students & Approvals</h1><p class="text-sm text-slate-500 max-w-3xl leading-relaxed">Manage admin, team-leader, and public-registration students with filters, duplicate warnings, approval actions, and visible rejection reasons.</p></div>
+    <div class="flex flex-wrap gap-2"><a href="../admin/student-create.html" class="btn btn-primary text-white text-xs font-bold px-4 py-2.5">Add Students</a><a id="public-registration-link" href="#" target="_blank" class="btn btn-secondary text-xs font-bold px-4 py-2.5 border border-emerald-100">Public Registration Link</a></div>
+  </section>
+
+  <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="admin-status-card"><span>Approved</span><strong id="stat-approved">0</strong></div>
+    <div class="admin-warning-card"><span>Pending Approval</span><strong id="stat-pending">0</strong></div>
+    <div class="admin-danger-card"><span>Rejected</span><strong id="stat-rejected">0</strong></div>
+    <div class="admin-info-card"><span>Total Students</span><strong id="stat-total">0</strong></div>
+  </section>
+
+  <section id="approval-queue" class="admin-warning-card hidden space-y-4">
+    <div class="flex items-center justify-between gap-3"><div><p class="text-[11px] font-extrabold uppercase tracking-widest text-amber-700">Approval queue</p><h2 class="text-xl font-extrabold text-slate-950">Pending student submissions</h2></div><span id="pending-count" class="status-badge status-badge--warning">0 pending</span></div>
+    <div id="pending-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+  </section>
+
+  <section class="admin-section-card space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+      <input id="search" class="form-input md:col-span-2" placeholder="Search name, chest, phone...">
+      <select id="team-filter" class="form-input"><option value="all">All teams</option></select>
+      <select id="category-filter" class="form-input"><option value="all">All categories</option></select>
+      <select id="gender-filter" class="form-input"><option value="all">All genders</option><option value="boys">Boys</option><option value="girls">Girls</option><option value="general">General</option><option value="mixed">Mixed</option></select>
+      <select id="status-filter" class="form-input"><option value="all">All statuses</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select>
+      <select id="source-filter" class="form-input"><option value="all">All sources</option><option value="admin">Admin</option><option value="teamLeader">Team Leader</option><option value="public">Public Registration</option></select>
     </div>
-  </div>
+    <div class="table-container"><table class="w-full text-left"><thead><tr class="text-[10px] uppercase text-slate-400"><th class="p-4">Student</th><th class="p-4">Team / Category</th><th class="p-4">Gender</th><th class="p-4">Chest</th><th class="p-4">Source</th><th class="p-4">Status</th><th class="p-4 text-right">Actions</th></tr></thead><tbody id="student-body" class="text-xs divide-y divide-slate-100"></tbody></table></div>
+  </section>
+</main></div></div>
 
-  <div class="min-h-screen flex flex-col lg:flex-row">
-    <!-- Sidebar -->
-    <div id="portal-sidebar"></div>
-
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
-      <!-- Header -->
-      <div id="portal-header"></div>
-
-      <main class="flex-1 p-4 lg:p-8 space-y-8">
-        
-        <!-- Header Panel -->
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div class="space-y-1">
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Students Management</h1>
-            <p class="text-xs text-slate-400 font-medium">Register students, assign them to groups, approve submissions, and audit chest-number assignments.</p>
-          </div>
-          <div class="flex items-center space-x-2 shrink-0">
-            <!-- Normal Register Button (Hidden/Disabled under teamLeadersOnly mode) -->
-            <button type="button" id="bulk-import-toggle" class="btn btn-secondary py-2.5 px-4 text-xs font-bold border border-slate-200">Bulk Add</button>
-            <a href="../admin/student-create.html" id="register-student-btn" class="btn btn-primary py-2.5 px-4 text-xs font-bold space-x-1.5 shadow-sm">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-              <span>Register New Student</span>
-            </a>
-          </div>
-        </div>
-
-
-        <!-- Bulk Student Import Panel -->
-        <div id="bulk-import-panel" class="hidden bg-white rounded-2xl border border-emerald-100 p-6 shadow-xs space-y-4">
-          <div class="space-y-1">
-            <h2 class="text-sm font-bold text-slate-900 font-display">Bulk add students to groups</h2>
-            <p class="text-[11px] text-slate-500">First select the target group and category. Then paste one student name per line. Chest numbers are assigned automatically from the selected team group series.</p>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <select id="bulk-team-select" class="form-input" required><option value="">Select team group</option></select>
-            <select id="bulk-category-select" class="form-input" required><option value="">Select category</option></select>
-            <select id="bulk-subdivision-select" class="form-input"><option value="">Sub category / subdivision (optional)</option></select>
-          </div>
-          <textarea id="bulk-import-text" class="form-input min-h-[140px] text-xs font-mono" placeholder="Ali
-Amina
-Muhammad"></textarea>
-          <div class="flex items-center justify-end gap-2">
-            <button type="button" id="bulk-import-cancel" class="btn btn-secondary text-xs font-bold px-4 py-2 border border-slate-200">Cancel</button>
-            <button type="button" id="bulk-import-submit" class="btn btn-primary text-xs font-bold text-white px-4 py-2">Import Students</button>
-          </div>
-          <p id="bulk-import-status" class="hidden text-xs font-bold"></p>
-        </div>
-
-        <!-- Mode Notification Banner -->
-        <div id="mode-warning-banner" class="hidden bg-amber-50 border border-amber-100 text-amber-900 rounded-2xl p-5 space-y-3">
-          <div class="flex items-start space-x-3">
-            <svg class="h-5 w-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            <div class="space-y-1">
-              <p class="text-xs font-bold">Team Leaders Only Mode Active (ടീം ലീഡർമാർക്ക് മാത്രം)</p>
-              <p class="text-[11px] text-amber-700 leading-relaxed">Direct student registration is disabled for administrators. Roster creations are managed by individual Team Leaders. Profile modifications must be saved as Audit-Logged Emergency Overrides.</p>
-              <p class="text-[10px] font-semibold text-emerald-800">വിദ്യാർത്ഥികളുടെ രജിസ്ട്രേഷൻ പൂർണ്ണമായും ടീം ലീഡർമാരുടെ ഉത്തരവാദിത്തത്തിലാണ്. അഡ്മിൻമാർ അടിയന്തര സാഹചര്യങ്ങളിൽ മാത്രം വിവരങ്ങൾ തിരുത്തുക (Emergency Override).</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Success/Error Alert Toast -->
-        <div id="toast-msg" class="hidden bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl p-4 text-xs flex items-center space-x-2">
-          <svg class="h-4 w-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span id="toast-text">Operation completed successfully.</span>
-        </div>
-
-        <!-- Roster Board Filter Bento Grid -->
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden p-6 space-y-4">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Student Database</h2>
-            <div class="flex flex-wrap gap-2">
-              <input type="text" id="roster-search" class="form-input text-xs py-1.5 px-3 max-w-xs" placeholder="Search by name, chest or team...">
-              <select id="roster-category-filter" class="form-input text-xs py-1.5 px-3 cursor-pointer">
-                <option value="all">All Categories</option>
-              </select>
-              <select id="roster-status-filter" class="form-input text-xs py-1.5 px-3 cursor-pointer">
-                <option value="all">All Statuses</option>
-                <option value="active">Active / Approved</option>
-                <option value="pending_approval">Pending Approval</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Students Table -->
-          <div class="table-container">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/20">
-                  <th class="px-6 py-4">Student Participant</th>
-                  <th class="px-6 py-4 font-mono">Chest Number</th>
-                  <th class="px-6 py-4">Category</th>
-                  <th class="px-6 py-4 font-mono">Team ID</th>
-                  <th class="px-6 py-4">Status</th>
-                  <th class="px-6 py-4 text-right">Roster Actions</th>
-                </tr>
-              </thead>
-              <tbody id="students-table-body" class="divide-y divide-slate-100 text-xs">
-                <tr>
-                  <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">Loading database entries...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </main>
-    </div>
-  </div>
-
-  <!-- Mandatory Rejection Reason Modal -->
-  <div id="reject-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4 select-none">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-150 max-w-md w-full overflow-hidden flex flex-col">
-      <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-        <div>
-          <p class="text-[10px] font-mono font-extrabold text-red-600 uppercase tracking-wider">Registration Approval</p>
-          <h3 class="text-base font-bold text-slate-900 font-display">Reject Student Profile</h3>
-        </div>
-        <button onclick="closeRejectModal()" class="text-slate-400 hover:text-slate-600 font-bold cursor-pointer text-sm">✕</button>
-      </div>
-
-      <form id="reject-form" class="p-6 space-y-4">
-        <input type="hidden" id="reject-student-id" value="">
-        
-        <div class="space-y-1.5">
-          <label for="reject-reason" class="text-xs font-bold text-slate-700">Rejection Reason / justification (English / Malayalam)</label>
-          <textarea id="reject-reason" required class="form-input min-h-[100px] text-xs leading-relaxed" placeholder="Please explain why this student profile cannot be approved. e.g. Invalid category choice / Chest mismatch"></textarea>
-          <p class="text-[10px] text-red-500 font-semibold">കാരണം രേഖപ്പെടുത്തൽ നിർബന്ധമാണ്.</p>
-        </div>
-
-        <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
-          <button type="button" onclick="closeRejectModal()" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold cursor-pointer">
-            Cancel
-          </button>
-          <button type="submit" class="btn bg-red-600 hover:bg-red-700 py-2 px-4 text-xs font-bold text-white shadow-md cursor-pointer">
-            Confirm Rejection
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script type="module">
-    import { verifyUserRole } from "../assets/js/role-guard.js";
-    import { loadPortalLayout } from "../assets/js/component-loader.js";
-    import { initializeNavigation } from "../assets/js/navigation.js";
-    import { getFestivalSettings, getAllFestivalStudents, approveStudent, rejectStudent, createFestivalStudent } from "../assets/js/student-service.js";
-    import { getCategories, getTeams, getSubdivisions } from "../assets/js/firestore-service.js";
-
-    let activeFestId = null;
-    let festivalSettings = null;
-    let studentsRoster = [];
-    let categoryMap = {};
-
-    async function initPage() {
-      try {
-        await verifyUserRole(['admin']);
-        await loadPortalLayout('admin');
-        initializeNavigation();
-
-        activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
-        if (!activeFestId) {
-          alert("Please select a festival scope first.");
-          window.location.replace('../unauthorized.html?reason=no_scope');
-          return;
-        }
-
-        festivalSettings = await getFestivalSettings(activeFestId);
-        applyModeVisualState();
-        
-        await populateCategoryFilter();
-        await populateBulkScopeSelectors();
-        await loadRoster();
-        setupFilters();
-        setupRejectHandler();
-        setupBulkImport();
-
-        document.getElementById('global-page-loader').classList.add('hidden');
-      } catch (err) {
-        console.error("Roster loading failed:", err);
-      }
-    }
-
-    function applyModeVisualState() {
-      const mode = festivalSettings.studentRegistrationMode || 'adminOnly';
-      const warnBanner = document.getElementById('mode-warning-banner');
-      const createBtn = document.getElementById('register-student-btn');
-      const bulkBtn = document.getElementById('bulk-import-toggle');
-
-      if (mode === 'teamLeadersOnly') {
-        warnBanner.classList.remove('hidden');
-        createBtn.classList.add('opacity-50', 'pointer-events-none');
-        bulkBtn.classList.add('opacity-50', 'pointer-events-none');
-        createBtn.setAttribute('title', 'Admin creations disabled under Team Leader Mode.');
-      } else {
-        warnBanner.classList.add('hidden');
-        createBtn.classList.remove('opacity-50', 'pointer-events-none');
-        bulkBtn.classList.remove('opacity-50', 'pointer-events-none');
-      }
-    }
-
-
-    async function populateCategoryFilter() {
-      const categories = (await getCategories() || []).filter(cat => cat.active !== false);
-      categoryMap = Object.fromEntries(categories.map(cat => [cat.id, cat.name || cat.code || cat.id]));
-      const dropdown = document.getElementById('roster-category-filter');
-      dropdown.innerHTML = '<option value="all">All Categories</option>';
-      categories.forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat.id;
-        opt.textContent = cat.name || cat.code || cat.id;
-        dropdown.appendChild(opt);
-      });
-    }
-
-    async function populateBulkScopeSelectors() {
-      const [teams, categories, subdivisions] = await Promise.all([getTeams(), getCategories(), getSubdivisions()]);
-      const teamSelect = document.getElementById('bulk-team-select');
-      const categorySelect = document.getElementById('bulk-category-select');
-      const subdivisionSelect = document.getElementById('bulk-subdivision-select');
-      teamSelect.innerHTML = '<option value="">Select team group</option>';
-      categorySelect.innerHTML = '<option value="">Select category</option>';
-      subdivisionSelect.innerHTML = '<option value="">Sub category / subdivision (optional)</option>';
-      (teams || []).filter(item => item.active !== false).forEach(team => {
-        const opt = document.createElement('option');
-        opt.value = team.id;
-        opt.textContent = `${team.name || team.code || team.id} — next chest ${team.nextChestNumber || team.chestStartNumber || 1}`;
-        teamSelect.appendChild(opt);
-      });
-      (categories || []).filter(item => item.active !== false).forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat.id;
-        opt.textContent = cat.name || cat.code || cat.id;
-        categorySelect.appendChild(opt);
-      });
-      (subdivisions || []).filter(item => item.active !== false).forEach(sub => {
-        const opt = document.createElement('option');
-        opt.value = sub.id;
-        opt.textContent = sub.name || sub.code || sub.id;
-        subdivisionSelect.appendChild(opt);
-      });
-    }
-
-    async function loadRoster() {
-      try {
-        studentsRoster = await getAllFestivalStudents() || [];
-        renderRoster(studentsRoster);
-      } catch (err) {
-        console.error("Failed to query student documents:", err);
-      }
-    }
-
-    function renderRoster(students) {
-      const tbody = document.getElementById('students-table-body');
-      tbody.innerHTML = '';
-
-      if (students.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">No student records found matching the selection criteria.</td>
-          </tr>
-        `;
-        return;
-      }
-
-const catNames = categoryMap;
-
-      students.forEach(s => {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
-
-        let badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-100";
-        let statusLabel = s.status || 'active';
-
-        if (s.status === 'pending_approval') {
-          badgeStyle = "bg-amber-50 text-amber-700 border-amber-100 animate-pulse";
-          statusLabel = "Pending Approval";
-        } else if (s.status === 'rejected') {
-          badgeStyle = "bg-red-50 text-red-700 border-red-100";
-          statusLabel = "Rejected";
-        }
-
-        // Action Buttons
-        let actionHTML = '';
-        if (s.status === 'pending_approval' && festivalSettings.studentRegistrationMode === 'teamLeadersOnly') {
-          actionHTML = `
-            <div class="flex items-center justify-end space-x-2">
-              <button class="approve-action-btn font-bold px-2.5 py-1 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] cursor-pointer" data-id="${s.id}">Approve</button>
-              <button class="reject-action-btn font-bold px-2.5 py-1 rounded-md bg-red-600 hover:bg-red-700 text-white text-[10px] cursor-pointer" data-id="${s.id}">Reject</button>
-            </div>
-          `;
-        } else {
-          // If mode is teamLeadersOnly, edit triggers an emergency override form.
-          // If mode is adminOnly, normal edit is available.
-          const editURL = `../admin/student-edit.html?id=${s.id}`;
-          actionHTML = `
-            <div class="flex items-center justify-end space-x-2">
-              <a href="../admin/student-details.html?id=${s.id}" class="text-xs font-bold text-slate-500 hover:text-slate-700 hover:underline">View</a>
-              <a href="${editURL}" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">${festivalSettings.studentRegistrationMode === 'teamLeadersOnly' ? 'Override' : 'Edit'}</a>
-            </div>
-          `;
-        }
-
-        tr.innerHTML = `
-          <td class="px-6 py-4">
-            <div class="font-bold text-slate-900">${s.name}</div>
-            ${s.emergencyOverride ? `<div class="text-[9px] text-amber-600 font-mono mt-0.5">⚠️ Emergency Override Applied</div>` : ''}
-          </td>
-          <td class="px-6 py-4 font-mono font-semibold text-slate-600">${s.chestNumber}</td>
-          <td class="px-6 py-4 text-slate-600 font-medium">${catNames[s.categoryId] || s.categoryId}</td>
-          <td class="px-6 py-4 font-mono font-semibold text-slate-500">${s.teamId ? s.teamId.toUpperCase() : 'N/A'}</td>
-          <td class="px-6 py-4">
-            <div class="flex flex-col space-y-1">
-              <span class="inline-flex w-fit px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeStyle} uppercase tracking-wider">
-                ${statusLabel}
-              </span>
-              ${s.status === 'rejected' && s.rejectionReason ? `<p class="text-[9px] text-red-500 italic truncate max-w-[150px]" title="${s.rejectionReason}">Reason: ${s.rejectionReason}</p>` : ''}
-            </div>
-          </td>
-          <td class="px-6 py-4 text-right">
-            ${actionHTML}
-          </td>
-        `;
-
-        // Register actions
-        const appBtn = tr.querySelector('.approve-action-btn');
-        if (appBtn) {
-          appBtn.onclick = async () => {
-            if (confirm(`Are you sure you want to approve student registration for ${s.name}?`)) {
-              await performApprove(s.id);
-            }
-          };
-        }
-
-        const rejBtn = tr.querySelector('.reject-action-btn');
-        if (rejBtn) {
-          rejBtn.onclick = () => {
-            openRejectModal(s.id);
-          };
-        }
-
-        tbody.appendChild(tr);
-      });
-    }
-
-    async function performApprove(studentId) {
-      const loader = document.getElementById('global-page-loader');
-      loader.classList.remove('hidden');
-      try {
-        await approveStudent(studentId);
-        showToast("Student profile approved successfully!");
-        await loadRoster();
-      } catch (err) {
-        alert("Approval failed: " + err.message);
-      } finally {
-        loader.classList.add('hidden');
-      }
-    }
-
-    function openRejectModal(studentId) {
-      document.getElementById('reject-student-id').value = studentId;
-      document.getElementById('reject-reason').value = '';
-      document.getElementById('reject-modal').classList.remove('hidden');
-    }
-
-    window.closeRejectModal = function() {
-      document.getElementById('reject-modal').classList.add('hidden');
-    };
-
-
-    function setupBulkImport() {
-      const panel = document.getElementById('bulk-import-panel');
-      const status = document.getElementById('bulk-import-status');
-      document.getElementById('bulk-import-toggle').onclick = () => panel.classList.toggle('hidden');
-      document.getElementById('bulk-import-cancel').onclick = () => panel.classList.add('hidden');
-      document.getElementById('bulk-import-submit').onclick = async () => {
-        const lines = document.getElementById('bulk-import-text').value.split('\n').map(line => line.trim()).filter(Boolean);
-        const teamId = document.getElementById('bulk-team-select').value;
-        const categoryId = document.getElementById('bulk-category-select').value;
-        const subdivisionId = document.getElementById('bulk-subdivision-select').value;
-        if (lines.length === 0 || !teamId || !categoryId) {
-          alert('Select team group and category, then paste at least one student name.');
-          return;
-        }
-
-        const loader = document.getElementById('global-page-loader');
-        loader.classList.remove('hidden');
-        let successCount = 0;
-        const failures = [];
-
-        for (const [index, line] of lines.entries()) {
-          const name = line.trim();
-          if (!name) {
-            failures.push(`Line ${index + 1}: invalid student name`);
-            continue;
-          }
-          try {
-            await createFestivalStudent({ name, teamId, categoryId, subdivisionId });
-            successCount += 1;
-          } catch (err) {
-            failures.push(`Line ${index + 1}: ${err.message}`);
-          }
-        }
-
-        loader.classList.add('hidden');
-        status.classList.remove('hidden', 'text-rose-600', 'text-emerald-700');
-        status.classList.add(failures.length ? 'text-rose-600' : 'text-emerald-700');
-        status.textContent = failures.length ? `${successCount} imported. ${failures.join(' | ')}` : `${successCount} students imported successfully.`;
-        await populateBulkScopeSelectors();
-        await loadRoster();
-      };
-    }
-
-    function setupRejectHandler() {
-      const form = document.getElementById('reject-form');
-      form.onsubmit = async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('reject-student-id').value;
-        const reason = document.getElementById('reject-reason').value.trim();
-
-        if (!reason) return;
-
-        closeRejectModal();
-        const loader = document.getElementById('global-page-loader');
-        loader.classList.remove('hidden');
-
-        try {
-          await rejectStudent(id, reason);
-          showToast("Student profile rejected successfully.");
-          await loadRoster();
-        } catch (err) {
-          alert("Rejection failed: " + err.message);
-        } finally {
-          loader.classList.add('hidden');
-        }
-      };
-    }
-
-    function setupFilters() {
-      const search = document.getElementById('roster-search');
-      const catFilter = document.getElementById('roster-category-filter');
-      const statusFilter = document.getElementById('roster-status-filter');
-
-      const applyFilters = () => {
-        const queryStr = search.value.toLowerCase().trim();
-        const catVal = catFilter.value;
-        const statusVal = statusFilter.value;
-
-        const filtered = studentsRoster.filter(s => {
-          const matchesSearch = s.name.toLowerCase().includes(queryStr) || 
-                                s.chestNumber.toLowerCase().includes(queryStr) || 
-                                (s.teamId && s.teamId.toLowerCase().includes(queryStr));
-          const matchesCat = catVal === 'all' || s.categoryId === catVal;
-          const matchesStatus = statusVal === 'all' || s.status === statusVal || (statusVal === 'active' && !s.status);
-          return matchesSearch && matchesCat && matchesStatus;
-        });
-
-        renderRoster(filtered);
-      };
-
-      search.oninput = applyFilters;
-      catFilter.onchange = applyFilters;
-      statusFilter.onchange = applyFilters;
-    }
-
-    function showToast(msg) {
-      const toast = document.getElementById('toast-msg');
-      const text = document.getElementById('toast-text');
-      text.textContent = msg;
-      toast.classList.remove('hidden');
-      setTimeout(() => { toast.classList.add('hidden'); }, 4000);
-    }
-
-    initPage();
-  </script>
-</body>
-</html>
+<div id="reject-dialog" class="admin-confirm-dialog hidden" role="dialog" aria-modal="true"><div class="admin-confirm-dialog__panel max-w-lg w-full"><h2 class="text-xl font-extrabold text-slate-950">Reject student submission</h2><p class="text-sm text-slate-600 mt-1">A rejection reason is required and will be visible to the submitter.</p><input type="hidden" id="reject-id"><textarea id="reject-reason" class="form-input min-h-[120px] mt-4" placeholder="Reason for rejection"></textarea><div class="mt-5 flex justify-end gap-2"><button id="reject-cancel" class="btn border border-slate-200 bg-white px-4 py-2 text-xs font-bold">Cancel</button><button id="reject-confirm" class="btn bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 text-xs font-bold">Reject</button></div></div></div>
+<script type="module">
+import { verifyUserRole } from '../assets/js/role-guard.js';
+import { loadPortalLayout } from '../assets/js/component-loader.js';
+import { initializeNavigation } from '../assets/js/navigation.js';
+import { getActiveScope, getTeams, getCategories } from '../assets/js/firestore-service.js';
+import { getAllFestivalStudents, approveStudent, rejectStudent, getFestivalSettings } from '../assets/js/student-service.js';
+const $=id=>document.getElementById(id);let students=[],teams=[],categories=[],settings={};
+function statusOf(s){if(s.status==='rejected')return 'rejected';if(s.status==='pending_approval'||s.status==='pending')return 'pending';return 'approved';}
+function label(list,id){const item=list.find(x=>x.id===id);return item?.name||item?.code||id||'—';}
+async function init(){await verifyUserRole(['admin']);await loadPortalLayout('admin');initializeNavigation();settings=await getFestivalSettings();[students,teams,categories]=await Promise.all([getAllFestivalStudents(),getTeams(),getCategories()]);students=students||[];teams=teams||[];categories=categories||[];populateFilters();renderStats();renderQueue();renderTable();buildPublicLink();bind();$('global-page-loader').classList.add('hidden');}
+function populateFilters(){for(const t of teams.filter(x=>x.active!==false))$('team-filter').insertAdjacentHTML('beforeend',`<option value="${t.id}">${t.name||t.code||t.id}</option>`);for(const c of categories.filter(x=>x.active!==false))$('category-filter').insertAdjacentHTML('beforeend',`<option value="${c.id}">${c.name||c.code||c.id}</option>`);}
+function buildPublicLink(){const scope=getActiveScope();const url=new URL('../public/registration.html',location.href);url.searchParams.set('institution',scope.institutionId);url.searchParams.set('festival',scope.festivalId);$('public-registration-link').href=url.toString();}
+function renderStats(){const approved=students.filter(s=>statusOf(s)==='approved').length,pending=students.filter(s=>statusOf(s)==='pending').length,rejected=students.filter(s=>statusOf(s)==='rejected').length;$('stat-approved').textContent=approved;$('stat-pending').textContent=pending;$('stat-rejected').textContent=rejected;$('stat-total').textContent=students.length;$('pending-count').textContent=`${pending} pending`;}
+function renderQueue(){const pending=students.filter(s=>statusOf(s)==='pending');$('approval-queue').classList.toggle('hidden',!pending.length);$('pending-list').innerHTML=pending.map(s=>`<article class="bg-white/80 rounded-2xl border border-amber-100 p-4"><p class="font-extrabold text-slate-950">${s.name}</p><p class="text-[11px] text-slate-500 mt-1">${label(teams,s.teamId)} · ${label(categories,s.categoryId)} · ${s.registrationSource||s.createdByRole||'unknown'}</p><p class="text-[11px] text-slate-500">Phone: ${s.phone||'—'} · Chest: ${s.chestNumber||'after approval'}</p><div class="flex gap-2 mt-3"><button data-approve="${s.id}" class="btn bg-emerald-600 text-white text-[11px] font-bold px-3 py-1.5">Approve</button><button data-reject="${s.id}" class="btn bg-rose-600 text-white text-[11px] font-bold px-3 py-1.5">Reject</button></div></article>`).join('');}
+function filtered(){const q=$('search').value.toLowerCase().trim(),team=$('team-filter').value,cat=$('category-filter').value,gender=$('gender-filter').value,status=$('status-filter').value,source=$('source-filter').value;return students.filter(s=>(!q||[s.name,s.chestNumber,s.phone,s.teamId].some(v=>String(v||'').toLowerCase().includes(q)))&&(team==='all'||s.teamId===team)&&(cat==='all'||s.categoryId===cat)&&(gender==='all'||String(s.gender||'general').toLowerCase()===gender)&&(status==='all'||statusOf(s)===status)&&(source==='all'||(s.registrationSource||s.createdByRole||'admin')===source));}
+function badge(s){const st=statusOf(s);return st==='approved'?'<span class="status-badge status-badge--success">Approved</span>':st==='pending'?'<span class="status-badge status-badge--warning">Pending</span>':'<span class="status-badge status-badge--danger">Rejected</span>';}
+function renderTable(){const rows=filtered();$('student-body').innerHTML=rows.length?rows.map(s=>`<tr><td class="p-4"><p class="font-extrabold text-slate-950">${s.name}</p><p class="text-[10px] text-slate-400">${s.phone||'No phone'}${s.rejectionReason?` · Reason: ${s.rejectionReason}`:''}</p></td><td class="p-4">${label(teams,s.teamId)}<br><span class="text-slate-400">${label(categories,s.categoryId)}</span></td><td class="p-4">${s.gender||'general'}</td><td class="p-4 font-mono">${s.chestNumber||'—'}</td><td class="p-4">${s.registrationSource||s.createdByRole||'admin'}</td><td class="p-4">${badge(s)}</td><td class="p-4 text-right"><div class="flex justify-end gap-2">${statusOf(s)==='pending'?`<button data-approve="${s.id}" class="text-emerald-700 font-bold">Approve</button><button data-reject="${s.id}" class="text-rose-700 font-bold">Reject</button>`:''}<a class="text-slate-500 font-bold" href="../admin/student-details.html?id=${s.id}">View</a></div></td></tr>`).join(''):'<tr><td colspan="7" class="p-10 text-center text-slate-400">No students match the selected filters.</td></tr>';}
+function bind(){['search','team-filter','category-filter','gender-filter','status-filter','source-filter'].forEach(id=>$(id).addEventListener('input',renderTable));document.body.addEventListener('click',async e=>{const approve=e.target.closest('[data-approve]');const reject=e.target.closest('[data-reject]');if(approve){await approveStudent(approve.dataset.approve);students=await getAllFestivalStudents()||[];renderStats();renderQueue();renderTable();}if(reject){$('reject-id').value=reject.dataset.reject;$('reject-reason').value='';$('reject-dialog').classList.remove('hidden');}});$('reject-cancel').onclick=()=>$('reject-dialog').classList.add('hidden');$('reject-confirm').onclick=async()=>{const reason=$('reject-reason').value.trim();if(!reason){alert('Rejection reason is required.');return;}await rejectStudent($('reject-id').value,reason);$('reject-dialog').classList.add('hidden');students=await getAllFestivalStudents()||[];renderStats();renderQueue();renderTable();};}
+init().catch(err=>{console.error(err);alert(err.message||err);$('global-page-loader').classList.add('hidden');});
+</script></body></html>

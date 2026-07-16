@@ -726,15 +726,127 @@ export async function getJudgeMarks() {
   }
 }
 
-export async function getEntries() {
-  const festId = getActiveFestivalId();
+
+// ==========================================
+// COMPETITION ENTRIES / PARTICIPANT REGISTRATION
+// ==========================================
+export async function getCompetitionEntries() {
   const path = window.meeladPulseScopedFestivalPath('entries');
   try {
     const snap = await getDocs(collection(db, path));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
   } catch (error) {
     handleFirestoreError(error, OperationType.LIST, path);
   }
+}
+
+export async function saveCompetitionEntry(entryData) {
+  assertOnline('Competition Entry Registration');
+  const profile = window.currentUserProfile || {};
+  const scope = getActiveScope();
+  const festId = getActiveFestivalId();
+  const competitionId = entryData.competitionId || '';
+  const teamId = entryData.teamId || profile.teamId || '';
+  if (!competitionId) throw new Error('Competition item is required.');
+  if (!teamId) throw new Error('Team is required.');
+  const competition = (await getDoc(doc(db, window.meeladPulseScopedFestivalPath('competitions'), competitionId))).data();
+  if (!competition) throw new Error('Competition item was not found.');
+  const studentIds = Array.isArray(entryData.studentIds) ? [...new Set(entryData.studentIds.filter(Boolean))] : [];
+  const minMembers = Number(competition.minParticipantsPerEntry) || 1;
+  const maxMembers = Number(competition.maxParticipantsPerEntry) || 1;
+  if (studentIds.length < minMembers || studentIds.length > maxMembers) {
+    throw new Error(`Select ${minMembers === maxMembers ? minMembers : `${minMembers}-${maxMembers}`} participant(s) for this item.`);
+  }
+  if (profile.role === 'teamLeader' && profile.teamId && profile.teamId !== teamId) {
+    throw new Error('Team leaders can submit entries only for their assigned team.');
+  }
+  const existing = await getDocs(query(
+    collection(db, window.meeladPulseScopedFestivalPath('entries')),
+    where('competitionId', '==', competitionId),
+    where('teamId', '==', teamId)
+  ));
+  const currentId = entryData.id || '';
+  const duplicateStudent = existing.docs.some((docSnap) => {
+    if (docSnap.id === currentId) return false;
+    const data = docSnap.data();
+    return (data.studentIds || []).some((id) => studentIds.includes(id));
+  });
+  if (duplicateStudent) {
+    throw new Error('One or more selected students are already entered for this competition.');
+  }
+  const activeTeamEntryCount = existing.docs.filter((docSnap) => docSnap.id !== currentId && docSnap.data().status !== 'rejected').length;
+  const maxEntriesPerTeam = Number(competition.maxEntriesPerTeam) || 1;
+  if (!currentId && activeTeamEntryCount >= maxEntriesPerTeam) {
+    throw new Error(`This team already reached the entry limit (${maxEntriesPerTeam}) for this item.`);
+  }
+  const role = profile.role || entryData.source || 'public';
+  const needsApproval = role !== 'admin';
+  const id = currentId || doc(collection(db, 'dummy')).id;
+  const payload = {
+    id,
+    institutionId: scope.institutionId,
+    festivalId: festId,
+    competitionId,
+    teamId,
+    studentIds,
+    entryName: entryData.entryName || '',
+    source: entryData.source || role,
+    status: entryData.status || (needsApproval ? 'pending_approval' : 'approved'),
+    rejectionReason: entryData.rejectionReason || '',
+    submittedBy: profile.uid || entryData.submittedBy || '',
+    submittedByRole: role,
+    audit: {
+      createdBy: profile.uid || entryData.submittedBy || '',
+      createdByRole: role,
+      updatedBy: profile.uid || '',
+      updatedAt: new Date().toISOString()
+    },
+    updatedAt: serverTimestamp(),
+    createdAt: entryData.createdAt || serverTimestamp()
+  };
+  try {
+    await setDoc(doc(db, window.meeladPulseScopedFestivalPath('entries'), id), payload, { merge: true });
+    return id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, window.meeladPulseScopedFestivalPath(`entries/${id}`));
+  }
+}
+
+export async function approveCompetitionEntry(entryId) {
+  assertAdminRole();
+  const profile = window.currentUserProfile || {};
+  try {
+    await updateDoc(doc(db, window.meeladPulseScopedFestivalPath('entries'), entryId), {
+      status: 'approved',
+      rejectionReason: '',
+      approvedBy: profile.uid || '',
+      approvedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, window.meeladPulseScopedFestivalPath(`entries/${entryId}`));
+  }
+}
+
+export async function rejectCompetitionEntry(entryId, reason) {
+  assertAdminRole();
+  const profile = window.currentUserProfile || {};
+  if (!reason || !reason.trim()) throw new Error('Rejection reason is required.');
+  try {
+    await updateDoc(doc(db, window.meeladPulseScopedFestivalPath('entries'), entryId), {
+      status: 'rejected',
+      rejectionReason: reason.trim(),
+      rejectedBy: profile.uid || '',
+      rejectedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, window.meeladPulseScopedFestivalPath(`entries/${entryId}`));
+  }
+}
+
+export async function getEntries() {
+  return getCompetitionEntries();
 }
 
 export async function getStudents() {

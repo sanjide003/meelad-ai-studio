@@ -151,6 +151,25 @@ service cloud.firestore {
           }
         }
 
+        match /festStudents/{studentId} {
+          allow read: if true;
+          allow create: if isInstitutionMember(institutionId) || (
+            request.resource.data.registrationSource == 'public' &&
+            request.resource.data.status == 'pending_approval' &&
+            request.resource.data.phone is string &&
+            request.resource.data.name is string &&
+            request.resource.data.teamId is string &&
+            request.resource.data.categoryId is string
+          );
+          allow update, delete: if isSuperAdmin() || isInstitutionMember(institutionId);
+        }
+
+        match /entries/{entryId} {
+          allow read: if isSuperAdmin() || isInstitutionMember(institutionId);
+          allow create: if isSuperAdmin() || isInstitutionMember(institutionId);
+          allow update, delete: if isSuperAdmin() || isInstitutionMember(institutionId);
+        }
+
         match /{document=**} {
           allow read: if isSuperAdmin() || isInstitutionMember(institutionId);
           allow write: if isSuperAdmin() || isInstitutionMember(institutionId);
