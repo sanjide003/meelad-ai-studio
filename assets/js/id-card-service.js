@@ -1,7 +1,7 @@
 // MeeladPulse ID Card Service
 import { db } from "./firebase-init.js";
 import { collection, getDocs, query, where, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getActiveFestivalId } from "./firestore-service.js";
+import { getActiveFestivalId, getActiveScope } from "./firestore-service.js";
 
 /**
  * Returns the public verification URL for a specific card.
@@ -102,7 +102,8 @@ export async function getFestivalStudentsForCards() {
  */
 export async function getSystemUsersForCards() {
   const festId = getActiveFestivalId();
-  const q = query(collection(db, "users"), where("active", "==", true));
+  const { institutionId } = getActiveScope();
+  const q = query(collection(db, "users"), where("active", "==", true), where("institutionId", "==", institutionId));
   const snap = await getDocs(q);
   
   const list = snap.docs.map(doc => {

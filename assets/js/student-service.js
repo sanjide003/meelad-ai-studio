@@ -30,7 +30,9 @@ export async function getFestivalSettings(festId) {
       return {
         id: snap.id,
         studentRegistrationMode: data.studentRegistrationMode || 'adminOnly',
+        studentRegistrationSources: Array.isArray(data.studentRegistrationSources) ? data.studentRegistrationSources : [],
         studentRegistrationOpen: data.studentRegistrationOpen !== false,
+        studentRegistrationCloseAt: data.studentRegistrationCloseAt || '',
         teamLeaderStudentApprovalRequired: data.teamLeaderStudentApprovalRequired === true,
         championshipTieBreakers: data.championshipTieBreakers || [
           'totalPoints',
@@ -63,7 +65,9 @@ export async function updateFestivalSettings(settings) {
     
     const payload = {
       studentRegistrationMode: settings.studentRegistrationMode || 'adminOnly',
+      studentRegistrationSources: Array.isArray(settings.studentRegistrationSources) ? settings.studentRegistrationSources : [],
       studentRegistrationOpen: settings.studentRegistrationOpen !== false,
+      studentRegistrationCloseAt: settings.studentRegistrationCloseAt || '',
       teamLeaderStudentApprovalRequired: settings.teamLeaderStudentApprovalRequired === true,
       madrasaName: settings.madrasaName || '',
       festivalTitle: settings.festivalTitle || '',
@@ -125,11 +129,11 @@ export async function canCurrentUserCreateStudent() {
   if (!settings.studentRegistrationOpen) return false;
 
   if (profile.role === 'admin') {
-    return settings.studentRegistrationMode === 'adminOnly';
+    return isAdminStudentMode(settings.studentRegistrationMode || 'adminOnly', settings);
   }
 
   if (profile.role === 'teamLeader') {
-    return settings.studentRegistrationMode === 'teamLeadersOnly';
+    return isTeamLeaderStudentMode(settings.studentRegistrationMode || 'adminOnly', settings);
   }
 
   return false;
@@ -147,18 +151,77 @@ export async function canCurrentUserEditStudent(student) {
   if (!settings.studentRegistrationOpen) return false;
 
   if (profile.role === 'admin') {
-    return settings.studentRegistrationMode === 'adminOnly';
+    return isAdminStudentMode(settings.studentRegistrationMode || 'adminOnly', settings);
   }
 
   if (profile.role === 'teamLeader') {
     // Team Leader can edit if mode is teamLeadersOnly, and student belongs to their team, 
     // and is not already approved if approval is required.
-    if (settings.studentRegistrationMode !== 'teamLeadersOnly') return false;
+    if (!isTeamLeaderStudentMode(settings.studentRegistrationMode || 'adminOnly', settings)) return false;
     if (student.teamId !== profile.teamId) return false;
     return true;
   }
 
   return false;
+}
+
+
+export function normalizeStudentName(name = '') {
+  const clean = name.trim().replace(/\s+/g, ' ');
+  return /^[A-Za-z .'-]+$/.test(clean) ? clean.toUpperCase() : clean;
+}
+
+function sourceEnabled(settings = {}, source) {
+  return Array.isArray(settings.studentRegistrationSources) && settings.studentRegistrationSources.length
+    ? settings.studentRegistrationSources.includes(source)
+    : null;
+}
+
+function isAdminStudentMode(mode = 'adminOnly', settings = {}) {
+  const explicit = sourceEnabled(settings, 'admin');
+  return explicit === null ? ['adminOnly', 'all'].includes(mode) : explicit;
+}
+
+function isTeamLeaderStudentMode(mode = 'adminOnly', settings = {}) {
+  const explicit = sourceEnabled(settings, 'teamLeader');
+  return explicit === null ? ['teamLeadersOnly', 'all'].includes(mode) : explicit;
+}
+
+function isPublicStudentMode(mode = 'adminOnly', settings = {}) {
+  const explicit = sourceEnabled(settings, 'public');
+  return explicit === null ? ['publicRegistrationOnly', 'registration', 'all'].includes(mode) : explicit;
+}
+
+export function isStudentRegistrationPortalOpen(settings = {}) {
+  if (settings.studentRegistrationOpen === false) return false;
+  if (settings.studentRegistrationCloseAt) {
+    const closeTime = new Date(settings.studentRegistrationCloseAt).getTime();
+    if (!Number.isNaN(closeTime) && Date.now() > closeTime) return false;
+  }
+  return true;
+}
+
+async function allocateChestNumberForStudent(studentData) {
+  if (!studentData.teamId) throw new Error('Team group selection is required before assigning a chest number.');
+  if (!studentData.categoryId) throw new Error('Category selection is required before assigning a chest number.');
+  const teamRef = doc(db, window.meeladPulseScopedFestivalPath('teams'), studentData.teamId);
+  const teamSnap = await getDoc(teamRef);
+  if (!teamSnap.exists()) throw new Error('Selected team group was not found.');
+  const team = teamSnap.data();
+  const gender = (studentData.gender || '').toLowerCase();
+  const categoryKey = team.chestMode === 'gender' && gender ? `${studentData.categoryId}_${gender}` : studentData.categoryId;
+  const fallbackStart = team.chestMode === 'gender'
+    ? Number(team.categoryChestStartNumbers?.[studentData.categoryId]?.[gender] || team.chestStartNumbers?.[gender] || team.chestStartNumber || 1)
+    : Number(team.categoryChestStartNumbers?.[studentData.categoryId]?.common || team.chestStartNumber || 1);
+  const nextNumber = Number(team.nextChestByCategory?.[categoryKey] || fallbackStart || 1);
+  const chestNumber = String(nextNumber).padStart(3, '0');
+  const qChest = query(collection(db, window.meeladPulseScopedFestivalPath('festStudents')), where('chestNumber', '==', chestNumber));
+  const snapChest = await getDocs(qChest);
+  if (!snapChest.empty) {
+    throw new Error(`Chest number ${chestNumber} is already assigned to another student in this festival.`);
+  }
+  await updateDoc(teamRef, { [`nextChestByCategory.${categoryKey}`]: nextNumber + 1, updatedAt: serverTimestamp() });
+  return chestNumber;
 }
 
 /**
@@ -174,16 +237,17 @@ export async function createFestivalStudent(studentData) {
   }
 
   // Ensure registration is open
-  if (!settings.studentRegistrationOpen) {
+  if (!isStudentRegistrationPortalOpen(settings)) {
     throw new Error("Student registration is currently closed.");
   }
 
   // Validate permission by mode
-  if (profile.role === 'admin' && settings.studentRegistrationMode !== 'adminOnly') {
-    throw new Error("Student registration mode is set to Team Leaders Only. Admins cannot normally register students.");
+  const mode = settings.studentRegistrationMode || 'adminOnly';
+  if (profile.role === 'admin' && !isAdminStudentMode(mode, settings)) {
+    throw new Error("Student registration mode does not allow admin-added students.");
   }
-  if (profile.role === 'teamLeader' && settings.studentRegistrationMode !== 'teamLeadersOnly') {
-    throw new Error("Student registration mode is set to Admin Only. Team Leaders cannot register students.");
+  if (profile.role === 'teamLeader' && !isTeamLeaderStudentMode(mode, settings)) {
+    throw new Error("Student registration mode does not allow team-leader-added students.");
   }
 
   if (!studentData.teamId) {
@@ -193,25 +257,26 @@ export async function createFestivalStudent(studentData) {
     throw new Error("Category selection is required before adding students.");
   }
 
-  let chestNumber = (studentData.chestNumber || '').toString().trim();
-  if (!chestNumber) {
-    const teamRef = doc(db, window.meeladPulseScopedFestivalPath('teams'), studentData.teamId);
-    const teamSnap = await getDoc(teamRef);
-    if (!teamSnap.exists()) {
-      throw new Error("Selected team group was not found.");
-    }
-    const team = teamSnap.data();
-    const nextNumber = Number(team.nextChestNumber || team.chestStartNumber || 1);
-    chestNumber = String(nextNumber).padStart(3, '0');
-    await updateDoc(teamRef, { nextChestNumber: nextNumber + 1, updatedAt: serverTimestamp() });
+  const duplicates = await findDuplicateFestivalStudents({
+    name: studentData.name,
+    teamId: studentData.teamId,
+    categoryId: studentData.categoryId,
+    gender: studentData.gender
+  });
+  if (duplicates?.length && !studentData.allowDuplicate) {
+    throw new Error("A matching student already exists in this team/category. Review duplicates before saving.");
   }
 
-  // Check if chest number is unique in this festival
-  const festStudentsCol = collection(db, window.meeladPulseScopedFestivalPath('festStudents'));
-  const qChest = query(festStudentsCol, where('chestNumber', '==', chestNumber));
-  const snapChest = await getDocs(qChest);
-  if (!snapChest.empty) {
-    throw new Error(`Chest number ${chestNumber} is already assigned to another student in this festival.`);
+  let chestNumber = (studentData.chestNumber || '').toString().trim();
+  if (!chestNumber) {
+    chestNumber = await allocateChestNumberForStudent(studentData);
+  } else {
+    const festStudentsCol = collection(db, window.meeladPulseScopedFestivalPath('festStudents'));
+    const qChest = query(festStudentsCol, where('chestNumber', '==', chestNumber));
+    const snapChest = await getDocs(qChest);
+    if (!snapChest.empty) {
+      throw new Error(`Chest number ${chestNumber} is already assigned to another student in this festival.`);
+    }
   }
 
   const studentId = `stud_${studentData.teamId}_${chestNumber}`;
@@ -219,8 +284,8 @@ export async function createFestivalStudent(studentData) {
 
   // Determine initial status based on role and settings
   let status = 'active';
-  if (profile.role === 'teamLeader' && settings.teamLeaderStudentApprovalRequired) {
-    status = 'pending_approval';
+  if (profile.role !== 'admin') {
+    status = settings.teamLeaderStudentApprovalRequired ? 'pending_approval' : 'active';
   }
 
   const payload = {
@@ -230,12 +295,15 @@ export async function createFestivalStudent(studentData) {
     teamId: studentData.teamId,
     categoryId: studentData.categoryId,
     subdivisionId: studentData.subdivisionId || '',
-    name: studentData.name.trim(),
+    name: normalizeStudentName(studentData.name),
+    gender: studentData.gender || '',
+    orderNumber: Number(studentData.orderNumber) || 0,
+    phone: studentData.phone || '',
     chestNumber,
     status,
     createdBy: profile.uid,
     createdByRole: profile.role,
-    registrationSource: profile.role,
+    registrationSource: studentData.registrationSource || profile.role,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   };
@@ -256,6 +324,100 @@ export async function createFestivalStudent(studentData) {
   }
 }
 
+
+export function normalizeStudentStatus(status = 'active') {
+  if (status === 'pending') return 'pending_approval';
+  if (!status || status === 'active') return 'approved';
+  if (status === 'pending_approval') return 'pending';
+  return status;
+}
+
+export async function findDuplicateFestivalStudents({ name, teamId, categoryId, gender, excludeId = '' }) {
+  const cleanName = normalizeStudentName(name || '');
+  const path = window.meeladPulseScopedFestivalPath('festStudents');
+  try {
+    const snap = await getDocs(query(
+      collection(db, path),
+      where('teamId', '==', teamId || ''),
+      where('categoryId', '==', categoryId || '')
+    ));
+    return snap.docs
+      .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+      .filter((student) => student.id !== excludeId)
+      .filter((student) => normalizeStudentName(student.name || '') === cleanName)
+      .filter((student) => !gender || !student.gender || String(student.gender).toLowerCase() === String(gender).toLowerCase());
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, path);
+  }
+}
+
+export async function createPublicStudentRegistration(studentData, { institutionId, festivalId } = {}) {
+  assertOnline('Public Student Registration');
+  const currentScope = getActiveFestivalId ? null : null;
+  const scopedPath = institutionId && festivalId
+    ? `institutions/${institutionId}/festivals/${festivalId}`
+    : window.meeladPulseScopedFestivalPath();
+  const settingsRef = doc(db, scopedPath);
+  const settingsSnap = await getDoc(settingsRef);
+  const settings = settingsSnap.exists() ? settingsSnap.data() : {};
+  if (!isStudentRegistrationPortalOpen(settings)) {
+    throw new Error('Public registration is currently closed.');
+  }
+  const mode = settings.studentRegistrationMode || 'adminOnly';
+  if (!isPublicStudentMode(mode, settings)) {
+    throw new Error('Public registration is not enabled for this festival.');
+  }
+  if (!studentData.phone || !studentData.name || !studentData.teamId || !studentData.categoryId) {
+    throw new Error('Name, phone, team, and category are required.');
+  }
+  const duplicateSnap = await getDocs(query(
+    collection(db, `${scopedPath}/festStudents`),
+    where('phone', '==', studentData.phone.trim())
+  ));
+  const cleanName = normalizeStudentName(studentData.name);
+  const hasDuplicate = duplicateSnap.docs.some((docSnap) => {
+    const data = docSnap.data();
+    return normalizeStudentName(data.name || '') === cleanName && data.teamId === studentData.teamId && data.categoryId === studentData.categoryId;
+  });
+  if (hasDuplicate) {
+    throw new Error('A matching registration already exists for this phone number.');
+  }
+  const newRef = doc(collection(db, `${scopedPath}/festStudents`));
+  const payload = {
+    id: newRef.id,
+    studentId: newRef.id,
+    institutionId: institutionId || '',
+    festivalId: festivalId || '',
+    festId: festivalId || '',
+    teamId: studentData.teamId,
+    categoryId: studentData.categoryId,
+    gender: studentData.gender || '',
+    name: cleanName,
+    phone: studentData.phone.trim(),
+    guardianName: studentData.guardianName || '',
+    notes: studentData.notes || '',
+    chestNumber: '',
+    status: 'pending_approval',
+    registrationSource: 'public',
+    createdByRole: 'public',
+    rejectionReason: '',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+  await setDoc(newRef, payload);
+  return newRef.id;
+}
+
+export async function getPublicStudentRegistrationsByPhone(phone, { institutionId, festivalId } = {}) {
+  const scopedPath = institutionId && festivalId
+    ? `institutions/${institutionId}/festivals/${festivalId}`
+    : window.meeladPulseScopedFestivalPath();
+  const cleanPhone = (phone || '').trim();
+  if (!cleanPhone) return [];
+  const snap = await getDocs(query(collection(db, `${scopedPath}/festStudents`), where('phone', '==', cleanPhone)));
+  return snap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+}
+
 /**
  * Updates a Festival Student.
  */
@@ -269,7 +431,7 @@ export async function updateFestivalStudent(studentId, studentData) {
   }
 
   // Ensure registration is open
-  if (!settings.studentRegistrationOpen) {
+  if (!isStudentRegistrationPortalOpen(settings)) {
     throw new Error("Student registration is currently closed.");
   }
 
@@ -345,12 +507,17 @@ export async function approveStudent(studentId) {
       throw new Error("Student not found.");
     }
 
-    await updateDoc(docRef, {
+    const current = snap.data();
+    const approvalPayload = {
       status: 'active',
       approvedBy: profile.uid,
       approvedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
-    });
+    };
+    if (!current.chestNumber) {
+      approvalPayload.chestNumber = await allocateChestNumberForStudent(current);
+    }
+    await updateDoc(docRef, approvalPayload);
 
     await logAuditEvent(
       'student_approved', 

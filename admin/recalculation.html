@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scoreboard Recalculation Node - MeeladPulse</title>
+  <title>Recalculation - MeeladPulse</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../assets/css/main.css">
 </head>
@@ -30,12 +30,12 @@
         <!-- Header Banner & Recalculate CTA -->
         <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
           <div class="space-y-1">
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display" id="page-title-recalc">Scoreboard Aggregation Terminal</h1>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display" id="page-title-recalc">Recalculation</h1>
             <p class="text-xs text-slate-400 font-medium" id="page-subtitle-recalc">Compile overall point tallies, subdivision metrics, and Arts/Sports standings from published competition results.</p>
           </div>
           <div class="flex items-center space-x-2 shrink-0">
             <button id="lang-toggle-btn" class="btn btn-secondary text-xs py-2.5 px-3 border border-slate-200 cursor-pointer">
-              <span>English / മലയാളം</span>
+              <span>Language</span>
             </button>
             <button id="trigger-recalc-btn" class="btn btn-accent bg-slate-900 text-white hover:bg-slate-800 text-xs py-2.5 px-5 font-bold cursor-pointer flex items-center space-x-2 shadow-sm">
               <svg class="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19v-3H18"/></svg>
@@ -44,14 +44,14 @@
           </div>
         </div>
 
-        <!-- Terminal Logs Panel -->
+        <!-- Process Log -->
         <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 text-slate-300 font-mono text-xs space-y-4 shadow-md">
           <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <div class="flex items-center space-x-2">
               <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
               <span class="font-bold text-slate-200 text-xs uppercase tracking-wider" id="lbl-recalc-logs">Active Tabulator Stream Logs</span>
             </div>
-            <button id="clear-terminal-btn" class="text-[10px] text-slate-500 hover:text-slate-350 cursor-pointer">Clear Terminal</button>
+            <button id="clear-terminal-btn" class="text-[10px] text-slate-500 hover:text-slate-350 cursor-pointer">Clear Log</button>
           </div>
           
           <div id="terminal-content" class="h-44 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-slate-800 pr-1">
@@ -102,7 +102,7 @@
 
     const trans = {
       en: {
-        title: "Scoreboard Aggregation Terminal",
+        title: "Recalculation",
         subtitle: "Compile overall point tallies, subdivision metrics, and Arts/Sports standings from published competition results.",
         btnTrigger: "Trigger Scoreboard Recalculation",
         btnRunning: "Running Tabulator...",
@@ -115,7 +115,7 @@
         thAdj: "Adjustments (Bonus | Deductions)",
         thTotal: "Overall Points",
         empty: "No calculated summary documents found. Run a recalculation above to populate.",
-        cleared: "Terminal log session cleared.",
+        cleared: "Log cleared.",
         initLog: "Tabulation core standby. Click 'Trigger Scoreboard Recalculation' to begin..."
       },
       ml: {

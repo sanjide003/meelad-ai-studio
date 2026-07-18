@@ -29,17 +29,38 @@
     import { verifyUserRole } from "../assets/js/role-guard.js";
     import { loadPortalLayout } from "../assets/js/component-loader.js";
     import { initializeNavigation } from "../assets/js/navigation.js";
+    import { db } from "../assets/js/firebase-init.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const frame = document.getElementById('admin-content-frame');
     const defaultPage = 'dashboard.html';
+    const setupPage = 'festival-settings.html?setup=1';
 
     async function initShell() {
       await verifyUserRole(['admin']);
       await loadPortalLayout('admin');
       initializeNavigation();
       wireShellNavigation();
-      loadAdminPage(new URLSearchParams(window.location.search).get('page') || defaultPage, false);
+      const requestedPage = new URLSearchParams(window.location.search).get('page') || defaultPage;
+      const firstPage = await resolveInitialPage(requestedPage);
+      loadAdminPage(firstPage, false);
       document.getElementById('global-page-loader').classList.add('hidden');
+    }
+
+
+    async function resolveInitialPage(requestedPage) {
+      const normalized = normalizePage(requestedPage);
+      if (normalized.startsWith('festival-settings.html')) return normalized;
+      const festivalId = localStorage.getItem('meeladpulse_selected_fest_id');
+      const institutionId = localStorage.getItem('meeladpulse_selected_institution_id') || localStorage.getItem('selectedInstitutionId') || festivalId;
+      if (!festivalId || !institutionId) return setupPage;
+      if (localStorage.getItem(`meeladpulse_setup_done_${institutionId}_${festivalId}`) === '1') return normalized;
+      const snap = await getDoc(doc(db, `institutions/${institutionId}/festivals`, festivalId));
+      if (snap.exists() && (snap.data().setupCompleted || snap.data().setupWizard?.completed)) {
+        localStorage.setItem(`meeladpulse_setup_done_${institutionId}_${festivalId}`, '1');
+        return normalized;
+      }
+      return setupPage;
     }
 
     function normalizePage(rawPage) {
@@ -71,11 +92,14 @@
       frame.addEventListener('load', () => {
         try {
           const doc = frame.contentDocument;
-          if (!doc || doc.getElementById('admin-shell-embedded-style')) return;
-          const style = doc.createElement('style');
-          style.id = 'admin-shell-embedded-style';
-          style.textContent = `#portal-sidebar,#portal-header,#global-page-loader{display:none!important}.main-content-layout{margin-left:0!important;width:100%!important}body{background:#f8fafc!important}main{padding:1.5rem!important}`;
-          doc.head.appendChild(style);
+          if (!doc) return;
+          if (!doc.getElementById('admin-shell-embedded-style')) {
+            const style = doc.createElement('style');
+            style.id = 'admin-shell-embedded-style';
+            style.textContent = `#portal-sidebar,#portal-header,#global-page-loader{display:none!important}.main-content-layout{margin-left:0!important;width:100%!important}body{background:#f8fafc!important}main{padding:1.5rem!important}`;
+            doc.head.appendChild(style);
+          }
+          window.meeladPulseApplyAdminTranslations?.(doc, localStorage.getItem('meeladpulse_lang') || 'en');
         } catch (err) {
           console.warn('Embedded page styling skipped:', err);
         }
@@ -91,7 +115,21 @@
         link.classList.toggle('bg-emerald-100', active);
         link.classList.toggle('text-emerald-800', active);
         link.classList.toggle('font-extrabold', active);
+        link.classList.toggle('shadow-sm', active);
+        link.classList.toggle('admin-active-tab', active);
         link.setAttribute('aria-current', active ? 'page' : 'false');
+
+        if (active) {
+          const parentGroup = link.closest('.nav-group-content');
+          if (!parentGroup) return;
+          parentGroup.classList.remove('hidden');
+          const trigger = document.querySelector(`[aria-controls="${parentGroup.id}"]`);
+          if (!trigger) return;
+          trigger.setAttribute('aria-expanded', 'true');
+          trigger.setAttribute('aria-current', 'section');
+          trigger.classList.add('bg-emerald-50', 'text-emerald-800', 'font-bold');
+          localStorage.setItem(`meeladpulse_nav_${parentGroup.id}`, 'open');
+        }
       });
     }
 

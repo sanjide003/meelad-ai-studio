@@ -3,85 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register Student - Admin Terminal</title>
+  <title>Add Students - Admin Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
-  
   <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
-    <div class="flex flex-col items-center space-y-3">
-      <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
-      <p class="text-xs font-bold text-slate-700">Verifying Authority Scope...</p>
+    <div class="flex flex-col items-center space-y-3"><div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div><p class="text-xs font-bold text-slate-700">Loading student tools...</p></div>
+  </div>
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <div id="portal-sidebar"></div>
+    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
+      <div id="portal-header"></div>
+      <main class="flex-1 p-4 lg:p-8 space-y-6 max-w-7xl">
+        <section class="admin-section-card setup-hero flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+          <div><p class="text-[11px] font-extrabold text-emerald-700 uppercase tracking-[0.22em]">Student Management</p><h1 class="text-3xl font-extrabold text-slate-950 tracking-tight font-display">Add Students</h1><p class="text-sm text-slate-500 max-w-3xl leading-relaxed">Select team, category and gender first. Add students manually line-by-line or upload an Excel-compatible CSV file. Chest numbers are assigned in the same order as the preview.</p></div>
+          <a href="../admin/students.html" class="btn border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700">All Students</a>
+        </section>
+
+        <section class="admin-section-card space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <label class="setup-field"><span>Team</span><select id="scope-team" class="form-input"><option value="">Select team</option></select></label>
+            <label class="setup-field"><span>Category</span><select id="scope-category" class="form-input"><option value="">Select category</option></select></label>
+            <label id="gender-field" class="setup-field"><span>Gender</span><select id="scope-gender" class="form-input"><option value="">Select gender</option><option value="boys">Boys</option><option value="girls">Girls</option></select></label>
+            <label class="setup-field"><span>Phone (optional)</span><input id="default-phone" class="form-input" placeholder="For registration lookup"></label>
+          </div>
+          <div id="scope-help" class="admin-info-card p-4 text-sm text-slate-700">Names typed in English will be converted to CAPITAL LETTERS while saving.</div>
+        </section>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+          <section class="admin-section-card space-y-4">
+            <div><h2 class="text-xl font-extrabold text-slate-950">Manual Add</h2><p class="text-sm text-slate-500">Paste one student per line. Example: 10 names = 10 students in the selected team/category/gender.</p></div>
+            <textarea id="manual-names" class="form-input min-h-[220px] font-mono text-sm" placeholder="ALI AHMED&#10;MUHAMMED SINAN&#10;FATHIMA ZAHRA"></textarea>
+            <button id="preview-manual" class="btn btn-primary text-xs font-bold text-white px-5 py-2.5" type="button">Preview Manual Students</button>
+          </section>
+
+          <section class="admin-section-card space-y-4">
+            <div><h2 class="text-xl font-extrabold text-slate-950">Excel / CSV Upload</h2><p class="text-sm text-slate-500">Download the template, fill it in Excel, then upload the CSV. Headers: Order, Student Name, Team, Category, Gender, Phone.</p></div>
+            <div class="flex flex-wrap gap-2"><button id="download-template" type="button" class="btn border border-slate-200 bg-white px-4 py-2 text-xs font-bold">Download Format</button><input id="csv-file" type="file" accept=".csv,text/csv" class="form-input max-w-sm"></div>
+            <div id="template-example" class="admin-info-card p-4 text-xs text-slate-700 leading-relaxed"></div>
+            <button id="preview-csv" class="btn btn-primary text-xs font-bold text-white px-5 py-2.5" type="button">Preview Uploaded Students</button>
+          </section>
+        </div>
+      </main>
     </div>
   </div>
 
-  <div class="min-h-screen flex flex-col lg:flex-row">
-    <!-- Sidebar -->
-    <div id="portal-sidebar"></div>
-
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col min-w-0 main-content-layout">
-      <!-- Header -->
-      <div id="portal-header"></div>
-
-      <main class="flex-1 p-4 lg:p-8 space-y-8 max-w-2xl">
-        
-        <!-- Header Banner -->
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex items-center justify-between shadow-xs">
-          <div class="space-y-1">
-            <h1 class="text-xl font-extrabold text-slate-900 tracking-tight font-display">Register Student</h1>
-            <p class="text-xs text-slate-400 font-medium">Add a new student profile directly to the active festival database.</p>
-          </div>
-          <a href="../admin/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-1.5 px-3 text-xs font-bold">
-            Back to Roster
-          </a>
-        </div>
-
-        <!-- Form Panel -->
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs">
-          <form id="student-create-form" class="space-y-4">
-            
-            <div class="space-y-1.5">
-              <label for="student-name" class="text-xs font-bold text-slate-700">Student Full Name</label>
-              <input type="text" id="student-name" required class="form-input" placeholder="e.g. Abdullah Khan">
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="space-y-1.5">
-                <label for="student-chest" class="text-xs font-bold text-slate-700">Chest Number (Assigned)</label>
-                <input type="text" id="student-chest" required class="form-input" placeholder="e.g. C105">
-                <p class="text-[10px] text-slate-400 font-medium">Must be unique across the entire festival.</p>
-              </div>
-
-              <div class="space-y-1.5">
-                <label for="student-team" class="text-xs font-bold text-slate-700">Institutional Team (Team ID)</label>
-                <select id="student-team" required class="form-input cursor-pointer">
-                  <option value="">-- Select competing team --</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="space-y-1.5">
-              <label for="student-cat" class="text-xs font-bold text-slate-700">Age Category</label>
-              <select id="student-cat" required class="form-input cursor-pointer">
-                <option value="">-- Select Category --</option>
-              </select>
-            </div>
-
-            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
-              <a href="../admin/students.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold">
-                Cancel
-              </a>
-              <button type="submit" class="btn btn-primary py-2 px-4 text-xs font-bold shadow-md cursor-pointer">
-                Save Student Record
-              </button>
-            </div>
-
-          </form>
-        </div>
-
-      </main>
+  <div id="preview-dialog" class="admin-confirm-dialog hidden" role="dialog" aria-modal="true">
+    <div class="admin-confirm-dialog__panel max-w-5xl w-full">
+      <h2 class="text-xl font-extrabold text-slate-950">Preview before saving</h2>
+      <p class="text-sm text-slate-600 mt-1">Verify the full student list. Data is saved only after clicking Confirm Save.</p>
+      <div class="table-container mt-4 max-h-[55vh] overflow-auto"><table class="w-full text-left"><thead><tr class="text-[10px] uppercase text-slate-400"><th class="p-3">Order</th><th class="p-3">Name</th><th class="p-3">Team</th><th class="p-3">Category</th><th class="p-3">Gender</th><th class="p-3">Phone</th></tr></thead><tbody id="preview-body" class="text-xs divide-y divide-slate-100"></tbody></table></div>
+      <div class="mt-5 flex justify-end gap-2"><button id="cancel-preview" class="btn border border-slate-200 bg-white px-4 py-2 text-xs font-bold">Cancel</button><button id="confirm-save" class="btn bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold">Confirm Save</button></div>
     </div>
   </div>
 
@@ -92,94 +65,110 @@
     import { getFestivalSettings, createFestivalStudent } from "../assets/js/student-service.js";
     import { getTeams, getCategories } from "../assets/js/firestore-service.js";
 
-    let activeFestId = null;
+    let teams = [];
+    let categories = [];
+    let settings = {};
+    let previewRows = [];
+    const $ = (id) => document.getElementById(id);
 
     async function initPage() {
-      try {
-        await verifyUserRole(['admin']);
-        await loadPortalLayout('admin');
-        initializeNavigation();
-
-        activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
-        if (!activeFestId) {
-          alert("Please select a festival scope first.");
-          window.location.replace('../unauthorized.html?reason=no_scope');
-          return;
-        }
-
-        // Authority Check: If teamLeadersOnly mode is active, direct creation is blocked for admins.
-        const settings = await getFestivalSettings(activeFestId);
-        if (settings.studentRegistrationMode === 'teamLeadersOnly') {
-          // Block and redirect
-          alert("Team Leaders Only Mode is currently active.\nAdmins cannot register students directly in this mode.\n\nടീം ലീഡർമാർക്ക് മാത്രമേ ഈ മോഡിൽ രജിസ്ട്രേഷൻ ചെയ്യുവാൻ അനുവാദമുള്ളൂ.");
-          window.location.replace('../admin/students.html?warning=mode_restriction');
-          return;
-        }
-
-        await populateTeamsDropdown();
-        await populateCategoriesDropdown();
-        setupFormHandler();
-
-        document.getElementById('global-page-loader').classList.add('hidden');
-      } catch (err) {
-        console.error("Student create page failed to load:", err);
-      }
+      await verifyUserRole(['admin']);
+      await loadPortalLayout('admin');
+      initializeNavigation();
+      settings = await getFestivalSettings();
+      await loadOptions();
+      bindEvents();
+      $('global-page-loader').classList.add('hidden');
     }
 
-    async function populateTeamsDropdown() {
-      try {
-        const teams = await getTeams() || [];
-        const dropdown = document.getElementById('student-team');
-        teams.forEach(t => {
-          const opt = document.createElement('option');
-          opt.value = t.id;
-          opt.textContent = `${t.name} (${t.id.toUpperCase()})`;
-          dropdown.appendChild(opt);
-        });
-      } catch (err) {
-        console.error("Failed to load teams:", err);
-      }
+    async function loadOptions() {
+      [teams, categories] = await Promise.all([getTeams(), getCategories()]);
+      teams = (teams || []).filter(item => item.active !== false);
+      categories = (categories || []).filter(item => item.active !== false);
+      $('scope-team').innerHTML = '<option value="">Select team</option>' + teams.map(team => `<option value="${team.id}">${team.name || team.code || team.id}</option>`).join('');
+      $('scope-category').innerHTML = '<option value="">Select category</option>' + categories.map(cat => `<option value="${cat.id}">${cat.name || cat.code || cat.id}</option>`).join('');
+      const participantMode = settings.setupWizard?.participantMode || settings.festivalType || 'boysAndGirls';
+      if (participantMode === 'boysOnly') { $('scope-gender').value = 'boys'; $('gender-field').classList.add('hidden'); }
+      if (participantMode === 'girlsOnly') { $('scope-gender').value = 'girls'; $('gender-field').classList.add('hidden'); }
+      renderTemplateExample();
     }
 
-
-    async function populateCategoriesDropdown() {
-      const dropdown = document.getElementById('student-cat');
-      const categories = (await getCategories() || []).filter(cat => cat.active !== false);
-      dropdown.innerHTML = '<option value="">-- Select Category --</option>';
-      categories.forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat.id;
-        opt.textContent = cat.name || cat.code || cat.id;
-        dropdown.appendChild(opt);
-      });
+    function bindEvents() {
+      $('preview-manual').onclick = () => openPreview(buildManualRows());
+      $('preview-csv').onclick = async () => openPreview(await buildCsvRows());
+      $('download-template').onclick = downloadTemplate;
+      $('cancel-preview').onclick = () => $('preview-dialog').classList.add('hidden');
+      $('confirm-save').onclick = savePreviewRows;
     }
 
-    function setupFormHandler() {
-      const form = document.getElementById('student-create-form');
-      form.onsubmit = async (e) => {
-        e.preventDefault();
-
-        const loader = document.getElementById('global-page-loader');
-        loader.classList.remove('hidden');
-
-        const studentData = {
-          name: document.getElementById('student-name').value.trim(),
-          chestNumber: document.getElementById('student-chest').value.trim(),
-          teamId: document.getElementById('student-team').value,
-          categoryId: document.getElementById('student-cat').value
-        };
-
-        try {
-          await createFestivalStudent(studentData);
-          window.location.replace('../admin/students.html?success=student_registered');
-        } catch (err) {
-          loader.classList.add('hidden');
-          alert("Registration failed: " + err.message);
-        }
-      };
+    function selectedScope() {
+      const teamId = $('scope-team').value;
+      const categoryId = $('scope-category').value;
+      const gender = $('scope-gender').value;
+      if (!teamId || !categoryId || !gender) throw new Error('Select team, category, and gender before adding students.');
+      return { teamId, categoryId, gender, phone: $('default-phone').value.trim() };
     }
 
-    initPage();
+    function normalizeName(name) {
+      const clean = name.trim().replace(/\s+/g, ' ');
+      return /^[A-Za-z .'-]+$/.test(clean) ? clean.toUpperCase() : clean;
+    }
+
+    function buildManualRows() {
+      const scope = selectedScope();
+      return $('manual-names').value.split('\n').map(line => line.trim()).filter(Boolean).map((name, index) => ({ orderNumber: index + 1, name: normalizeName(name), ...scope }));
+    }
+
+    async function buildCsvRows() {
+      const file = $('csv-file').files[0];
+      if (!file) throw new Error('Upload the completed CSV file first.');
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      const headers = lines.shift().split(',').map(item => item.trim().toLowerCase());
+      const get = (cols, key) => cols[headers.indexOf(key)]?.trim() || '';
+      return lines.map((line, index) => {
+        const cols = line.split(',');
+        const teamName = get(cols, 'team');
+        const catName = get(cols, 'category');
+        const team = teams.find(item => [item.id, item.name, item.code].filter(Boolean).map(String).map(v => v.toLowerCase()).includes(teamName.toLowerCase()));
+        const cat = categories.find(item => [item.id, item.name, item.code].filter(Boolean).map(String).map(v => v.toLowerCase()).includes(catName.toLowerCase()));
+        return { orderNumber: Number(get(cols, 'order')) || index + 1, name: normalizeName(get(cols, 'student name')), teamId: team?.id || $('scope-team').value, categoryId: cat?.id || $('scope-category').value, gender: (get(cols, 'gender') || $('scope-gender').value).toLowerCase(), phone: get(cols, 'phone') || $('default-phone').value.trim() };
+      }).sort((a, b) => a.orderNumber - b.orderNumber);
+    }
+
+    function openPreview(rows) {
+      if (!rows.length) throw new Error('Add at least one student name.');
+      previewRows = rows;
+      $('preview-body').innerHTML = rows.map(row => `<tr><td class="p-3 font-mono">${row.orderNumber}</td><td class="p-3 font-bold text-slate-900">${row.name}</td><td class="p-3">${label(teams, row.teamId)}</td><td class="p-3">${label(categories, row.categoryId)}</td><td class="p-3 uppercase">${row.gender}</td><td class="p-3">${row.phone || '-'}</td></tr>`).join('');
+      $('preview-dialog').classList.remove('hidden');
+    }
+
+    async function savePreviewRows() {
+      $('confirm-save').disabled = true;
+      for (const row of previewRows) await createFestivalStudent({ ...row, registrationSource: 'admin' });
+      window.location.href = '../admin/students.html?success=students_added';
+    }
+
+    function label(list, id) { const item = list.find(entry => entry.id === id); return item?.name || item?.code || id; }
+
+    function downloadTemplate() {
+      const rows = ['Order,Student Name,Team,Category,Gender,Phone'];
+      let order = 1;
+      teams.forEach(team => categories.forEach(category => rows.push(`${order++},SAMPLE STUDENT ${order},${team.name || team.id},${category.name || category.id},boys,`)));
+      const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'student-upload-template.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function renderTemplateExample() {
+      $('template-example').innerHTML = `<strong>Template includes:</strong> Order, Student Name, Team, Category, Gender, Phone.<br><strong>Teams:</strong> ${teams.map(t => t.name || t.id).join(', ') || 'No teams yet'}<br><strong>Categories:</strong> ${categories.map(c => c.name || c.id).join(', ') || 'No categories yet'}`;
+    }
+
+    initPage().catch(err => { console.error(err); alert(err.message || err); $('global-page-loader').classList.add('hidden'); });
   </script>
 </body>
 </html>

@@ -44,13 +44,38 @@ service cloud.firestore {
       return isAuthenticated() && getUserData().role == 'teamLeader';
     }
 
+    function isSameInstitutionResource() {
+      return isAuthenticated() && resource.data.institutionId is string && getUserData().institutionId == resource.data.institutionId;
+    }
+
+    function isSameInstitutionCreate() {
+      return isAuthenticated() && request.resource.data.institutionId is string && getUserData().institutionId == request.resource.data.institutionId;
+    }
+
+    function institutionProfileKeys() {
+      return ['name', 'place', 'registerNumber', 'logoUrl', 'runBy', 'defaultFestivalId', 'updatedAt'];
+    }
+
+    function canCreateInstitutionProfile(institutionId) {
+      return isAuthenticated() && getUserData().institutionId == institutionId &&
+        !request.resource.data.keys().hasAny(['ownerPassword', 'password', 'passwordHash']) &&
+        request.resource.data.keys().hasOnly(institutionProfileKeys());
+    }
+
+    function canUpdateInstitutionProfile(institutionId) {
+      return isAuthenticated() && getUserData().institutionId == institutionId &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['ownerPassword', 'password', 'passwordHash']) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(institutionProfileKeys());
+    }
+
     // --- Users Collection ---
     match /users/{userId} {
-      allow read: if isAuthenticated();
+      allow get: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin() || isSameInstitutionResource());
+      allow list: if isAuthenticated() && (isSuperAdmin() || isSameInstitutionResource());
       // Super Admin/admin writes normal profiles. Manual institution credentials create an anonymous Firebase session profile
       // after the password is verified through institutionLogins, so scoped Firestore rules can enforce tenant isolation.
-      allow create: if isAdmin() || isValidManualSessionProfile(userId);
-      allow update: if isAdmin() || (
+      allow create: if (isAdmin() && (isSuperAdmin() || isSameInstitutionCreate())) || isValidManualSessionProfile(userId);
+      allow update: if (isAdmin() && (isSuperAdmin() || isSameInstitutionResource())) || (
         isAuthenticated() &&
         request.auth.uid == userId &&
         resource.data.manualAuth == true &&
@@ -60,29 +85,30 @@ service cloud.firestore {
         request.auth.uid == userId &&
         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions', 'teamId', 'active', 'institutionId', 'festivalId', 'manualAuth'])
       );
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() && (isSuperAdmin() || isSameInstitutionResource());
     }
 
     // --- User Invitations Collection (Top-Level) ---
     match /userInvitations/{tokenHash} {
-      // Anyone can read a token to verify it during activation
-      allow read: if true;
-      // Admins can create invitations
-      allow create: if isAdmin();
+      // Anyone can get a token to verify it during activation, but list queries stay institution-scoped.
+      allow get: if true;
+      allow list: if isAdmin() && (isSuperAdmin() || isSameInstitutionResource());
+      // Admins can create invitations only for their own institution.
+      allow create: if isAdmin() && (isSuperAdmin() || isSameInstitutionCreate());
       // Allow updating a pending token to 'used' during activation
-      allow update: if isAdmin() || (
+      allow update: if (isAdmin() && (isSuperAdmin() || isSameInstitutionResource())) || (
         resource.data.status == 'pending' && 
         request.resource.data.status == 'used' && 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'activatedAt', 'activatedUid'])
       );
       // Only admins can delete invitations
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() && (isSuperAdmin() || isSameInstitutionResource());
     }
 
     // --- Master Students Collection ---
     match /students/{studentId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow read: if isAuthenticated() && (isSuperAdmin() || isSameInstitutionResource());
+      allow write: if isAdmin() && (isSuperAdmin() || isSameInstitutionCreate() || isSameInstitutionResource());
     }
 
     // --- Global App Settings ---
@@ -92,16 +118,31 @@ service cloud.firestore {
     }
 
 
-    // --- Public manual login index for institution admins (replace with Cloud Function + hashed passwords before launch). ---
+    // --- Public manual login index for institution admins. Passwords must be stored only as hashes. ---
     match /institutionLogins/{loginId} {
       allow read: if true;
-      allow write: if isSuperAdmin();
+      allow create: if (isSuperAdmin() || (
+        isAdmin() &&
+        request.resource.data.institutionId == getUserData().institutionId &&
+        request.resource.data.usernameLower == loginId &&
+        request.resource.data.role in ['institutionAdmin', 'admin']
+      )) && !request.resource.data.keys().hasAny(['password']);
+      allow update: if (isSuperAdmin() || (
+        isAdmin() &&
+        resource.data.institutionId == getUserData().institutionId &&
+        request.resource.data.institutionId == resource.data.institutionId &&
+        request.resource.data.usernameLower == loginId &&
+        request.resource.data.role in ['institutionAdmin', 'admin']
+      )) && !request.resource.data.keys().hasAny(['password']);
+      allow delete: if isSuperAdmin() || (isAdmin() && resource.data.institutionId == getUserData().institutionId && resource.data.role in ['institutionAdmin', 'admin']);
     }
 
     // --- Premium SaaS Institutions Collection ---
     match /institutions/{institutionId} {
       allow read: if isSuperAdmin() || isInstitutionMember(institutionId);
-      allow create, update, delete: if isSuperAdmin();
+      allow create: if (isSuperAdmin() && !request.resource.data.keys().hasAny(['ownerPassword'])) || canCreateInstitutionProfile(institutionId);
+      allow update: if (isSuperAdmin() && !request.resource.data.keys().hasAny(['ownerPassword'])) || canUpdateInstitutionProfile(institutionId);
+      allow delete: if isSuperAdmin();
 
       match /admins/{adminId} {
         allow read: if isSuperAdmin() || isInstitutionMember(institutionId);
@@ -114,7 +155,8 @@ service cloud.firestore {
 
         match /manualUsers/{manualUserId} {
           allow read: if true;
-          allow write: if isSuperAdmin() || isInstitutionMember(institutionId);
+          allow create, update: if (isSuperAdmin() || isInstitutionMember(institutionId)) && !request.resource.data.keys().hasAny(['password']);
+          allow delete: if isSuperAdmin() || isInstitutionMember(institutionId);
         }
 
         match /publicData/{pubId} {
@@ -124,6 +166,25 @@ service cloud.firestore {
             allow read: if true;
             allow write: if isSuperAdmin() || isInstitutionMember(institutionId);
           }
+        }
+
+        match /festStudents/{studentId} {
+          allow read: if true;
+          allow create: if isInstitutionMember(institutionId) || (
+            request.resource.data.registrationSource == 'public' &&
+            request.resource.data.status == 'pending_approval' &&
+            request.resource.data.phone is string &&
+            request.resource.data.name is string &&
+            request.resource.data.teamId is string &&
+            request.resource.data.categoryId is string
+          );
+          allow update, delete: if isSuperAdmin() || isInstitutionMember(institutionId);
+        }
+
+        match /entries/{entryId} {
+          allow read: if isSuperAdmin() || isInstitutionMember(institutionId);
+          allow create: if isSuperAdmin() || isInstitutionMember(institutionId);
+          allow update, delete: if isSuperAdmin() || isInstitutionMember(institutionId);
         }
 
         match /{document=**} {

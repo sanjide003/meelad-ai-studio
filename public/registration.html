@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Registration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <main class="max-w-5xl mx-auto p-4 md:p-8 space-y-6">
+    <section class="admin-section-card setup-hero">
+      <p class="text-[11px] font-extrabold text-emerald-700 uppercase tracking-[0.22em]">Public registration</p>
+      <h1 class="text-3xl font-extrabold text-slate-950">Register a Student</h1>
+      <p id="portal-message" class="text-sm text-slate-600 mt-1">Submit student details for admin approval. Use the same phone number later to check approval or rejection reason.</p>
+    </section>
+
+    <section id="closed-panel" class="admin-warning-card hidden p-5">
+      <h2 class="text-xl font-extrabold text-slate-950">Public registration is closed</h2>
+      <p class="text-sm text-slate-600 mt-2">The admin has not opened public registration for this festival, or the configured closing time has passed. Please contact your team leader or institution admin.</p>
+    </section>
+
+    <section id="registration-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-5 hidden">
+      <form id="registration-form" class="admin-section-card space-y-4">
+        <h2 class="text-xl font-extrabold text-slate-950">Student details</h2>
+        <label class="setup-field"><span>Student name</span><input id="name" class="form-input" required></label>
+        <label class="setup-field"><span>Phone number</span><input id="phone" class="form-input" required></label>
+        <label class="setup-field"><span>Team</span><select id="team" class="form-input" required><option value="">Select team</option></select></label>
+        <label class="setup-field"><span>Category</span><select id="category" class="form-input" required><option value="">Select category</option></select></label>
+        <label class="setup-field"><span>Gender</span><select id="gender" class="form-input"><option value="general">General</option><option value="boys">Boys</option><option value="girls">Girls</option></select></label>
+        <label class="setup-field"><span>Guardian / parent name</span><input id="guardian" class="form-input"></label>
+        <label class="setup-field"><span>Optional notes</span><textarea id="notes" class="form-input min-h-[90px]"></textarea></label>
+        <button class="btn btn-primary text-white text-xs font-bold px-5 py-2.5" type="submit">Submit for Approval</button>
+        <p id="form-status" class="text-sm font-bold"></p>
+      </form>
+      <section class="admin-section-card space-y-4">
+        <h2 class="text-xl font-extrabold text-slate-950">Check registration status</h2>
+        <p class="text-sm text-slate-500">Enter the phone number used during registration.</p>
+        <div class="flex gap-2"><input id="status-phone" class="form-input" placeholder="Phone number"><button id="status-search" class="btn btn-secondary text-xs font-bold px-4 py-2 border border-slate-200">Search</button></div>
+        <div id="status-result" class="space-y-3"></div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module">
+    import { db } from '../assets/js/firebase-init.js';
+    import { collection, doc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    import { createPublicStudentRegistration, getPublicStudentRegistrationsByPhone, isStudentRegistrationPortalOpen } from '../assets/js/student-service.js';
+
+    const $ = (id) => document.getElementById(id);
+    const params = new URLSearchParams(location.search);
+    const institutionId = params.get('institution');
+    const festivalId = params.get('festival') || institutionId;
+    const scoped = `institutions/${institutionId}/festivals/${festivalId}`;
+    const publicModes = ['publicRegistrationOnly', 'registration', 'all'];
+
+    function requireScope() {
+      if (!institutionId || !festivalId) throw new Error('Invalid registration link. Institution and festival are required.');
+    }
+
+    async function loadPortalState() {
+      requireScope();
+      const snap = await getDoc(doc(db, scoped));
+      const settings = snap.exists() ? snap.data() : {};
+      const publicEnabled = Array.isArray(settings.studentRegistrationSources) && settings.studentRegistrationSources.length ? settings.studentRegistrationSources.includes('public') : publicModes.includes(settings.studentRegistrationMode || 'adminOnly');
+      const open = publicEnabled && isStudentRegistrationPortalOpen(settings);
+      if (!open) {
+        $('closed-panel').classList.remove('hidden');
+        $('registration-grid').classList.add('hidden');
+        return false;
+      }
+      $('registration-grid').classList.remove('hidden');
+      if (settings.studentRegistrationCloseAt) {
+        $('portal-message').textContent = `Registration is open until ${new Date(settings.studentRegistrationCloseAt).toLocaleString()}. Submit student details for admin approval.`;
+      }
+      return true;
+    }
+
+    async function loadOptions() {
+      const [teams, cats] = await Promise.all([getDocs(collection(db, `${scoped}/teams`)), getDocs(collection(db, `${scoped}/categories`))]);
+      $('team').innerHTML = '<option value="">Select team</option>' + teams.docs.map((d) => ({ id: d.id, ...d.data() })).filter((x) => x.active !== false).map((t) => `<option value="${t.id}">${t.name || t.code || t.id}</option>`).join('');
+      $('category').innerHTML = '<option value="">Select category</option>' + cats.docs.map((d) => ({ id: d.id, ...d.data() })).filter((x) => x.active !== false).map((c) => `<option value="${c.id}">${c.name || c.code || c.id}</option>`).join('');
+    }
+
+    $('registration-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const status = $('form-status');
+      status.className = 'text-sm font-bold text-slate-600';
+      status.textContent = 'Submitting...';
+      try {
+        await createPublicStudentRegistration({ name: $('name').value, phone: $('phone').value, teamId: $('team').value, categoryId: $('category').value, gender: $('gender').value, guardianName: $('guardian').value, notes: $('notes').value }, { institutionId, festivalId });
+        status.className = 'text-sm font-bold text-emerald-700';
+        status.textContent = 'Registration submitted. Please check approval status later using your phone number.';
+        e.target.reset();
+      } catch (err) {
+        status.className = 'text-sm font-bold text-rose-700';
+        status.textContent = err.message || err;
+      }
+    };
+
+    $('status-search').onclick = async () => {
+      const target = $('status-result');
+      target.textContent = 'Searching...';
+      try {
+        const rows = await getPublicStudentRegistrationsByPhone($('status-phone').value, { institutionId, festivalId });
+        target.innerHTML = rows.length ? rows.map((s) => `<article class="${s.status === 'rejected' ? 'admin-danger-card' : s.status === 'pending_approval' ? 'admin-warning-card' : 'admin-success-card'}"><p class="font-extrabold">${s.name}</p><p class="text-sm">Status: ${s.status === 'active' ? 'approved' : s.status || 'pending_approval'}</p>${s.rejectionReason ? `<p class="text-sm mt-1">Reason: ${s.rejectionReason}</p>` : ''}</article>`).join('') : '<div class="admin-empty-state">No registration found for this phone number.</div>';
+      } catch (err) {
+        target.innerHTML = `<div class="admin-danger-card">${err.message || err}</div>`;
+      }
+    };
+
+    loadPortalState().then((open) => open && loadOptions()).catch((err) => { document.body.innerHTML = `<main class="max-w-xl mx-auto p-6"><div class="admin-danger-card">${err.message || err}</div></main>`; });
+  </script>
+</body>
+</html>

@@ -170,7 +170,7 @@
         const compStage = comp ? (comp.stageId || 'TBA') : 'TBA';
 
         // Get names of registered members
-        const studentNames = (ent.memberStudentIds || []).map(sid => {
+        const studentNames = (ent.studentIds || ent.memberStudentIds || []).map(sid => {
           const s = teamStudents.find(stud => stud.id === sid);
           return s ? s.name : "Unknown Student";
         }).join(', ');
@@ -194,8 +194,8 @@
           </td>
           <td class="px-6 py-4">
             <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase tracking-wider">
-              ${ent.status || 'registered'}
-            </span>
+              ${ent.status === 'approved' ? 'approved' : ent.status === 'rejected' ? 'rejected' : 'pending approval'}
+            </span>${ent.rejectionReason ? `<p class="text-[10px] text-rose-600 font-bold mt-1">Reason: ${ent.rejectionReason}</p>` : ''}
           </td>
           <td class="px-6 py-4 text-right space-x-2">
             <button class="edit-btn text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer" data-id="${ent.id}">Edit</button>

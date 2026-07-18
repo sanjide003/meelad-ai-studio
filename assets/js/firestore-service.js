@@ -13,8 +13,18 @@ import {
   where, 
   orderBy, 
   writeBatch,
+  deleteField,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { assertOnline } from "./network-status.js";
+
+
+async function hashManualPassword(password) {
+  if (!password) return '';
+  const data = new TextEncoder().encode(password);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
 
 // Firestore Error Information conforming to strict security skill specification
 export const OperationType = {
@@ -366,45 +376,93 @@ export async function getTeams() {
 export async function saveTeam(teamData) {
   assertAdminRole();
   const festId = getActiveFestivalId();
-  const id = (teamData.id || teamData.code || doc(collection(db, 'dummy')).id).toString().trim().toLowerCase();
+  const scope = getActiveScope();
+  const id = (teamData.id || teamData.code || teamData.name || doc(collection(db, 'dummy')).id).toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || doc(collection(db, 'dummy')).id;
   const path = window.meeladPulseScopedFestivalPath(`teams/${id}`);
   const chestStartNumber = Math.max(1, Number(teamData.chestStartNumber) || 1);
   const nextChestNumber = Math.max(chestStartNumber, Number(teamData.nextChestNumber) || chestStartNumber);
-  const leaderUsername = (teamData.leaderUsername || '').trim().toLowerCase();
+  const chestStartNumbers = {
+    common: chestStartNumber,
+    boys: Math.max(1, Number(teamData.boysChestStartNumber) || chestStartNumber),
+    girls: Math.max(1, Number(teamData.girlsChestStartNumber) || chestStartNumber)
+  };
+  const leaders = Array.isArray(teamData.leaders) ? teamData.leaders
+    .map((leader, index) => ({
+      id: leader.id || `${id}-leader-${index + 1}`,
+      name: (leader.name || '').trim(),
+      role: (leader.role || 'Team Leader').trim(),
+      order: Math.max(1, Number(leader.order) || index + 1),
+      photoUrl: (leader.photoUrl || '').trim(),
+      username: (leader.username || '').trim(),
+      usernameLower: (leader.username || '').trim().toLowerCase(),
+      active: leader.active !== false
+    }))
+    .filter(leader => leader.name || leader.username)
+    .sort((a, b) => a.order - b.order)
+    : [];
+  const primaryLeader = leaders[0] || {
+    role: teamData.leaderRole || 'Team Leader',
+    name: teamData.leaderName || '',
+    username: teamData.leaderUsername || '',
+    usernameLower: (teamData.leaderUsername || '').trim().toLowerCase(),
+    photoUrl: teamData.leaderPhotoUrl || '',
+    active: teamData.leaderActive !== false,
+    order: 1
+  };
   try {
     const payload = {
       id,
       name: teamData.name,
       code: teamData.code || id.toUpperCase(),
-      colour: teamData.colour || '#10b981',
+      logoUrl: teamData.logoUrl || '',
+      colour: teamData.colour || teamData.color || '#10b981',
+      color: teamData.colour || teamData.color || '#10b981',
+      chestMode: teamData.chestMode || 'common',
       chestStartNumber,
       nextChestNumber,
-      leader: {
-        role: teamData.leaderRole || 'teamLeader',
-        name: teamData.leaderName || '',
-        username: teamData.leaderUsername || '',
-        usernameLower: leaderUsername,
-        photoUrl: teamData.leaderPhotoUrl || '',
-        active: teamData.leaderActive !== false
-      },
+      chestStartNumbers,
+      categoryChestStartNumbers: teamData.categoryChestStartNumbers || {},
+      nextChestByCategory: teamData.nextChestByCategory || {},
+      leaders,
+      leader: primaryLeader,
       active: teamData.active !== false,
       updatedAt: serverTimestamp()
     };
     await setDoc(doc(db, window.meeladPulseScopedFestivalPath('teams'), id), payload, { merge: true });
 
-    if (leaderUsername && teamData.leaderPassword) {
+    const leadersWithPasswords = Array.isArray(teamData.leaders) ? teamData.leaders.filter(leader => leader.username && leader.password) : [];
+    if (!leadersWithPasswords.length && teamData.leaderUsername && teamData.leaderPassword) {
+      leadersWithPasswords.push({
+        name: teamData.leaderName,
+        role: teamData.leaderRole,
+        username: teamData.leaderUsername,
+        password: teamData.leaderPassword,
+        photoUrl: teamData.leaderPhotoUrl,
+        order: 1,
+        active: teamData.leaderActive !== false
+      });
+    }
+
+    for (const leader of leadersWithPasswords) {
+      const leaderUsername = (leader.username || '').trim().toLowerCase();
+      if (!leaderUsername) continue;
       const manualUserPayload = {
-        uid: `manual_team_${id}_${leaderUsername}`,
+        uid: `manual_team_${id}_${leaderUsername.replace(/[^a-z0-9]+/g, '_')}`,
         role: 'teamLeader',
-        institutionId: getActiveScope().institutionId,
+        teamRole: leader.role || 'Team Leader',
+        institutionId: scope.institutionId,
         festivalId: festId,
         teamId: id,
-        name: teamData.leaderName || teamData.name || leaderUsername,
-        username: teamData.leaderUsername,
+        name: leader.name || teamData.name || leaderUsername,
+        username: leader.username,
         usernameLower: leaderUsername,
-        password: teamData.leaderPassword,
-        photoUrl: teamData.leaderPhotoUrl || '',
-        active: teamData.leaderActive !== false,
+        password: deleteField(),
+        passwordHash: await hashManualPassword(leader.password),
+        passwordUpdatedAt: serverTimestamp(),
+        legacyPasswordMigrated: true,
+        photoUrl: leader.photoUrl || '',
+        order: Math.max(1, Number(leader.order) || 1),
+        active: leader.active !== false,
         updatedAt: serverTimestamp()
       };
       await setDoc(doc(db, getScopedFestivalPath(`manualUsers/${leaderUsername}`)), manualUserPayload, { merge: true });
@@ -477,6 +535,21 @@ export async function saveCompetition(compData) {
   const path = window.meeladPulseScopedFestivalPath(`competitions/${id}`);
   try {
     const docRef = doc(db, window.meeladPulseScopedFestivalPath('competitions'), id);
+    const existingSnap = await getDocs(query(
+      collection(db, window.meeladPulseScopedFestivalPath('competitions')),
+      where('name', '==', compData.name)
+    ));
+    const duplicate = existingSnap.docs.some((docSnap) => {
+      if (docSnap.id === id) return false;
+      const data = docSnap.data();
+      return (data.categoryId || '') === (compData.categoryId || '') &&
+        (data.genderMode || 'flexible') === (compData.genderMode || 'flexible') &&
+        (data.programmeType || '') === (compData.programmeType || '') &&
+        (data.performanceType || 'stage') === (compData.performanceType || 'stage');
+    });
+    if (duplicate) {
+      throw new Error('A competition with the same name, category, gender, programme, and section already exists.');
+    }
     const payload = {
       id,
       name: compData.name,
@@ -487,6 +560,8 @@ export async function saveCompetition(compData) {
       genderMode: compData.genderMode || 'flexible',
       resultMode: compData.resultMode || 'combinedResult',
       competitionType: compData.competitionType || 'individual',
+      programmeType: compData.programmeType || '',
+      sourceMode: compData.sourceMode || 'admin',
       performanceType: compData.performanceType || 'stage',
       roundType: compData.roundType || 'directFinal',
       minParticipantsPerEntry: Number(compData.minParticipantsPerEntry) || 1,
@@ -667,15 +742,213 @@ export async function getJudgeMarks() {
   }
 }
 
-export async function getEntries() {
-  const festId = getActiveFestivalId();
+
+// ==========================================
+// COMPETITION ENTRIES / PARTICIPANT REGISTRATION
+// ==========================================
+export async function getCompetitionEntries() {
   const path = window.meeladPulseScopedFestivalPath('entries');
+  try {
+    const snap = await getDocs(collection(db, path));
+    return snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, path);
+  }
+}
+
+
+// ==========================================
+// SCHEDULE MANAGEMENT
+// ==========================================
+export async function getSchedules() {
+  const path = window.meeladPulseScopedFestivalPath('schedules');
   try {
     const snap = await getDocs(collection(db, path));
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (error) {
     handleFirestoreError(error, OperationType.LIST, path);
   }
+}
+
+export async function saveSchedule(scheduleData) {
+  assertAdminRole();
+  const scope = getActiveScope();
+  const id = scheduleData.id || doc(collection(db, 'dummy')).id;
+  const path = window.meeladPulseScopedFestivalPath(`schedules/${id}`);
+  try {
+    const payload = {
+      id,
+      institutionId: scope.institutionId,
+      festivalId: scope.festivalId,
+      competitionId: scheduleData.competitionId,
+      competitionName: scheduleData.competitionName || '',
+      date: scheduleData.date || '',
+      reportingTime: scheduleData.reportingTime || '',
+      startTime: scheduleData.startTime || '',
+      endTime: scheduleData.endTime || '',
+      durationMinutes: Number(scheduleData.durationMinutes) || 0,
+      stage: scheduleData.stage || '',
+      venue: scheduleData.venue || scheduleData.stage || '',
+      status: scheduleData.status || 'scheduled',
+      notes: scheduleData.notes || '',
+      estimatedDurationMinutes: Number(scheduleData.estimatedDurationMinutes) || 0,
+      entryCount: Number(scheduleData.entryCount) || 0,
+      teamEntryCount: Number(scheduleData.teamEntryCount) || 0,
+      participantCount: Number(scheduleData.participantCount) || 0,
+      scheduledTime: scheduleData.date && scheduleData.startTime ? `${scheduleData.date}T${scheduleData.startTime}` : '',
+      updatedAt: serverTimestamp()
+    };
+    await setDoc(doc(db, window.meeladPulseScopedFestivalPath('schedules'), id), payload, { merge: true });
+    return id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export async function deleteSchedule(id) {
+  assertAdminRole();
+  const path = window.meeladPulseScopedFestivalPath(`schedules/${id}`);
+  try {
+    await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('schedules'), id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+async function validateCompetitionEntryStudents(competition, teamId, studentIds) {
+  const students = [];
+  for (const studentId of studentIds) {
+    const snap = await getDoc(doc(db, window.meeladPulseScopedFestivalPath('festStudents'), studentId));
+    if (!snap.exists()) throw new Error(`Student ${studentId} was not found.`);
+    const student = { id: snap.id, ...snap.data() };
+    if (student.teamId !== teamId) throw new Error(`${student.name || studentId} does not belong to the selected team.`);
+    if ((student.status || 'active') !== 'active') throw new Error(`${student.name || studentId} is not approved yet.`);
+    const categoryOk = !competition.categoryId || competition.categoryId === 'general' || student.categoryId === competition.categoryId;
+    if (!categoryOk) throw new Error(`${student.name || studentId} is not eligible for this category.`);
+    const studentGender = (student.gender || 'general').toLowerCase();
+    const competitionGender = (competition.genderMode || 'general').toLowerCase();
+    const genderOk = ['general', 'mixed', 'flexible'].includes(competitionGender) || !studentGender || studentGender === 'general' || studentGender === competitionGender;
+    if (!genderOk) throw new Error(`${student.name || studentId} is not eligible for this gender mode.`);
+    students.push(student);
+  }
+  return students;
+}
+
+export async function saveCompetitionEntry(entryData) {
+  assertOnline('Competition Entry Registration');
+  const profile = window.currentUserProfile || {};
+  const scope = getActiveScope();
+  const festId = getActiveFestivalId();
+  const competitionId = entryData.competitionId || '';
+  const teamId = entryData.teamId || profile.teamId || '';
+  if (!competitionId) throw new Error('Competition item is required.');
+  if (!teamId) throw new Error('Team is required.');
+  const competition = (await getDoc(doc(db, window.meeladPulseScopedFestivalPath('competitions'), competitionId))).data();
+  if (!competition) throw new Error('Competition item was not found.');
+  const role = profile.role || entryData.source || 'public';
+  const sourceMode = competition.sourceMode || 'admin';
+  if (role === 'teamLeader' && !['teamLeader', 'all'].includes(sourceMode)) {
+    throw new Error('Team leader entries are not enabled for this competition.');
+  }
+  if (role === 'public' && !['registration', 'all'].includes(sourceMode)) {
+    throw new Error('Public entries are not enabled for this competition.');
+  }
+  const studentIds = Array.isArray(entryData.studentIds) ? [...new Set(entryData.studentIds.filter(Boolean))] : [];
+  await validateCompetitionEntryStudents(competition, teamId, studentIds);
+  const minMembers = Number(competition.minParticipantsPerEntry) || 1;
+  const maxMembers = Number(competition.maxParticipantsPerEntry) || 1;
+  if (studentIds.length < minMembers || studentIds.length > maxMembers) {
+    throw new Error(`Select ${minMembers === maxMembers ? minMembers : `${minMembers}-${maxMembers}`} participant(s) for this item.`);
+  }
+  if (profile.role === 'teamLeader' && profile.teamId && profile.teamId !== teamId) {
+    throw new Error('Team leaders can submit entries only for their assigned team.');
+  }
+  const existing = await getDocs(query(
+    collection(db, window.meeladPulseScopedFestivalPath('entries')),
+    where('competitionId', '==', competitionId),
+    where('teamId', '==', teamId)
+  ));
+  const currentId = entryData.id || '';
+  const duplicateStudent = existing.docs.some((docSnap) => {
+    if (docSnap.id === currentId) return false;
+    const data = docSnap.data();
+    return (data.studentIds || []).some((id) => studentIds.includes(id));
+  });
+  if (duplicateStudent) {
+    throw new Error('One or more selected students are already entered for this competition.');
+  }
+  const activeTeamEntryCount = existing.docs.filter((docSnap) => docSnap.id !== currentId && docSnap.data().status !== 'rejected').length;
+  const maxEntriesPerTeam = Number(competition.maxEntriesPerTeam) || 1;
+  if (!currentId && activeTeamEntryCount >= maxEntriesPerTeam) {
+    throw new Error(`This team already reached the entry limit (${maxEntriesPerTeam}) for this item.`);
+  }
+  const needsApproval = role !== 'admin';
+  const id = currentId || doc(collection(db, 'dummy')).id;
+  const payload = {
+    id,
+    institutionId: scope.institutionId,
+    festivalId: festId,
+    competitionId,
+    teamId,
+    studentIds,
+    entryName: entryData.entryName || '',
+    source: entryData.source || role,
+    status: entryData.status || (needsApproval ? 'pending_approval' : 'approved'),
+    rejectionReason: entryData.rejectionReason || '',
+    submittedBy: profile.uid || entryData.submittedBy || '',
+    submittedByRole: role,
+    audit: {
+      createdBy: profile.uid || entryData.submittedBy || '',
+      createdByRole: role,
+      updatedBy: profile.uid || '',
+      updatedAt: new Date().toISOString()
+    },
+    updatedAt: serverTimestamp(),
+    createdAt: entryData.createdAt || serverTimestamp()
+  };
+  try {
+    await setDoc(doc(db, window.meeladPulseScopedFestivalPath('entries'), id), payload, { merge: true });
+    return id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, window.meeladPulseScopedFestivalPath(`entries/${id}`));
+  }
+}
+
+export async function approveCompetitionEntry(entryId) {
+  assertAdminRole();
+  const profile = window.currentUserProfile || {};
+  try {
+    await updateDoc(doc(db, window.meeladPulseScopedFestivalPath('entries'), entryId), {
+      status: 'approved',
+      rejectionReason: '',
+      approvedBy: profile.uid || '',
+      approvedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, window.meeladPulseScopedFestivalPath(`entries/${entryId}`));
+  }
+}
+
+export async function rejectCompetitionEntry(entryId, reason) {
+  assertAdminRole();
+  const profile = window.currentUserProfile || {};
+  if (!reason || !reason.trim()) throw new Error('Rejection reason is required.');
+  try {
+    await updateDoc(doc(db, window.meeladPulseScopedFestivalPath('entries'), entryId), {
+      status: 'rejected',
+      rejectionReason: reason.trim(),
+      rejectedBy: profile.uid || '',
+      rejectedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, window.meeladPulseScopedFestivalPath(`entries/${entryId}`));
+  }
+}
+
+export async function getEntries() {
+  return getCompetitionEntries();
 }
 
 export async function getStudents() {

@@ -29,7 +29,7 @@
     <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div class="space-y-1">
         <h1 class="text-2xl font-extrabold text-slate-950 tracking-tight font-display" id="page-title">Arts Championships</h1>
-        <p class="text-xs text-slate-400 font-medium font-display" id="page-subtitle">Official results and podium standings for all Arts categories. Malayalam: കലാ മത്സരങ്ങൾ</p>
+        <p class="text-xs text-slate-400 font-medium font-display" id="page-subtitle">Official results and podium standings for all Arts categories.</p>
       </div>
       <div class="flex items-center space-x-2 shrink-0">
         <input type="text" id="arts-search" class="w-64 p-2.5 text-xs border border-slate-150 rounded-xl bg-slate-50/50 outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400 font-medium animate-pulse-once" placeholder="Search by event or code...">
@@ -111,7 +111,7 @@
 
     function translatePage(lang) {
       if (lang === 'ml') {
-        document.getElementById('page-title').textContent = "കലാ മത്സരങ്ങൾ (Arts Championships)";
+        document.getElementById('page-title').textContent = "കലാ മത്സരങ്ങൾ";
         document.getElementById('page-subtitle').textContent = "കലാ വിഭാഗങ്ങളിലെ എല്ലാ മത്സരങ്ങളുടെയും ഫലങ്ങളും റാങ്കുകളും ഇവിടെ കാണാം.";
         document.getElementById('arts-search').placeholder = "മത്സരം അല്ലെങ്കിൽ കോഡ് തിരയുക...";
       }

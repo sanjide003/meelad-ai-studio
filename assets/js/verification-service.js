@@ -18,7 +18,7 @@ export async function verifyCardIntegrity(id, role, festId) {
     let subDetails = "";
     let teamId = "";
     let statusLabel = "";
-    let festivalName = "Active Festival Node";
+    let festivalName = "Active Festival";
     let docTypeLabel = "Secure Document";
     let issueDateLabel = "N/A";
     let documentNoLabel = id;

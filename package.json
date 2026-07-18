@@ -8,7 +8,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "migrate:scope": "node scripts/backfill-institution-scope.mjs",
+    "deploy:rules": "firebase deploy --only firestore:rules",
+    "audit:tenant": "rg -n \"collection\\(db, ['\\\"](users|userInvitations|students|appSettings)['\\\"]\\)|doc\\(db, ['\\\"](users|userInvitations|students|appSettings|institutionLogins)['\\\"]\" admin assets/js public team judge --glob '!my old project/**'",
+    "migrate:passwords": "node scripts/migrate-manual-password-hashes.mjs"
   },
   "dependencies": {
     "firebase": "^12.16.0",

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manage Accounts - MeeladPulse</title>
+  <title>Accounts - MeeladPulse</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../assets/css/main.css">
 </head>
@@ -30,9 +30,25 @@
       <main class="flex-1 p-4 lg:p-8 space-y-8">
         
         <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-2">
-          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Manage User Accounts</h1>
-          <p class="text-xs text-slate-400 font-medium">Verify system profiles, toggle activation codes, and restrict security clearances.</p>
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Accounts</h1>
+          <p class="text-xs text-slate-400 font-medium">See how many administrator, team, and judge accounts belong to the selected institution workspace.</p>
         </div>
+
+        <section class="admin-section-card border border-slate-100 bg-white p-5">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-extrabold text-slate-900">Account operations</h2>
+              <p class="text-xs text-slate-500 mt-1">Create Judge and Team Leader accounts inline below; use Judge Assignments later to assign competitions.</p>
+            </div>
+            <div class="flex flex-wrap gap-2"><a href="../admin/judge-assignments.html" class="btn btn-secondary text-[10px] font-bold px-3 py-2 border border-slate-200">Judge Assignments</a></div>
+          </div>
+        </section>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4" id="account-summary-cards">
+          <article class="admin-status-card"><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Admin Accounts</p><h2 id="admin-account-count" class="text-3xl font-extrabold text-slate-950 mt-2">0</h2><p class="text-xs text-slate-500 mt-1">Institution administrators with workspace access.</p><a href="../admin/account-settings.html" class="btn btn-secondary mt-3 text-[10px] font-bold px-3 py-2 border border-slate-200 inline-flex">Manage Admin</a></article>
+          <article class="admin-status-card"><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Team Accounts</p><h2 id="team-account-count" class="text-3xl font-extrabold text-slate-950 mt-2">0</h2><p class="text-xs text-slate-500 mt-1">Teams / group leader login accounts.</p><a href="../admin/teams.html" class="btn btn-secondary mt-3 text-[10px] font-bold px-3 py-2 border border-slate-200 inline-flex">Create Team Leaders</a></article>
+          <article class="admin-status-card"><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Judge Accounts</p><h2 id="judge-account-count" class="text-3xl font-extrabold text-slate-950 mt-2">0</h2><p class="text-xs text-slate-500 mt-1">Judges assigned under this institution.</p><a href="../admin/judges.html" class="btn btn-secondary mt-3 text-[10px] font-bold px-3 py-2 border border-slate-200 inline-flex">Create Judges</a></article>
+        </section>
 
         <!-- Alert Notification Toast -->
         <div id="alert-toast" class="hidden bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl p-4 text-xs flex items-center space-x-2">
@@ -40,10 +56,31 @@
           <span id="alert-toast-text">Account updated successfully.</span>
         </div>
 
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-extrabold text-slate-900">Create / Edit Manual Account</h2>
+              <p class="text-xs text-slate-500 mt-1">Admin-created Judge and Team Leader usernames are used directly on the login page. Competition assignment happens later from Judge Assignments.</p>
+            </div>
+            <button id="reset-account-form" class="btn btn-secondary text-[10px] font-bold px-3 py-2 border border-slate-200">New Account</button>
+          </div>
+          <form id="account-form" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <input type="hidden" id="account-doc-id">
+            <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Name</label><input id="account-name" required class="form-input" placeholder="Full name"></div>
+            <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Username</label><input id="account-username" required class="form-input" placeholder="judge01"></div>
+            <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password / Reset Password</label><input id="account-password" type="password" class="form-input" placeholder="Required for new account"></div>
+            <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Role</label><select id="account-role" required class="form-input"><option value="judge">Judge</option><option value="teamLeader">Team Leader</option></select></div>
+            <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile / Phone</label><input id="account-phone" class="form-input" placeholder="Mobile number"></div>
+            <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Team for Team Leader</label><select id="account-team" class="form-input"><option value="">No team / Judge</option></select></div>
+            <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</label><select id="account-active" class="form-input"><option value="true">Active</option><option value="false">Inactive</option></select></div>
+            <div class="flex items-end gap-2"><button id="save-account-btn" type="submit" class="btn btn-accent bg-slate-950 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex-1">Save Account</button></div>
+          </form>
+        </div>
+
         <!-- Users Table Card -->
         <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-xs">
           <div class="p-5 border-b border-slate-100 bg-slate-50/50">
-            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Registered System Profiles</h2>
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Institution Accounts</h2>
           </div>
 
           <div class="table-container">
@@ -60,7 +97,7 @@
               <tbody id="users-table-body" class="divide-y divide-slate-100 text-xs text-slate-700">
                 <!-- Loaded Dynamically -->
                 <tr>
-                  <td colspan="5" class="px-6 py-12 text-center text-slate-400">Scanning security nodes...</td>
+                  <td colspan="5" class="px-6 py-12 text-center text-slate-400">Loading institution accounts...</td>
                 </tr>
               </tbody>
             </table>
@@ -76,7 +113,9 @@
     import { loadPortalLayout } from "../assets/js/component-loader.js";
     import { initializeNavigation } from "../assets/js/navigation.js";
     import { db } from "../assets/js/firebase-init.js";
-    import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { collection, getDocs, doc, updateDoc, query, where, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getActiveScope, getTeams } from "../assets/js/firestore-service.js";
+    import { hashManualPassword } from "../assets/js/manual-account-service.js";
 
     async function initUsersManager() {
       try {
@@ -84,33 +123,56 @@
         await loadPortalLayout('admin');
         initializeNavigation();
 
+        await loadTeamOptions();
+        setupAccountForm();
         await loadUsersList();
       } catch (err) {
         console.error("Failed loading user dashboard context:", err);
       }
     }
 
+
+    function updateAccountSummary(users, teamsSnapshot, judgesSnapshot) {
+      const adminRoles = ['admin', 'institutionAdmin', 'superAdmin'];
+      const adminCount = users.filter((user) => adminRoles.includes(user.role)).length;
+      const teamLeaderUsers = users.filter((user) => user.role === 'teamLeader').length;
+      const activeTeams = teamsSnapshot.docs.filter((docSnap) => docSnap.data().active !== false).length;
+      const judgeUsers = users.filter((user) => user.role === 'judge').length;
+      const activeJudges = judgesSnapshot.docs.filter((docSnap) => docSnap.data().active !== false).length;
+      document.getElementById('admin-account-count').textContent = adminCount;
+      document.getElementById('team-account-count').textContent = Math.max(teamLeaderUsers, activeTeams);
+      document.getElementById('judge-account-count').textContent = Math.max(judgeUsers, activeJudges);
+    }
+
     async function loadUsersList() {
       const tableBody = document.getElementById('users-table-body');
       
       try {
+        const { institutionId, festivalId } = getActiveScope();
         const usersCol = collection(db, 'users');
-        const querySnapshot = await getDocs(usersCol);
+        const scopedUsersQuery = query(usersCol, where('institutionId', '==', institutionId));
+        const base = `institutions/${institutionId}/festivals/${festivalId}`;
+        const [querySnapshot, teamsSnapshot, judgesSnapshot] = await Promise.all([
+          getDocs(scopedUsersQuery),
+          getDocs(collection(db, `${base}/teams`)),
+          getDocs(collection(db, `${base}/judges`))
+        ]);
+        const scopedUsers = querySnapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+        updateAccountSummary(scopedUsers, teamsSnapshot, judgesSnapshot);
 
         tableBody.innerHTML = '';
 
         if (querySnapshot.empty) {
           tableBody.innerHTML = `
             <tr>
-              <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No registered system profiles found.</td>
+              <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No accounts found for this institution.</td>
             </tr>
           `;
           return;
         }
 
-        querySnapshot.forEach((userDoc) => {
-          const user = userDoc.data();
-          const uid = userDoc.id;
+        scopedUsers.forEach((user) => {
+          const uid = user.id;
 
           const row = document.createElement('tr');
           row.className = "hover:bg-slate-50/50 transition";
@@ -149,7 +211,8 @@
                 ${activeStatusText}
               </span>
             </td>
-            <td class="px-6 py-4 text-right">
+            <td class="px-6 py-4 text-right space-x-2">
+              <button class="edit-account-btn inline-flex items-center px-3 py-1.5 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer" data-uid="${uid}">Edit / Reset</button>
               <button class="toggle-btn inline-flex items-center px-3 py-1.5 border rounded-lg text-[10px] font-bold transition cursor-pointer ${toggleButtonColorClass}" data-uid="${uid}" data-active="${user.active}">
                 ${toggleButtonText}
               </button>
@@ -157,6 +220,8 @@
           `;
 
           // Bind toggle status event
+          const editBtn = row.querySelector('.edit-account-btn');
+          editBtn.addEventListener('click', () => populateAccountForm(user));
           const btn = row.querySelector('.toggle-btn');
           btn.addEventListener('click', async () => {
             const currentActive = btn.getAttribute('data-active') === 'true';
@@ -176,13 +241,125 @@
       }
     }
 
+
+    async function loadTeamOptions() {
+      const teamSelect = document.getElementById('account-team');
+      try {
+        const teams = await getTeams();
+        teamSelect.innerHTML = '<option value="">No team / Judge</option>';
+        (teams || []).filter((team) => team.active !== false).forEach((team) => {
+          const option = document.createElement('option');
+          option.value = team.id;
+          option.textContent = team.name || team.teamName || team.id;
+          teamSelect.appendChild(option);
+        });
+      } catch (err) {
+        console.warn('Could not load team options for account form:', err);
+      }
+    }
+
+    function normalizeUsername(value = '') {
+      return value.trim().toLowerCase();
+    }
+
+    function manualDocId(usernameLower) {
+      return `manual_${usernameLower.replace(/[^a-z0-9_-]/g, '_')}`;
+    }
+
+    function resetAccountForm() {
+      document.getElementById('account-doc-id').value = '';
+      document.getElementById('account-form').reset();
+      document.getElementById('account-role').value = 'judge';
+      document.getElementById('account-active').value = 'true';
+      document.getElementById('account-username').disabled = false;
+      document.getElementById('account-password').required = true;
+      document.getElementById('save-account-btn').textContent = 'Save Account';
+    }
+
+    function populateAccountForm(user) {
+      document.getElementById('account-doc-id').value = user.id || user.uid || '';
+      document.getElementById('account-name').value = user.name || '';
+      document.getElementById('account-username').value = user.usernameLower || user.username || user.email || '';
+      document.getElementById('account-username').disabled = true;
+      document.getElementById('account-password').value = '';
+      document.getElementById('account-password').required = false;
+      document.getElementById('account-role').value = user.role === 'teamLeader' ? 'teamLeader' : 'judge';
+      document.getElementById('account-phone').value = user.phone || user.mobile || '';
+      document.getElementById('account-team').value = user.teamId || '';
+      document.getElementById('account-active').value = user.active === false ? 'false' : 'true';
+      document.getElementById('save-account-btn').textContent = 'Update Account';
+      document.getElementById('account-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function setupAccountForm() {
+      document.getElementById('reset-account-form').addEventListener('click', resetAccountForm);
+      document.getElementById('account-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const submitBtn = document.getElementById('save-account-btn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+        try {
+          const { institutionId, festivalId } = getActiveScope();
+          const docId = document.getElementById('account-doc-id').value;
+          const usernameLower = normalizeUsername(document.getElementById('account-username').value);
+          const password = document.getElementById('account-password').value;
+          const isNew = !docId;
+          if (!usernameLower) throw new Error('Username is required.');
+          if (isNew && !password) throw new Error('Password is required for a new account.');
+          const role = document.getElementById('account-role').value;
+          const name = document.getElementById('account-name').value.trim();
+          const phone = document.getElementById('account-phone').value.trim();
+          const teamId = role === 'teamLeader' ? document.getElementById('account-team').value : '';
+          const userId = docId || manualDocId(usernameLower);
+          const active = document.getElementById('account-active').value === 'true';
+          const basePayload = {
+            uid: userId,
+            manualAuth: true,
+            role,
+            active,
+            institutionId,
+            festivalId,
+            username: usernameLower,
+            usernameLower,
+            email: usernameLower,
+            name,
+            phone,
+            mobile: phone,
+            teamId,
+            judgeId: role === 'judge' ? userId : '',
+            updatedAt: serverTimestamp()
+          };
+          const manualPayload = { ...basePayload, createdAt: isNew ? serverTimestamp() : undefined };
+          if (password) manualPayload.passwordHash = await hashManualPassword(password);
+          Object.keys(manualPayload).forEach((key) => manualPayload[key] === undefined && delete manualPayload[key]);
+          const userPayload = { ...basePayload };
+          if (isNew) userPayload.createdAt = serverTimestamp();
+          await Promise.all([
+            setDoc(doc(db, `institutions/${institutionId}/festivals/${festivalId}/manualUsers`, usernameLower), manualPayload, { merge: true }),
+            setDoc(doc(db, 'users', userId), userPayload, { merge: true })
+          ]);
+          showToast(`${role === 'judge' ? 'Judge' : 'Team Leader'} account saved. Share username ${usernameLower}${password ? ' and the new password' : ''}.`);
+          resetAccountForm();
+          await loadUsersList();
+        } catch (err) {
+          alert(`Failed to save account: ${err.message}`);
+        } finally {
+          submitBtn.disabled = false;
+          if (!document.getElementById('account-doc-id').value) submitBtn.textContent = 'Save Account';
+        }
+      });
+      resetAccountForm();
+    }
+
     async function toggleUserActivation(uid, newStatus) {
       const globalLoader = document.getElementById('global-page-loader');
       globalLoader.classList.remove('hidden');
 
       try {
+        const { institutionId } = getActiveScope();
         const userDocRef = doc(db, 'users', uid);
         await updateDoc(userDocRef, {
+          institutionId,
           active: newStatus,
           updatedAt: new Date()
         });
@@ -191,6 +368,8 @@
         showToast(`User profile registration updated to: ${newStatus ? 'ACTIVE' : 'DISABLED'}`);
         
         // Refresh Table Roster
+        await loadTeamOptions();
+        setupAccountForm();
         await loadUsersList();
       } catch (err) {
         console.error("Could not update user activation:", err);

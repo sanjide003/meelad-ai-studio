@@ -26,6 +26,30 @@ if (loaderEl) {
   loaderEl.classList.toggle('hidden', fastNavRequested);
 }
 
+
+function getSelectedScopeIds() {
+  const params = new URLSearchParams(window.location.search);
+  const institutionId = params.get('institution') || localStorage.getItem('meeladpulse_selected_institution_id');
+  const festivalId = params.get('festival') || localStorage.getItem('meeladpulse_selected_fest_id') || institutionId;
+  return { institutionId, festivalId };
+}
+
+function assertProfileScope(profile = {}) {
+  if (profile.role === 'superAdmin') return;
+  const { institutionId, festivalId } = getSelectedScopeIds();
+  if (!institutionId || !festivalId) {
+    throw new Error('No institution workspace scope selected');
+  }
+  const profileInstitutionId = profile.institutionId || profile.institution || profile.tenantId;
+  const profileFestivalId = profile.festivalId || profile.festId || profileInstitutionId;
+  if (profileInstitutionId && profileInstitutionId !== institutionId) {
+    throw new Error('Selected institution does not match this account');
+  }
+  if (profileFestivalId && profileFestivalId !== festivalId) {
+    throw new Error('Selected festival does not match this account');
+  }
+}
+
 function isSubscriptionDataAvailable(data = {}) {
   const subscriptionStatus = ['trial', 'active', 'suspended'].includes(data.subscriptionStatus) ? data.subscriptionStatus : (data.plan === 'purchased' ? 'active' : 'trial');
   const expiryDate = subscriptionStatus === 'trial' ? data.trialEndsAt : data.subscriptionEndsAt;
@@ -77,6 +101,10 @@ export async function verifyUserRole(allowedRoles) {
         const currentPath = window.location.pathname;
         if (!currentPath.includes('select-fest.html') && !currentPath.includes('unauthorized.html')) {
           const selectedFestId = localStorage.getItem('meeladpulse_selected_fest_id');
+          try { assertProfileScope(manualProfile); } catch (scopeErr) {
+            window.location.replace(appUrl('unauthorized.html?reason=scope_mismatch'));
+            throw scopeErr;
+          }
           if (!selectedFestId) {
             window.location.replace(appUrl('unauthorized.html?reason=no_scope'));
             throw new Error('No institution workspace scope selected');
@@ -139,6 +167,10 @@ export async function verifyUserRole(allowedRoles) {
         const currentPath = window.location.pathname;
         if (!currentPath.includes('select-fest.html') && !currentPath.includes('unauthorized.html')) {
           const selectedFestId = localStorage.getItem('meeladpulse_selected_fest_id');
+          try { assertProfileScope(userData); } catch (scopeErr) {
+            window.location.replace(appUrl('unauthorized.html?reason=scope_mismatch'));
+            throw scopeErr;
+          }
           if (!selectedFestId) {
             if (userData.role === 'superAdmin') {
               window.location.replace(appUrlWithCurrentScope('select-fest.html'));

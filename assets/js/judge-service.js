@@ -11,7 +11,7 @@ import {
   where, 
   serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getActiveFestivalId, assertAdminRole, handleFirestoreError, OperationType } from "./firestore-service.js";
+import { getActiveFestivalId, getActiveScope, assertAdminRole, handleFirestoreError, OperationType } from "./firestore-service.js";
 import { createSecureInvitation } from "./invitation-service.js";
 
 /**
@@ -20,7 +20,8 @@ import { createSecureInvitation } from "./invitation-service.js";
 export async function getJudges() {
   const path = "users";
   try {
-    const q = query(collection(db, "users"), where("role", "==", "judge"));
+    const { institutionId } = getActiveScope();
+    const q = query(collection(db, "users"), where("role", "==", "judge"), where("institutionId", "==", institutionId));
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (error) {

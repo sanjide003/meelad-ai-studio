@@ -3,623 +3,590 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Festival Settings - MeeladPulse</title>
+  <title>Master Setup - MeeladPulse</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
-  
   <div id="global-page-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
     <div class="flex flex-col items-center space-y-3">
       <div class="h-10 w-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
-      <p class="text-xs font-bold text-slate-700">Loading Festival Configuration...</p>
+      <p class="text-xs font-bold text-slate-700">Loading Master Setup...</p>
     </div>
   </div>
 
   <div class="min-h-screen flex flex-col lg:flex-row">
-    <!-- Sidebar -->
     <div id="portal-sidebar"></div>
-
-    <!-- Main Content -->
     <div class="flex-1 flex flex-col min-w-0 main-content-layout">
-      <!-- Header -->
       <div id="portal-header"></div>
-
-      <main class="flex-1 p-4 lg:p-8 space-y-8 max-w-4xl">
-        
-        <!-- Welcome Banner -->
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
-          <div class="space-y-1">
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Festival Settings</h1>
-            <p class="text-xs text-slate-400 font-medium">Configure festival-specific security controls and registration authorities.</p>
-          </div>
-          <div class="flex items-center space-x-2 shrink-0">
-            <a href="../admin/dashboard.html" class="btn border border-slate-200 hover:bg-slate-50 text-slate-600 py-2 px-4 text-xs font-bold">
-              Back to Dashboard
-            </a>
-          </div>
-        </div>
-
-        <!-- Alert Banner -->
-        <div id="success-banner" class="hidden bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl p-4 text-xs flex items-center space-x-2">
-          <svg class="h-4 w-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span>Festival settings saved and updated successfully.</span>
-        </div>
-
-        <form id="settings-form" class="space-y-6">
-          
-          <!-- General Branding & Labels -->
-          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
-            <h2 class="text-base font-bold text-slate-900 font-display">General Branding & Details</h2>
-            <p class="text-xs text-slate-400">Configure core descriptors used on certificates, ID passes, and public scoreboard headers.</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div class="space-y-1.5">
-                <label for="madrasaName" class="text-xs font-bold text-slate-700 flex items-center space-x-1">
-                  <span>Madrasa / Institution Name</span>
-                  <span class="text-[10px] text-slate-400 font-normal">(മദ്രസ പേര്)</span>
-                </label>
-                <input type="text" id="madrasaName" class="form-input" placeholder="e.g. Al-Noor Islamic Madrasa">
-              </div>
-              <div class="space-y-1.5">
-                <label for="festivalTitle" class="text-xs font-bold text-slate-700 flex items-center space-x-1">
-                  <span>Festival Title / Heading</span>
-                  <span class="text-[10px] text-slate-400 font-normal">(മേളയുടെ പേര്)</span>
-                </label>
-                <input type="text" id="festivalTitle" class="form-input" placeholder="e.g. Meelad Fest 2026">
-              </div>
-              <div class="space-y-1.5 md:col-span-2">
-                <label for="venueLocation" class="text-xs font-bold text-slate-700 flex items-center space-x-1">
-                  <span>Festival Venue / Location</span>
-                  <span class="text-[10px] text-slate-400 font-normal">(വേദി)</span>
-                </label>
-                <input type="text" id="venueLocation" class="form-input" placeholder="e.g. Central Auditorium Main Stage">
-              </div>
+      <main class="flex-1 p-4 lg:p-8 space-y-6 max-w-7xl">
+        <section class="admin-section-card setup-hero">
+          <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+            <div class="space-y-2">
+              <p class="text-[11px] font-extrabold text-emerald-700 uppercase tracking-[0.22em]">First-time configuration</p>
+              <h1 class="text-3xl font-extrabold text-slate-950 tracking-tight font-display">Master Setup</h1>
+              <p class="text-sm text-slate-500 max-w-3xl leading-relaxed">Create the institution profile, festival identity, participant rules, sections, and categories before opening students and competitions. Every field is optional now; skipped items can be completed later from this page.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <span id="lock-status" class="admin-info-card px-4 py-2 text-xs font-extrabold">Checking lock status...</span>
+              <a id="dashboard-link" href="../admin/app.html?page=dashboard.html" target="_top" class="btn border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 py-2.5 px-4 text-xs font-bold">Dashboard</a>
             </div>
           </div>
+          <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-3" id="step-indicator"></div>
+        </section>
 
-          <!-- Festival Blueprint & Professional Setup Flow -->
-          <div class="bg-white rounded-2xl border border-emerald-100 p-6 shadow-xs space-y-5">
-            <div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
-              <div>
-                <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Step 01 · Festival Blueprint</p>
-                <h2 class="text-base font-bold text-slate-900 font-display">Festival Type, Category Logic & Competition Sections</h2>
-                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Set the professional structure first. Teams, categories, students, competitions, judges, and results should follow this blueprint so each institution keeps a clean festival layout.</p>
-              </div>
-              <span class="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[10px] font-extrabold text-emerald-700 uppercase">Foundation Setup</span>
-            </div>
+        <div id="success-banner" class="hidden admin-success-card p-4 text-sm font-bold">Master setup saved successfully.</div>
+        <div id="lock-banner" class="hidden admin-warning-card p-4 text-sm leading-relaxed">Core setup is locked because students or competitions already exist. You can add new custom sections/categories, but existing participant mode, fest type, and selected defaults are protected.</div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="space-y-1.5">
-                <label for="festivalType" class="text-xs font-bold text-slate-700">Festival Participant Type</label>
-                <select id="festivalType" class="form-input">
-                  <option value="boysOnly">Boys Only · ആൺകുട്ടികൾ മാത്രം</option>
-                  <option value="girlsOnly">Girls Only · പെൺകുട്ടികൾ മാത്രം</option>
-                  <option value="boysAndGirls">Boys & Girls · ആൺകുട്ടികളും പെൺകുട്ടികളും</option>
-                  <option value="general">Open / General · പൊതുവായ ഫെസ്റ്റ്</option>
-                </select>
-                <p class="text-[10px] text-slate-400">Controls whether the same category/competition tree is used for everyone or split by gender.</p>
-              </div>
-
-              <div class="space-y-1.5" id="gender-competition-mode-row">
-                <label for="genderCompetitionMode" class="text-xs font-bold text-slate-700">Boys & Girls Competition Mode</label>
-                <select id="genderCompetitionMode" class="form-input">
-                  <option value="separate">Separate competitions for Boys and Girls</option>
-                  <option value="shared">Same competition, common participation</option>
-                </select>
-                <p class="text-[10px] text-slate-400">Visible when Boys & Girls is selected. Use this before creating competitions.</p>
-              </div>
-
-              <div class="space-y-1.5">
-                <label for="programmeScope" class="text-xs font-bold text-slate-700">Programme Scope</label>
-                <select id="programmeScope" class="form-input">
-                  <option value="artsAndSports">Arts & Sports · കലയും കായികവും</option>
-                  <option value="artsOnly">Arts Only · കല മാത്രം</option>
-                  <option value="sportsOnly">Sports Only · കായികം മാത്രം</option>
-                </select>
-                <p class="text-[10px] text-slate-400">Only matching competition section checkboxes will be shown below.</p>
-              </div>
-            </div>
-
-            <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-3">
-              <div class="flex items-center justify-between gap-3">
+        <form id="setup-form" class="space-y-6">
+          <section class="wizard-step space-y-6" data-step="0">
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div class="admin-section-card space-y-5">
                 <div>
-                  <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Competition Sections</h3>
-                  <p class="text-[11px] text-slate-500">Tick the sections required for this festival. Add a custom section if it is not listed.</p>
+                  <p class="text-[11px] font-extrabold text-emerald-700 uppercase tracking-widest">I · Institution</p>
+                  <h2 class="text-xl font-extrabold text-slate-950">Institution Details</h2>
+                  <p class="text-sm text-slate-500 mt-1">Used on public pages, certificates, ID cards, and official outputs.</p>
                 </div>
-                <span id="section-count-badge" class="rounded-full bg-white border border-slate-200 px-3 py-1 text-[10px] font-bold text-slate-500">0 selected</span>
-              </div>
-              <div id="competition-sections-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-
-              <div class="grid grid-cols-1 md:grid-cols-[1fr_160px_auto] gap-3 pt-2 border-t border-slate-200">
-                <input id="custom-section-name" type="text" class="form-input" placeholder="Add custom section, e.g. Quiz Arena / Digital Arts">
-                <select id="custom-section-type" class="form-input">
-                  <option value="arts">Arts</option>
-                  <option value="sports">Sports</option>
-                  <option value="general">General</option>
-                </select>
-                <button id="add-custom-section-btn" type="button" class="btn btn-secondary px-4 py-2 text-xs font-bold border border-slate-200">Add Section</button>
-              </div>
-              <div id="custom-sections-list" class="flex flex-wrap gap-2"></div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-[11px]">
-              <a href="../admin/teams.html" class="rounded-xl border border-slate-100 bg-white p-3 hover:border-emerald-200 transition"><span class="font-bold text-slate-900 block">Step 02 · Teams</span><span class="text-slate-500">Create teams and group leaders.</span></a>
-              <a href="../admin/categories.html" class="rounded-xl border border-slate-100 bg-white p-3 hover:border-emerald-200 transition"><span class="font-bold text-slate-900 block">Step 03 · Categories</span><span class="text-slate-500">Build age/category divisions.</span></a>
-              <a href="../admin/competition-rules.html" class="rounded-xl border border-slate-100 bg-white p-3 hover:border-emerald-200 transition"><span class="font-bold text-slate-900 block">Step 04 · Competitions</span><span class="text-slate-500">Add items using the blueprint.</span></a>
-              <a href="../admin/judges.html" class="rounded-xl border border-slate-100 bg-white p-3 hover:border-emerald-200 transition"><span class="font-bold text-slate-900 block">Step 05 · Judges</span><span class="text-slate-500">Create judges and assignments.</span></a>
-            </div>
-          </div>
-          
-          <!-- Student Registration Authority Modes -->
-          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
-            <h2 class="text-base font-bold text-slate-900 font-display">Student Registration Authority</h2>
-            <p class="text-xs text-slate-400">Determine which role is authorized to create and manage the student rosters. Changing this mode alters portal workflows instantly.</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              
-              <!-- Mode 1: adminOnly -->
-              <label class="relative flex flex-col p-5 bg-white border rounded-2xl cursor-pointer hover:border-slate-300 transition-all focus-within:ring-2 focus-within:ring-emerald-500 border-slate-200" id="label-adminOnly">
-                <input type="radio" name="registrationMode" value="adminOnly" class="sr-only" id="radio-adminOnly">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-slate-900">Admin Only</span>
-                  <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 uppercase">Default</span>
-                </div>
-                <p class="text-[11px] text-slate-400 mt-2 leading-relaxed">Only Admin can create, edit, or de-activate student profiles. Team leaders can only view rosters.</p>
-                
-                <div class="mt-4 border-t border-slate-100 pt-3">
-                  <p class="text-[10px] font-bold text-emerald-600">അഡ്മിൻ മാത്രം</p>
-                  <p class="text-[10px] text-slate-500 mt-1 leading-normal font-medium">വിദ്യാർത്ഥികളുടെ പ്രൊഫൈലുകൾ അഡ്മിന്മാർക്ക് മാത്രമേ നിർമ്മിക്കാനും എഡിറ്റ് ചെയ്യാനും സാധിക്കൂ. ടീം ലീഡർമാർക്ക് അവരുടെ കുട്ടികളുടെ ലിസ്റ്റ് കാണാൻ മാത്രമേ അനുവാദമുള്ളൂ.</p>
-                </div>
-              </label>
-
-              <!-- Mode 2: teamLeadersOnly -->
-              <label class="relative flex flex-col p-5 bg-white border rounded-2xl cursor-pointer hover:border-slate-300 transition-all focus-within:ring-2 focus-within:ring-emerald-500 border-slate-200" id="label-teamLeadersOnly">
-                <input type="radio" name="registrationMode" value="teamLeadersOnly" class="sr-only" id="radio-teamLeadersOnly">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-slate-900">Team Leaders Only</span>
-                  <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase">Self-Serve</span>
-                </div>
-                <p class="text-[11px] text-slate-400 mt-2 leading-relaxed">School team leaders register their own students directly. Admin is locked from normal roster creation.</p>
-                
-                <div class="mt-4 border-t border-slate-100 pt-3">
-                  <p class="text-[10px] font-bold text-emerald-600">ടീം ലീഡർമാർക്ക് മാത്രം</p>
-                  <p class="text-[10px] text-slate-500 mt-1 leading-normal font-medium">ഓരോ സ്കൂൾ/സ്ഥാപന ടീം ലീഡർമാർക്കും അവരുടെ കുട്ടികളുടെ പ്രൊഫൈലുകൾ സ്വയം രജിസ്റ്റർ ചെയ്യാൻ സാധിക്കും.</p>
-                </div>
-              </label>
-
-            </div>
-          </div>
-
-          <!-- Registration Controls -->
-          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
-            <h2 class="text-base font-bold text-slate-900 font-display">Registration Controls & Approvals</h2>
-            <p class="text-xs text-slate-400">Lock down registration windows and configure verification workflows.</p>
-
-            <div class="space-y-4 pt-2">
-              
-              <!-- Registration Status (Open/Closed) -->
-              <div class="flex items-start justify-between p-4 bg-slate-50 rounded-xl border border-slate-150">
-                <div class="space-y-0.5 max-w-lg">
-                  <label class="text-xs font-bold text-slate-900 flex items-center space-x-2">
-                    <span>Student Registration Open</span>
-                    <span id="open-status-badge" class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase"></span>
-                  </label>
-                  <p class="text-[11px] text-slate-400 leading-relaxed">Toggle to freeze the student roster. When closed, even the selected authorized roles are forbidden from creating or updating student profiles.</p>
-                  <p class="text-[10px] text-emerald-700 font-medium">വിദ്യാർത്ഥി രജിസ്ട്രേഷൻ സ്റ്റാറ്റസ് (ഓപ്പൺ / ക്ലോസ്ഡ്)</p>
-                </div>
-                <div class="flex items-center">
-                  <input type="checkbox" id="studentRegistrationOpen" class="h-4.5 w-4.5 text-emerald-600 border-slate-300 rounded cursor-pointer">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label class="setup-field md:col-span-2"><span>Institution Name</span><input id="institutionName" class="form-input" placeholder="e.g. Busthan UL Uloom Madrasa"></label>
+                  <label class="setup-field"><span>Place</span><input id="institutionPlace" class="form-input" placeholder="e.g. Madrasah campus / town"></label>
+                  <label class="setup-field"><span>Register Number</span><input id="institutionRegisterNumber" class="form-input" placeholder="Registration number"></label>
+                  <label class="setup-field md:col-span-2"><span>Logo URL</span><input id="institutionLogoUrl" class="form-input" placeholder="Paste logo image URL"></label>
+                  <label class="setup-field md:col-span-2"><span>Run by / Subtitle</span><input id="institutionRunBy" class="form-input" placeholder="e.g. Run by committee / trust name"></label>
                 </div>
               </div>
 
-              <!-- Mandatory Admin Approval -->
-              <div class="flex items-start justify-between p-4 bg-slate-50 rounded-xl border border-slate-150" id="approval-row">
-                <div class="space-y-0.5 max-w-lg">
-                  <label class="text-xs font-bold text-slate-900">Require Admin Approval for Team-Leader Registered Students</label>
-                  <p class="text-[11px] text-slate-400 leading-relaxed">If enabled, team-leader registered students remain in a 'pending' state and cannot participate in competitions until approved by an administrator.</p>
-                  <p class="text-[10px] text-emerald-700 font-medium">ടീം ലീഡർമാർ രജിസ്റ്റർ ചെയ്യുന്ന കുട്ടികൾക്ക് അഡ്മിൻ അംഗീകാരം നിർബന്ധമാക്കുക</p>
+              <div class="admin-section-card space-y-5">
+                <div>
+                  <p class="text-[11px] font-extrabold text-cyan-700 uppercase tracking-widest">I · Festival</p>
+                  <h2 class="text-xl font-extrabold text-slate-950">Festival Identity</h2>
+                  <p class="text-sm text-slate-500 mt-1">Branding and contact details displayed in the public portal.</p>
                 </div>
-                <div class="flex items-center">
-                  <input type="checkbox" id="teamLeaderStudentApprovalRequired" class="h-4.5 w-4.5 text-emerald-600 border-slate-300 rounded cursor-pointer">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label class="setup-field md:col-span-2"><span>Festival Name</span><input id="festName" class="form-input" placeholder="e.g. Meelad Fest 2026"></label>
+                  <label class="setup-field"><span>Subtitle</span><input id="festSubtitle" class="form-input" placeholder="Short subtitle"></label>
+                  <label class="setup-field"><span>Tagline</span><input id="festTagline" class="form-input" placeholder="Public tagline"></label>
+                  <label class="setup-field md:col-span-2"><span>Festival Logo URL</span><input id="festLogoUrl" class="form-input" placeholder="Paste festival logo URL"></label>
+                  <label class="setup-field"><span>Phone Number</span><input id="festPhone" class="form-input" placeholder="Contact phone"></label>
+                  <label class="setup-field"><span>Email ID</span><input id="festEmail" type="email" class="form-input" placeholder="Contact email"></label>
                 </div>
               </div>
+            </div>
 
+            <div class="admin-info-card p-5 space-y-4">
+              <div>
+                <h3 class="text-lg font-extrabold text-slate-950">Social Media Links</h3>
+                <p class="text-sm text-slate-600">Optional links shown in the public portal footer/header areas.</p>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <label class="setup-field"><span>Instagram</span><input id="socialInstagram" class="form-input" placeholder="https://instagram.com/..."></label>
+                <label class="setup-field"><span>Facebook</span><input id="socialFacebook" class="form-input" placeholder="https://facebook.com/..."></label>
+                <label class="setup-field"><span>YouTube</span><input id="socialYoutube" class="form-input" placeholder="https://youtube.com/..."></label>
+                <label class="setup-field"><span>X / Twitter</span><input id="socialX" class="form-input" placeholder="https://x.com/..."></label>
+                <label class="setup-field"><span>Telegram</span><input id="socialTelegram" class="form-input" placeholder="https://t.me/..."></label>
+                <label class="setup-field"><span>WhatsApp</span><input id="socialWhatsapp" class="form-input" placeholder="https://wa.me/..."></label>
+              </div>
+            </div>
+          </section>
+
+          <section class="wizard-step hidden space-y-6" data-step="1">
+            <div class="admin-section-card space-y-5">
+              <div>
+                <p class="text-[11px] font-extrabold text-emerald-700 uppercase tracking-widest">II · Participating Mode</p>
+                <h2 class="text-xl font-extrabold text-slate-950">Who can participate?</h2>
+                <p class="text-sm text-slate-500 mt-1">This controls how competitions and categories are grouped for boys and girls.</p>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4" data-option-group="participantGender">
+                <label class="setup-option-card"><input type="checkbox" name="participantGender" value="boys" checked><span>Boys</span><small>Boys can participate in this festival.</small></label>
+                <label class="setup-option-card"><input type="checkbox" name="participantGender" value="girls"><span>Girls</span><small>Girls can participate in this festival.</small></label>
+              </div>
+            </div>
+
+            <div id="gender-mode-panel" class="admin-info-card p-5 space-y-4 hidden">
+              <div>
+                <h3 class="text-lg font-extrabold text-slate-950">Boys & Girls Competition Pattern</h3>
+                <p class="text-sm text-slate-600">Choose whether competitions are separate, common, or mixed by item.</p>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4" data-option-group="genderCompetitionMode">
+                <label class="setup-option-card"><input type="radio" name="genderCompetitionMode" value="separate" checked><span>Separate</span><small>Different competitions for boys and girls.</small></label>
+                <label class="setup-option-card"><input type="radio" name="genderCompetitionMode" value="single"><span>Single</span><small>One shared competition for everyone.</small></label>
+                <label class="setup-option-card"><input type="radio" name="genderCompetitionMode" value="separateAndSingle"><span>Separate & Single</span><small>Some shared, some boys-only, some girls-only.</small></label>
+              </div>
+            </div>
+          </section>
+
+          <section class="wizard-step hidden space-y-6" data-step="2">
+            <div class="admin-section-card space-y-5">
+              <div>
+                <p class="text-[11px] font-extrabold text-emerald-700 uppercase tracking-widest">III · Fest Type</p>
+                <h2 class="text-xl font-extrabold text-slate-950">Arts, Sports, or both?</h2>
+                <p class="text-sm text-slate-500 mt-1">Sections can be selected from defaults or created as custom sections.</p>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4" data-option-group="programmeTypes">
+                <label class="setup-option-card"><input type="checkbox" name="programmeTypes" value="arts" checked><span>Arts</span><small>On-stage, off-stage, and custom arts sections.</small></label>
+                <label class="setup-option-card"><input type="checkbox" name="programmeTypes" value="sports" checked><span>Sports</span><small>Track, field, and custom sports sections.</small></label>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div id="arts-section-card" class="admin-success-card p-5 space-y-4">
+                <h3 class="text-lg font-extrabold text-slate-950">Arts Sections</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <label class="setup-check-card"><input type="checkbox" name="artsSections" value="onStage" checked><span>On Stage</span></label>
+                  <label class="setup-check-card"><input type="checkbox" name="artsSections" value="offStage" checked><span>Off Stage</span></label>
+                </div>
+                <div class="flex gap-2"><input id="customArtsSection" class="form-input" placeholder="Create new arts section"><button id="addArtsSection" type="button" class="btn btn-secondary text-xs font-bold px-4">Add</button></div>
+                <div id="customArtsList" class="flex flex-wrap gap-2"></div>
+              </div>
+
+              <div id="sports-section-card" class="admin-info-card p-5 space-y-4">
+                <h3 class="text-lg font-extrabold text-slate-950">Sports Sections</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <label class="setup-check-card"><input type="checkbox" name="sportsSections" value="track" checked><span>Track</span></label>
+                  <label class="setup-check-card"><input type="checkbox" name="sportsSections" value="field" checked><span>Field</span></label>
+                </div>
+                <div class="flex gap-2"><input id="customSportsSection" class="form-input" placeholder="Create new sports section"><button id="addSportsSection" type="button" class="btn btn-secondary text-xs font-bold px-4">Add</button></div>
+                <div id="customSportsList" class="flex flex-wrap gap-2"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="wizard-step hidden space-y-6" data-step="3">
+            <div class="admin-section-card space-y-5">
+              <div>
+                <p class="text-[11px] font-extrabold text-emerald-700 uppercase tracking-widest">IV · Categories</p>
+                <h2 class="text-xl font-extrabold text-slate-950">Student Categories</h2>
+                <p class="text-sm text-slate-500 mt-1">Students will be added to these categories. You can use defaults, create custom categories, or leave defaults unchecked.</p>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                <label class="setup-check-card"><input type="checkbox" name="categories" value="kiddies" checked><span>Kiddies</span></label>
+                <label class="setup-check-card"><input type="checkbox" name="categories" value="subJunior" checked><span>Sub Junior</span></label>
+                <label class="setup-check-card"><input type="checkbox" name="categories" value="junior" checked><span>Junior</span></label>
+                <label class="setup-check-card"><input type="checkbox" name="categories" value="senior" checked><span>Senior</span></label>
+                <label class="setup-check-card"><input type="checkbox" name="categories" value="superSenior" checked><span>Super Senior</span></label>
+              </div>
+              <div class="flex gap-2"><input id="customCategory" class="form-input" placeholder="Create new category"><button id="addCategory" type="button" class="btn btn-secondary text-xs font-bold px-4">Add</button></div>
+              <div id="customCategoryList" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div class="admin-warning-card p-5 space-y-3">
+                <h3 class="text-lg font-extrabold text-slate-950">Before clicking Done</h3>
+                <p class="text-sm text-slate-700 leading-relaxed">You can edit this Master Setup freely until students or competitions are created. After that, core choices are locked to protect marks, teams, registrations, and results. New categories/sections can still be added later.</p>
+              </div>
+              <div class="admin-danger-card p-5 space-y-4">
+                <h3 class="text-lg font-extrabold text-slate-950">Reset festival data</h3>
+                <p class="text-sm text-slate-700 leading-relaxed">Deletes students, competitions, marks, results, judges, teams, categories, and setup-linked records from this festival. Admin password is required.</p>
+                <button id="open-reset" type="button" class="btn bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2">Reset with Admin Password</button>
+              </div>
+            </div>
+          </section>
+
+          <div class="admin-section-card flex flex-col md:flex-row md:items-center justify-between gap-3 sticky bottom-4 z-20">
+            <div class="text-sm text-slate-500"><span id="step-label" class="font-extrabold text-slate-900">Step 1 of 4</span> · All fields are optional during first setup.</div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="prev-step" type="button" class="btn border border-slate-200 bg-white text-slate-700 px-4 py-2 text-xs font-bold">Previous</button>
+              <button id="skip-step" type="button" class="btn border border-amber-200 bg-amber-50 text-amber-700 px-4 py-2 text-xs font-bold">Skip</button>
+              <button id="next-step" type="button" class="btn btn-primary px-5 py-2 text-xs font-bold">Next</button>
+              <button id="done-step" type="button" class="hidden btn bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 text-xs font-bold">Done</button>
             </div>
           </div>
-
-          <!-- Championship Tie-Break Configuration -->
-          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
-            <h2 class="text-base font-bold text-slate-900 font-display">Championship Tie-Break Rules Sequence</h2>
-            <p class="text-xs text-slate-400">Configure the exact step-by-step sequence of rules used to resolve competitor tie conditions. Enabled rules will be evaluated in the specified priority order.</p>
-
-            <div class="overflow-x-auto pt-2">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    <th class="py-3 px-2">Enable</th>
-                    <th class="py-3 px-2">Rule Criteria</th>
-                    <th class="py-3 px-2">Malayalam Label</th>
-                    <th class="py-3 px-2 w-32 text-center">Priority (1-12)</th>
-                  </tr>
-                </thead>
-                <tbody id="tie-break-rules-body" class="divide-y divide-slate-50 text-xs text-slate-700 font-medium">
-                  <!-- Dynamic rows go here -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Submit Button -->
-          <div class="flex items-center justify-end space-x-3">
-            <button type="submit" class="btn btn-primary py-2.5 px-6 text-xs font-bold shadow-md cursor-pointer">
-              Save Configuration Settings
-            </button>
-          </div>
-
         </form>
-
       </main>
     </div>
   </div>
 
+  <div id="confirm-dialog" class="admin-confirm-dialog hidden" role="dialog" aria-modal="true">
+    <div class="admin-confirm-dialog__panel">
+      <h2 class="text-xl font-extrabold text-slate-950">Complete Master Setup?</h2>
+      <p class="text-sm text-slate-600 leading-relaxed mt-2">You can change these setup choices later from Master Setup before adding students and competitions. After students/events are created, core setup will be locked and only new items can be added.</p>
+      <p id="confirm-save-status" class="hidden text-xs font-bold mt-3"></p>
+      <div class="mt-5 flex justify-end gap-2"><button id="cancel-confirm" class="btn border border-slate-200 bg-white text-slate-700 px-4 py-2 text-xs font-bold">Cancel</button><button id="save-setup" class="btn bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold">Confirm & Save</button></div>
+    </div>
+  </div>
+
+  <div id="reset-dialog" class="admin-confirm-dialog hidden" role="dialog" aria-modal="true">
+    <div class="admin-confirm-dialog__panel border-rose-200">
+      <h2 class="text-xl font-extrabold text-rose-700">Reset festival data?</h2>
+      <p class="text-sm text-slate-600 leading-relaxed mt-2">This permanently deletes festival setup-linked data for the active institution. Enter the logged-in admin password to continue.</p>
+      <input id="reset-password" type="password" class="form-input mt-4" placeholder="Admin password">
+      <p id="reset-error" class="hidden text-xs font-bold text-rose-600 mt-2"></p>
+      <div class="mt-5 flex justify-end gap-2"><button id="cancel-reset" class="btn border border-slate-200 bg-white text-slate-700 px-4 py-2 text-xs font-bold">Cancel</button><button id="confirm-reset" class="btn bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 text-xs font-bold">Delete Data</button></div>
+    </div>
+  </div>
+
   <script type="module">
+    import { db } from "../assets/js/firebase-init.js";
     import { verifyUserRole } from "../assets/js/role-guard.js";
     import { loadPortalLayout } from "../assets/js/component-loader.js";
     import { initializeNavigation } from "../assets/js/navigation.js";
-    import { getFestivalSettings, updateFestivalSettings } from "../assets/js/student-service.js";
+    import { getActiveScope } from "../assets/js/firestore-service.js";
+    import { hashManualPassword } from "../assets/js/manual-account-service.js";
+    import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const RULE_DEFS = [
-      { key: 'totalPoints', name: 'Total Championship Points', nameMl: 'ആകെ പോയിന്റുകൾ', defaultPriority: 1 },
-      { key: 'firstPlaceCount', name: 'Count of First Places (1st)', nameMl: 'ഒന്നാം സ്ഥാനങ്ങളുടെ എണ്ണം', defaultPriority: 2 },
-      { key: 'secondPlaceCount', name: 'Count of Second Places (2nd)', nameMl: 'രണ്ടാം സ്ഥാനങ്ങളുടെ എണ്ണം', defaultPriority: 3 },
-      { key: 'thirdPlaceCount', name: 'Count of Third Places (3rd)', nameMl: 'മൂന്നാം സ്ഥാനങ്ങളുടെ എണ്ണം', defaultPriority: 4 },
-      { key: 'aGradeCount', name: 'Count of A Grades', nameMl: 'എ ഗ്രേഡുകളുടെ എണ്ണം', defaultPriority: 5 },
-      { key: 'averagePercentage', name: 'Average Percentage Score', nameMl: 'ശരാശരി ശതമാനം', defaultPriority: 6 },
-      { key: 'rawScoreSum', name: 'Sum of Raw Scores', nameMl: 'ആകെ റോ സ്കോർ', defaultPriority: null },
-      { key: 'stagePoints', name: 'Subdivision Stage Points', nameMl: 'സ്റ്റേജ് പോയിന്റുകൾ', defaultPriority: null },
-      { key: 'youngerAge', name: 'Age Priority: Younger Student Wins', nameMl: 'പ്രായം കുറഞ്ഞ വിദ്യാർത്ഥിക്ക് മുൻഗണന', defaultPriority: null },
-      { key: 'olderAge', name: 'Age Priority: Older Student Wins', nameMl: 'പ്രായം കൂടിയ വിദ്യാർത്ഥിക്ക് മുൻഗണന', defaultPriority: null },
-      { key: 'jointChampion', name: 'Declare Joint Champion', nameMl: 'സംയുക്ത വിജയിയായി പ്രഖ്യാപിക്കുക', defaultPriority: null },
-      { key: 'adminDecision', name: 'Fallback to Admin Decision / Unresolved', nameMl: 'അഡ്മിൻ തീരുമാനത്തിന് വിടുക', defaultPriority: 7 }
+    const steps = [
+      ['Profile', 'Institution and festival identity'],
+      ['Mode', 'Boys/Girls participation'],
+      ['Type', 'Arts and sports sections'],
+      ['Categories', 'Student groups and finish']
     ];
+    const defaultCategoryNames = { kiddies: 'Kiddies', subJunior: 'Sub Junior', junior: 'Junior', senior: 'Senior', superSenior: 'Super Senior' };
+    const defaultSectionNames = { onStage: 'On Stage', offStage: 'Off Stage', track: 'Track', field: 'Field' };
+    const state = { step: 0, skipped: new Set(), customArts: [], customSports: [], customCategories: [], locked: false, scope: null, counts: { students: 0, competitions: 0 } };
 
-    const SECTION_DEFS = [
-      { key: 'trackAthletics', name: 'Track Athletics', nameMl: 'ട്രാക്ക് അത്‌ലറ്റിക്സ്', type: 'sports', hint: 'Running track events and lanes.' },
-      { key: 'fieldAthletics', name: 'Field Athletics', nameMl: 'ഫീൽഡ് അത്‌ലറ്റിക്സ്', type: 'sports', hint: 'Jump, throw, and field events.' },
-      { key: 'teamGames', name: 'Team Games', nameMl: 'ടീം ഗെയിംസ്', type: 'sports', hint: 'Football, volleyball, kabaddi, and similar events.' },
-      { key: 'onStage', name: 'On Stage', nameMl: 'സ്റ്റേജ് മത്സരങ്ങൾ', type: 'arts', hint: 'Speech, song, recitation, and stage items.' },
-      { key: 'offStage', name: 'Off Stage', nameMl: 'ഓഫ് സ്റ്റേജ് മത്സരങ്ങൾ', type: 'arts', hint: 'Writing, drawing, quiz, and non-stage items.' },
-      { key: 'general', name: 'General / Common', nameMl: 'പൊതു വിഭാഗം', type: 'general', hint: 'Common activities not limited to arts or sports.' }
-    ];
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+    const value = (id) => $(`#${id}`)?.value?.trim() || '';
+    const slug = (text) => (text || 'item').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `item-${Date.now()}`;
 
-    let customCompetitionSections = [];
-
-    let activeFestId = null;
-
-    function renderTieBreakers(savedSequence) {
-      const container = document.getElementById('tie-break-rules-body');
-      container.innerHTML = '';
-
-      RULE_DEFS.forEach(def => {
-        const indexInSaved = savedSequence ? savedSequence.indexOf(def.key) : -1;
-        const isEnabled = savedSequence ? indexInSaved !== -1 : (def.defaultPriority !== null);
-        const priorityVal = isEnabled 
-          ? (savedSequence ? (indexInSaved + 1) : def.defaultPriority) 
-          : '';
-
-        const row = document.createElement('tr');
-        row.className = 'hover:bg-slate-50/50';
-        row.innerHTML = `
-          <td class="py-3 px-2">
-            <input type="checkbox" id="chk-${def.key}" ${isEnabled ? 'checked' : ''} class="h-4.5 w-4.5 text-emerald-600 border-slate-300 rounded cursor-pointer" onchange="toggleRuleField('${def.key}')">
-          </td>
-          <td class="py-3 px-2 font-semibold text-slate-900">${def.name}</td>
-          <td class="py-3 px-2 text-slate-400 font-medium">${def.nameMl}</td>
-          <td class="py-3 px-2 text-center">
-            <input type="number" id="order-${def.key}" value="${priorityVal}" min="1" max="12" ${!isEnabled ? 'disabled' : ''} class="w-16 px-2 py-1 bg-white border border-slate-200 rounded text-center font-bold text-slate-700 disabled:bg-slate-50 disabled:text-slate-350 focus:ring-emerald-500 focus:border-emerald-500">
-          </td>
-        `;
-        container.appendChild(row);
-      });
+    async function init() {
+      await verifyUserRole(['admin']);
+      await loadPortalLayout('admin');
+      initializeNavigation();
+      state.scope = resolveScope();
+      buildStepIndicator();
+      bindEvents();
+      await loadExistingSetup();
+      await refreshLockState();
+      render();
+      $('#global-page-loader').classList.add('hidden');
     }
 
-    window.toggleRuleField = function(key) {
-      const chk = document.getElementById(`chk-${key}`);
-      const input = document.getElementById(`order-${key}`);
-      if (chk && input) {
-        input.disabled = !chk.checked;
-        if (chk.checked && !input.value) {
-          let max = 0;
-          RULE_DEFS.forEach(d => {
-            const valInput = document.getElementById(`order-${d.key}`);
-            const val = valInput ? parseInt(valInput.value) : 0;
-            if (val > max) max = val;
-          });
-          input.value = max + 1;
-        } else if (!chk.checked) {
-          input.value = '';
-        }
+    function resolveScope() {
+      try { return getActiveScope(); } catch (err) {
+        const festivalId = localStorage.getItem('meeladpulse_selected_fest_id') || 'main-festival';
+        const institutionId = localStorage.getItem('meeladpulse_selected_institution_id') || localStorage.getItem('selectedInstitutionId') || festivalId;
+        localStorage.setItem('meeladpulse_selected_fest_id', festivalId);
+        localStorage.setItem('meeladpulse_selected_institution_id', institutionId);
+        return { institutionId, festivalId };
       }
-    };
-
-    function allowedSectionTypes() {
-      const scope = document.getElementById('programmeScope')?.value || 'artsAndSports';
-      if (scope === 'artsOnly') return ['arts', 'general'];
-      if (scope === 'sportsOnly') return ['sports', 'general'];
-      return ['arts', 'sports', 'general'];
     }
 
-    function getSelectedCompetitionSections() {
-      return Array.from(document.querySelectorAll('input[name="competitionSections"]:checked')).map(input => input.value);
+    function buildStepIndicator() {
+      $('#step-indicator').innerHTML = steps.map((step, index) => `<button type="button" data-go-step="${index}" class="setup-step-chip"><span>${index + 1}</span><strong>${step[0]}</strong><small>${step[1]}</small></button>`).join('');
     }
 
-    function renderCompetitionSections(selectedKeys = []) {
-      const grid = document.getElementById('competition-sections-grid');
-      if (!grid) return;
-      const allowed = allowedSectionTypes();
-      grid.innerHTML = '';
-      SECTION_DEFS.filter(section => allowed.includes(section.type)).forEach(section => {
-        const checked = selectedKeys.includes(section.key) || (!selectedKeys.length && ['trackAthletics', 'onStage', 'offStage'].includes(section.key));
-        const label = document.createElement('label');
-        label.className = 'flex gap-3 rounded-xl border border-slate-200 bg-white p-3 cursor-pointer hover:border-emerald-200 transition';
-        label.innerHTML = `
-          <input type="checkbox" name="competitionSections" value="${section.key}" ${checked ? 'checked' : ''} class="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600">
-          <span>
-            <span class="block text-xs font-bold text-slate-900">${section.name}</span>
-            <span class="block text-[10px] font-bold text-emerald-600">${section.nameMl}</span>
-            <span class="block text-[10px] text-slate-400 mt-0.5">${section.hint}</span>
-          </span>
-        `;
-        grid.appendChild(label);
+    function bindEvents() {
+      $('#prev-step').addEventListener('click', () => goStep(state.step - 1));
+      $('#skip-step').addEventListener('click', async () => { state.skipped.add(state.step); await goStep(Math.min(steps.length - 1, state.step + 1)); });
+      $('#next-step').addEventListener('click', async () => goStep(state.step + 1));
+      $('#done-step').addEventListener('click', () => $('#confirm-dialog').classList.remove('hidden'));
+      $('#cancel-confirm').addEventListener('click', () => $('#confirm-dialog').classList.add('hidden'));
+      $('#save-setup').addEventListener('click', saveSetup);
+      $('#open-reset').addEventListener('click', () => $('#reset-dialog').classList.remove('hidden'));
+      $('#cancel-reset').addEventListener('click', () => $('#reset-dialog').classList.add('hidden'));
+      $('#confirm-reset').addEventListener('click', resetFestivalData);
+      $('#addArtsSection').addEventListener('click', () => addCustom('customArtsSection', 'customArts', 'customArtsList'));
+      $('#addSportsSection').addEventListener('click', () => addCustom('customSportsSection', 'customSports', 'customSportsList'));
+      $('#addCategory').addEventListener('click', () => addCustom('customCategory', 'customCategories', 'customCategoryList'));
+      $$('input').forEach(input => input.addEventListener('change', render));
+      $$('[data-go-step]').forEach(button => button.addEventListener('click', async () => goStep(Number(button.dataset.goStep))));
+    }
+
+    async function loadExistingSetup() {
+      const { institutionId, festivalId } = state.scope;
+      const [institutionSnap, festivalSnap] = await Promise.all([
+        getDoc(doc(db, 'institutions', institutionId)),
+        getDoc(doc(db, `institutions/${institutionId}/festivals`, festivalId))
+      ]);
+      const institution = institutionSnap.exists() ? institutionSnap.data() : {};
+      const festival = festivalSnap.exists() ? festivalSnap.data() : {};
+      const wizard = festival.setupWizard || {};
+      $('#institutionName').value = institution.name || festival.institutionName || '';
+      $('#institutionPlace').value = institution.place || festival.place || festival.venue || '';
+      $('#institutionRegisterNumber').value = institution.registerNumber || '';
+      $('#institutionLogoUrl').value = institution.logoUrl || '';
+      $('#institutionRunBy').value = institution.runBy || '';
+      $('#festName').value = festival.name || festival.title || '';
+      $('#festSubtitle').value = festival.subtitle || '';
+      $('#festTagline').value = festival.tagline || '';
+      $('#festLogoUrl').value = festival.logoUrl || '';
+      $('#festPhone').value = festival.contact?.phone || festival.phone || '';
+      $('#festEmail').value = festival.contact?.email || festival.email || '';
+      const social = festival.socialLinks || {};
+      ['Instagram','Facebook','Youtube','X','Telegram','Whatsapp'].forEach(key => { $(`#social${key}`).value = social[key.toLowerCase()] || ''; });
+      setParticipantChecks(wizard.participantGenders, wizard.participantMode || festival.festivalType || 'boysOnly');
+      setRadio('genderCompetitionMode', wizard.genderCompetitionMode || festival.genderCompetitionMode || 'separate');
+      setProgrammeTypeChecks(wizard.programmeTypes, wizard.festType || festival.programmeScope || 'artsAndSports');
+      restoreChecks('artsSections', wizard.sections?.arts || ['onStage', 'offStage']);
+      restoreChecks('sportsSections', wizard.sections?.sports || ['track', 'field']);
+      restoreChecks('categories', wizard.categories?.defaults || Object.keys(defaultCategoryNames));
+      state.customArts = wizard.sections?.customArts || [];
+      state.customSports = wizard.sections?.customSports || [];
+      state.customCategories = wizard.categories?.custom || [];
+      renderCustomList('customArtsList', 'customArts');
+      renderCustomList('customSportsList', 'customSports');
+      renderCustomList('customCategoryList', 'customCategories');
+    }
+
+    async function refreshLockState() {
+      const base = `institutions/${state.scope.institutionId}/festivals/${state.scope.festivalId}`;
+      const [studentsSnap, competitionsSnap] = await Promise.all([
+        getDocs(collection(db, `${base}/students`)),
+        getDocs(collection(db, `${base}/competitions`))
+      ]);
+      state.counts = { students: studentsSnap.size, competitions: competitionsSnap.size };
+      state.locked = studentsSnap.size > 0 || competitionsSnap.size > 0;
+      $('#lock-status').textContent = state.locked ? `Locked · ${studentsSnap.size} students · ${competitionsSnap.size} events` : 'Editable · no students/events yet';
+      $('#lock-status').className = state.locked ? 'admin-warning-card px-4 py-2 text-xs font-extrabold' : 'admin-success-card px-4 py-2 text-xs font-extrabold';
+      $('#lock-banner').classList.toggle('hidden', !state.locked);
+      $$('input[name="participantGender"], input[name="genderCompetitionMode"], input[name="programmeTypes"], input[name="artsSections"], input[name="sportsSections"], input[name="categories"]').forEach(input => { input.disabled = state.locked; });
+    }
+
+    function setRadio(name, val) { const radio = $(`input[name="${name}"][value="${val}"]`); if (radio) radio.checked = true; }
+    function restoreChecks(name, values) { $$(`input[name="${name}"]`).forEach(input => { input.checked = values.includes(input.value); }); }
+    function setParticipantChecks(savedGenders, mode) {
+      const genders = Array.isArray(savedGenders) && savedGenders.length ? savedGenders : modeToGenders(mode);
+      $$('input[name="participantGender"]').forEach(input => { input.checked = genders.includes(input.value); });
+    }
+    function setProgrammeTypeChecks(savedTypes, festType) {
+      const types = Array.isArray(savedTypes) && savedTypes.length ? savedTypes : festTypeToProgrammeTypes(festType);
+      $$('input[name="programmeTypes"]').forEach(input => { input.checked = types.includes(input.value); });
+    }
+
+    async function goStep(next) {
+      const target = Math.max(0, Math.min(steps.length - 1, next));
+      if (target > state.step) {
+        try { await saveSetupDraft(); }
+        catch (error) { console.error('Master Setup draft save failed:', error); alert(`Could not save this step: ${error.message || error}`); return; }
+      }
+      state.step = target;
+      render();
+    }
+
+    function render() {
+      $$('.wizard-step').forEach((section, index) => section.classList.toggle('hidden', index !== state.step));
+      $$('.setup-step-chip').forEach((chip, index) => {
+        chip.classList.toggle('is-active', index === state.step);
+        chip.classList.toggle('is-done', index < state.step);
       });
-      grid.querySelectorAll('input[name="competitionSections"]').forEach(input => {
-        input.addEventListener('change', updateSectionCountBadge);
-      });
-      updateSectionCountBadge();
+      $('#step-label').textContent = `Step ${state.step + 1} of ${steps.length}`;
+      $('#prev-step').disabled = state.step === 0;
+      $('#next-step').classList.toggle('hidden', state.step === steps.length - 1);
+      $('#done-step').classList.toggle('hidden', state.step !== steps.length - 1);
+      const participantGenders = checkedValues('participantGender');
+      $('#gender-mode-panel').classList.toggle('hidden', !(participantGenders.includes('boys') && participantGenders.includes('girls')));
+      const programmeTypes = checkedValues('programmeTypes');
+      $('#arts-section-card').classList.toggle('hidden', !programmeTypes.includes('arts'));
+      $('#sports-section-card').classList.toggle('hidden', !programmeTypes.includes('sports'));
+      updateSelectableStyles();
     }
 
-    function updateSectionCountBadge() {
-      const badge = document.getElementById('section-count-badge');
-      if (!badge) return;
-      const count = getSelectedCompetitionSections().length + customCompetitionSections.length;
-      badge.textContent = `${count} selected`;
-    }
-
-    function renderCustomSections() {
-      const list = document.getElementById('custom-sections-list');
-      if (!list) return;
-      list.innerHTML = '';
-      customCompetitionSections.forEach(section => {
-        const chip = document.createElement('span');
-        chip.className = 'inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 px-3 py-1 text-[10px] font-bold text-slate-600';
-        chip.innerHTML = `${section.name} <span class="text-slate-400 uppercase">${section.type}</span> <button type="button" class="text-red-500" data-remove-section="${section.key}">×</button>`;
-        list.appendChild(chip);
-      });
-      list.querySelectorAll('[data-remove-section]').forEach(button => {
-        button.addEventListener('click', () => {
-          customCompetitionSections = customCompetitionSections.filter(section => section.key !== button.dataset.removeSection);
-          renderCustomSections();
-          updateSectionCountBadge();
-        });
-      });
-      updateSectionCountBadge();
-    }
-
-    function updateGenderModeVisibility() {
-      const row = document.getElementById('gender-competition-mode-row');
-      const festivalType = document.getElementById('festivalType')?.value;
-      if (!row) return;
-      row.classList.toggle('hidden', festivalType !== 'boysAndGirls');
-    }
-
-    function setupBlueprintHandlers(settings = {}) {
-      const festivalType = document.getElementById('festivalType');
-      const genderMode = document.getElementById('genderCompetitionMode');
-      const programmeScope = document.getElementById('programmeScope');
-      if (festivalType) festivalType.value = settings.festivalType || 'boysAndGirls';
-      if (genderMode) genderMode.value = settings.genderCompetitionMode || 'separate';
-      if (programmeScope) programmeScope.value = settings.programmeScope || 'artsAndSports';
-      customCompetitionSections = Array.isArray(settings.customCompetitionSections) ? settings.customCompetitionSections : [];
-
-      renderCompetitionSections(settings.competitionSections || []);
-      renderCustomSections();
-      updateGenderModeVisibility();
-
-      festivalType?.addEventListener('change', updateGenderModeVisibility);
-      programmeScope?.addEventListener('change', () => {
-        renderCompetitionSections(getSelectedCompetitionSections());
-        customCompetitionSections = customCompetitionSections.filter(section => allowedSectionTypes().includes(section.type));
-        renderCustomSections();
-      });
-
-      document.getElementById('add-custom-section-btn')?.addEventListener('click', () => {
-        const input = document.getElementById('custom-section-name');
-        const type = document.getElementById('custom-section-type')?.value || 'general';
-        const name = input.value.trim();
-        if (!name) return;
-        if (!allowedSectionTypes().includes(type)) {
-          alert('This custom section type is not available for the selected Programme Scope.');
-          return;
-        }
-        const key = `custom-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || Date.now()}`;
-        if (!customCompetitionSections.some(section => section.key === key)) {
-          customCompetitionSections.push({ key, name, type });
-          renderCustomSections();
-        }
-        input.value = '';
+    function updateSelectableStyles() {
+      $$('.setup-option-card, .setup-check-card').forEach(card => {
+        const input = card.querySelector('input');
+        card.classList.toggle('selected', Boolean(input?.checked));
+        card.classList.toggle('opacity-60', Boolean(input?.disabled));
       });
     }
 
-    function collectBlueprintSettings() {
-      const festivalType = document.getElementById('festivalType').value;
+    function addCustom(inputId, bucket, listId) {
+      const input = $(`#${inputId}`);
+      const name = input.value.trim();
+      if (!name) return;
+      if (!state[bucket].some(item => item.name.toLowerCase() === name.toLowerCase())) state[bucket].push({ id: slug(name), name });
+      input.value = '';
+      renderCustomList(listId, bucket);
+    }
+
+    function modeToGenders(mode) {
+      if (mode === 'girlsOnly') return ['girls'];
+      if (mode === 'boysAndGirls') return ['boys', 'girls'];
+      return ['boys'];
+    }
+
+    function gendersToMode(genders) {
+      const hasBoys = genders.includes('boys');
+      const hasGirls = genders.includes('girls');
+      if (hasBoys && hasGirls) return 'boysAndGirls';
+      if (hasGirls) return 'girlsOnly';
+      return 'boysOnly';
+    }
+
+    function festTypeToProgrammeTypes(festType) {
+      if (festType === 'sportsOnly') return ['sports'];
+      if (festType === 'artsOnly') return ['arts'];
+      return ['arts', 'sports'];
+    }
+
+    function programmeTypesToFestType(types) {
+      const hasArts = types.includes('arts');
+      const hasSports = types.includes('sports');
+      if (hasArts && hasSports) return 'artsAndSports';
+      if (hasSports) return 'sportsOnly';
+      return 'artsOnly';
+    }
+
+    function renderCustomList(listId, bucket) {
+      $(`#${listId}`).innerHTML = state[bucket].map((item, index) => `
+        <div class="custom-setup-row">
+          <span class="font-extrabold text-slate-900">${item.name}</span>
+          <div class="flex items-center gap-2">
+            <button type="button" class="text-[11px] font-extrabold text-sky-700 hover:text-sky-900" data-edit="${bucket}:${index}:${listId}">Edit</button>
+            <button type="button" class="text-[11px] font-extrabold text-rose-700 hover:text-rose-900" data-remove="${bucket}:${index}:${listId}">Delete</button>
+          </div>
+        </div>`).join('');
+      $$('[data-edit]').forEach(button => button.addEventListener('click', () => {
+        const [bucketName, index, targetList] = button.dataset.edit.split(':');
+        const current = state[bucketName][Number(index)];
+        const nextName = prompt('Edit name', current?.name || '');
+        if (!nextName || !nextName.trim()) return;
+        state[bucketName][Number(index)] = { ...current, id: current.id || slug(nextName), name: nextName.trim() };
+        renderCustomList(targetList, bucketName);
+      }));
+      $$('[data-remove]').forEach(button => button.addEventListener('click', () => {
+        const [bucketName, index, targetList] = button.dataset.remove.split(':');
+        const item = state[bucketName][Number(index)];
+        if (!confirm(`Delete ${item?.name || 'this item'}?`)) return;
+        state[bucketName].splice(Number(index), 1);
+        renderCustomList(targetList, bucketName);
+      }));
+    }
+
+    function collectSetup() {
+      const participantGenders = checkedValues('participantGender');
+      const safeParticipantGenders = participantGenders.length ? participantGenders : ['boys'];
+      const participantMode = gendersToMode(safeParticipantGenders);
+      const programmeTypes = checkedValues('programmeTypes');
+      const safeProgrammeTypes = programmeTypes.length ? programmeTypes : ['arts'];
+      const festType = programmeTypesToFestType(safeProgrammeTypes);
       return {
-        festivalType,
-        genderCompetitionMode: festivalType === 'boysAndGirls' ? document.getElementById('genderCompetitionMode').value : 'notApplicable',
-        programmeScope: document.getElementById('programmeScope').value,
-        competitionSections: getSelectedCompetitionSections(),
-        customCompetitionSections,
-        setupBlueprintCompleted: true
+        institution: { name: value('institutionName'), place: value('institutionPlace'), registerNumber: value('institutionRegisterNumber'), logoUrl: value('institutionLogoUrl'), runBy: value('institutionRunBy') },
+        fest: {
+          name: value('festName'), subtitle: value('festSubtitle'), tagline: value('festTagline'), logoUrl: value('festLogoUrl'),
+          contact: { phone: value('festPhone'), email: value('festEmail') },
+          socialLinks: { instagram: value('socialInstagram'), facebook: value('socialFacebook'), youtube: value('socialYoutube'), x: value('socialX'), telegram: value('socialTelegram'), whatsapp: value('socialWhatsapp') }
+        },
+        participantMode,
+        participantGenders: safeParticipantGenders,
+        genderCompetitionMode: $('input[name="genderCompetitionMode"]:checked')?.value || 'separate',
+        festType,
+        programmeTypes: safeProgrammeTypes,
+        sections: {
+          arts: !safeProgrammeTypes.includes('arts') ? [] : checkedValues('artsSections'),
+          sports: !safeProgrammeTypes.includes('sports') ? [] : checkedValues('sportsSections'),
+          customArts: state.customArts,
+          customSports: state.customSports
+        },
+        categories: { defaults: checkedValues('categories'), custom: state.customCategories }
       };
     }
 
-    async function initPage() {
+    function checkedValues(name) { return $$(`input[name="${name}"]:checked`).map(input => input.value); }
+
+    async function saveProfileAndFestival(data, { completed = false } = {}) {
+      const { institutionId, festivalId } = state.scope;
+      await setDoc(doc(db, 'institutions', institutionId), { ...data.institution, defaultFestivalId: festivalId, updatedAt: serverTimestamp() }, { merge: true });
+      await setDoc(doc(db, `institutions/${institutionId}/festivals`, festivalId), {
+        ...data.fest,
+        title: data.fest.name || data.fest.subtitle || 'Untitled Festival',
+        institutionId,
+        festivalId,
+        institutionName: data.institution.name,
+        setupWizard: { ...data, completed, draft: !completed, skippedSteps: Array.from(state.skipped), completedAt: completed ? serverTimestamp() : null, draftSavedAt: serverTimestamp(), lockedBecause: state.counts },
+        setupCompleted: completed,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }
+
+    async function saveSetupDraft() {
+      const data = collectSetup();
+      await saveProfileAndFestival(data, { completed: false });
+    }
+
+    async function saveSetup() {
+      const status = $('#confirm-save-status');
+      const data = collectSetup();
+      const { institutionId, festivalId } = state.scope;
+      $('#save-setup').disabled = true;
+      status.className = 'text-xs font-bold mt-3 text-slate-600';
+      status.textContent = 'Saving Master Setup...';
+      status.classList.remove('hidden');
       try {
-        await verifyUserRole(['admin']);
-        await loadPortalLayout('admin');
-        initializeNavigation();
-
-        activeFestId = localStorage.getItem('meeladpulse_selected_fest_id');
-        if (!activeFestId) {
-          alert("Please select a festival scope first.");
-          window.location.replace('../unauthorized.html?reason=no_scope');
-          return;
-        }
-
-        await loadSettings();
-        setupFormHandler();
-
-        document.getElementById('global-page-loader').classList.add('hidden');
-      } catch (err) {
-        console.error("Settings page initialization error:", err);
+        await saveProfileAndFestival(data, { completed: true });
+        if (!state.locked) await seedSetupRecords(data);
+        localStorage.setItem(`meeladpulse_setup_done_${institutionId}_${festivalId}`, '1');
+        if (data.fest.name) localStorage.setItem('meeladpulse_selected_fest_title', data.fest.name);
+        $('#confirm-dialog').classList.add('hidden');
+        $('#success-banner').classList.remove('hidden');
+        status.classList.add('hidden');
+        setTimeout(() => { window.location.href = '../admin/app.html?page=dashboard.html'; }, 700);
+      } catch (error) {
+        console.error('Master Setup save failed:', error);
+        status.className = 'text-xs font-bold mt-3 text-rose-700';
+        status.textContent = `Save failed: ${error.message || error}`;
+      } finally {
+        $('#save-setup').disabled = false;
       }
     }
 
-    async function loadSettings() {
-      const settings = await getFestivalSettings(activeFestId) || {};
-
-      // Set branding fields
-      document.getElementById('madrasaName').value = settings.madrasaName || '';
-      document.getElementById('festivalTitle').value = settings.festivalTitle || '';
-      document.getElementById('venueLocation').value = settings.venueLocation || '';
-
-      setupBlueprintHandlers(settings);
-
-      // Set radio options
-      const mode = settings.studentRegistrationMode || 'adminOnly';
-      const radio = document.getElementById(`radio-${mode}`);
-      if (radio) {
-        radio.checked = true;
-        updateVisualRadioGroup(mode);
-      }
-
-      // Set checkboxes
-      const openCheckbox = document.getElementById('studentRegistrationOpen');
-      openCheckbox.checked = settings.studentRegistrationOpen !== false;
-      updateOpenStatusBadge(openCheckbox.checked);
-
-      const approvalCheckbox = document.getElementById('teamLeaderStudentApprovalRequired');
-      approvalCheckbox.checked = settings.teamLeaderStudentApprovalRequired === true;
-
-      // Event listener for radios
-      const radios = document.querySelectorAll('input[name="registrationMode"]');
-      radios.forEach(r => {
-        r.addEventListener('change', (e) => {
-          updateVisualRadioGroup(e.target.value);
-        });
+    async function seedSetupRecords(data) {
+      const base = `institutions/${state.scope.institutionId}/festivals/${state.scope.festivalId}`;
+      const batch = writeBatch(db);
+      Object.entries(defaultCategoryNames).forEach(([id, name]) => {
+        batch.set(doc(db, `${base}/categories`, id), { id, name, active: data.categories.defaults.includes(id), source: 'masterSetup', updatedAt: serverTimestamp() }, { merge: true });
       });
-
-      // Event listener for open status
-      openCheckbox.addEventListener('change', (e) => {
-        updateOpenStatusBadge(e.target.checked);
+      data.categories.custom.forEach(item => {
+        batch.set(doc(db, `${base}/categories`, item.id), { id: item.id, name: item.name, active: true, source: 'masterSetupCustom', custom: true, updatedAt: serverTimestamp() }, { merge: true });
       });
-
-      renderTieBreakers(settings.championshipTieBreakers);
-    }
-
-    function updateVisualRadioGroup(selectedMode) {
-      const modes = ['adminOnly', 'teamLeadersOnly'];
-      modes.forEach(m => {
-        const label = document.getElementById(`label-${m}`);
-        if (m === selectedMode) {
-          label.classList.add('border-emerald-500', 'bg-emerald-50/20', 'ring-2', 'ring-emerald-500');
-          label.classList.remove('border-slate-200', 'bg-white');
-        } else {
-          label.classList.remove('border-emerald-500', 'bg-emerald-50/20', 'ring-2', 'ring-emerald-500');
-          label.classList.add('border-slate-200', 'bg-white');
-        }
+      Object.entries(defaultSectionNames).forEach(([id, name]) => {
+        const type = ['track', 'field'].includes(id) ? 'sports' : 'arts';
+        const selected = type === 'arts' ? data.sections.arts.includes(id) : data.sections.sports.includes(id);
+        batch.set(doc(db, `${base}/competitionSections`, id), { id, name, type, active: selected, source: 'masterSetup', updatedAt: serverTimestamp() }, { merge: true });
       });
+      [...data.sections.customArts.map(item => ({ ...item, type: 'arts' })), ...data.sections.customSports.map(item => ({ ...item, type: 'sports' }))].forEach(item => {
+        batch.set(doc(db, `${base}/competitionSections`, item.id), { ...item, active: true, source: 'masterSetupCustom', custom: true, updatedAt: serverTimestamp() }, { merge: true });
+      });
+      await batch.commit();
+    }
 
-      // Show/hide approval row if team leader registration is selected
-      const approvalRow = document.getElementById('approval-row');
-      if (selectedMode === 'teamLeadersOnly') {
-        approvalRow.classList.remove('opacity-50');
-        document.getElementById('teamLeaderStudentApprovalRequired').disabled = false;
-      } else {
-        approvalRow.classList.add('opacity-50');
-        document.getElementById('teamLeaderStudentApprovalRequired').disabled = true;
+    async function resetFestivalData() {
+      const password = $('#reset-password').value;
+      $('#reset-error').classList.add('hidden');
+      if (!password) return showResetError('Admin password is required.');
+      const valid = await verifyAdminPassword(password);
+      if (!valid) return showResetError('Password is incorrect.');
+      $('#confirm-reset').disabled = true;
+      const base = `institutions/${state.scope.institutionId}/festivals/${state.scope.festivalId}`;
+      const collections = ['festStudents', 'students', 'competitions', 'entries', 'teams', 'categories', 'competitionSections', 'divisions', 'subdivisions', 'judges', 'judgeAssignments', 'marks', 'judgeMarks', 'results', 'publishedResults', 'teamTotals', 'champions', 'announcements', 'idCards', 'certificates', 'reports', 'userInvitations', 'manualUsers'];
+      for (const name of collections) await deleteCollection(`${base}/${name}`);
+      await setDoc(doc(db, `institutions/${state.scope.institutionId}/festivals`, state.scope.festivalId), { setupCompleted: false, setupBlueprintCompleted: false, setupWizard: { completed: false, resetAt: serverTimestamp() }, studentRegistrationOpen: false, studentRegistrationMode: 'adminOnly', studentRegistrationCloseAt: '', updatedAt: serverTimestamp() }, { merge: true });
+      localStorage.removeItem(`meeladpulse_setup_done_${state.scope.institutionId}_${state.scope.festivalId}`);
+      $('#reset-dialog').classList.add('hidden');
+      $('#confirm-reset').disabled = false;
+      await refreshLockState();
+      alert('Festival data reset completed. You can configure Master Setup again.');
+    }
+
+    async function verifyAdminPassword(password) {
+      const profile = window.currentUserProfile || JSON.parse(sessionStorage.getItem('meeladpulse_manual_user') || 'null') || {};
+      const username = (profile.usernameLower || profile.username || profile.email || '').toLowerCase();
+      const refs = [username && doc(db, 'institutionLogins', username), username && doc(db, `institutions/${state.scope.institutionId}/festivals/${state.scope.festivalId}/manualUsers`, username)].filter(Boolean);
+      for (const ref of refs) {
+        const snap = await getDoc(ref);
+        if (!snap.exists()) continue;
+        const data = snap.data();
+        if (data.passwordHash && data.passwordHash === await hashManualPassword(password)) return true;
+        if (data.password && data.password === password) return true;
       }
+      return false;
     }
 
-    function updateOpenStatusBadge(isOpen) {
-      const badge = document.getElementById('open-status-badge');
-      if (isOpen) {
-        badge.textContent = 'Active & Open';
-        badge.className = 'px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-200';
-      } else {
-        badge.textContent = 'Locked & Closed';
-        badge.className = 'px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-red-100 text-red-800 border border-red-200';
+    async function deleteCollection(path) {
+      const snap = await getDocs(collection(db, path));
+      let batch = writeBatch(db);
+      let count = 0;
+      for (const docSnap of snap.docs) {
+        batch.delete(docSnap.ref);
+        count += 1;
+        if (count === 450) { await batch.commit(); batch = writeBatch(db); count = 0; }
       }
+      if (count) await batch.commit();
     }
 
-    function setupFormHandler() {
-      const form = document.getElementById('settings-form');
-      form.onsubmit = async (e) => {
-        e.preventDefault();
-        
-        const loader = document.getElementById('global-page-loader');
-        loader.classList.remove('hidden');
+    function showResetError(message) { $('#reset-error').textContent = message; $('#reset-error').classList.remove('hidden'); }
 
-        const selectedMode = document.querySelector('input[name="registrationMode"]:checked').value;
-        const registrationOpen = document.getElementById('studentRegistrationOpen').checked;
-        const approvalRequired = document.getElementById('teamLeaderStudentApprovalRequired').checked;
-        
-        const madrasaName = document.getElementById('madrasaName').value.trim();
-        const festivalTitle = document.getElementById('festivalTitle').value.trim();
-        const venueLocation = document.getElementById('venueLocation').value.trim();
-
-        const rulesToSave = [];
-        RULE_DEFS.forEach(def => {
-          const chk = document.getElementById(`chk-${def.key}`);
-          const orderInput = document.getElementById(`order-${def.key}`);
-          if (chk && chk.checked) {
-            const priority = parseInt(orderInput.value) || 99;
-            rulesToSave.push({ key: def.key, priority });
-          }
-        });
-        rulesToSave.sort((a, b) => a.priority - b.priority);
-        const championshipTieBreakers = rulesToSave.map(r => r.key);
-
-        try {
-          await updateFestivalSettings({
-            studentRegistrationMode: selectedMode,
-            studentRegistrationOpen: registrationOpen,
-            teamLeaderStudentApprovalRequired: selectedMode === 'teamLeadersOnly' ? approvalRequired : false,
-            madrasaName,
-            festivalTitle,
-            venueLocation,
-            ...collectBlueprintSettings(),
-            championshipTieBreakers
-          });
-
-          const banner = document.getElementById('success-banner');
-          banner.classList.remove('hidden');
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-
-          setTimeout(() => {
-            banner.classList.add('hidden');
-          }, 5000);
-
-        } catch (err) {
-          console.error("Save settings failed:", err);
-          alert("Failed to save configuration settings: " + err.message);
-        } finally {
-          loader.classList.add('hidden');
-        }
-      };
-    }
-
-    initPage();
+    init().catch(err => { console.error(err); alert(err.message || err); });
   </script>
 </body>
 </html>

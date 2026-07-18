@@ -12,6 +12,7 @@ import {
   signOut 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { assertOnline } from "./network-status.js";
+import { getActiveScope } from "./firestore-service.js";
 
 /**
  * Computes the SHA-256 hash of a string natively using the Web Crypto API.
@@ -45,7 +46,11 @@ export async function createSecureInvitation(recipientName, recipientEmail, assi
   const rawToken = generateSecureToken();
   const tokenHash = await hashTokenSHA256(rawToken);
 
+  const { institutionId, festivalId } = getActiveScope();
+
   const invitationData = {
+    institutionId,
+    festivalId,
     name: recipientName,
     email: recipientEmail.toLowerCase().trim(),
     role: assignedRole,
@@ -122,6 +127,8 @@ export async function activateInvitation(rawToken, enteredEmail, password) {
     emailLower: invitation.email.toLowerCase().trim(),
     role: invitation.role,
     teamId: invitation.role === 'teamLeader' ? invitation.teamId : null,
+    institutionId: invitation.institutionId || null,
+    festivalId: invitation.festivalId || invitation.institutionId || null,
     active: true,
     permissions: invitation.role === 'admin' ? ['*'] : [],
     invitationId: tokenHash,
