@@ -570,3 +570,15 @@ Reason:
 ### Remaining / needs staging verification
 - Run a full Firebase staging flow with real manual Judge and Team Leader logins to verify anonymous manual-session creation, scoped rules, judge dashboard visibility, mark entry, admin review, and result publication.
 - If hard-blocking schedule conflict prevention is required for judge conflicts and participant conflicts, move the current UI warnings into stricter service-layer validation before production lock.
+
+## Current Update — Admin Navigation Cleanup
+
+### Completed in this update
+- Sidebar was reorganized into the final admin lifecycle: Dashboard, Master Setup, Team Management, Students, Event Management, People & Access, Judging, Results, Reports & Certificates, and System.
+- Removed duplicate/obsolete sidebar links: Invitations, Judges, Divisions, Subdivisions, Categories, and Publishing Board are no longer primary navigation items.
+- Merged event operations under **Event Management**: Competition Items, Competition Entries, and Schedule Management.
+- Moved ID Cards to **Reports & Certificates** and Public Data Diagnostics to **System**.
+- Moved Provisional Results to **Results** and kept Judging focused on assignments, mark monitoring, submitted marks, and mark review.
+
+### Remaining / optional cleanup
+- Legacy pages still exist for direct links/backward compatibility; after staging confirmation they can be deleted or redirected if no longer needed.
