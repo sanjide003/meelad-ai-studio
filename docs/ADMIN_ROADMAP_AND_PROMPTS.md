@@ -51,19 +51,20 @@ Completed items:
 - Created a Master Setup wizard for first-time festival configuration.
 - Added institution profile fields such as institution name, place, registration number, logo, and run-by/subtitle information.
 - Added festival profile fields such as festival name, subtitle, tagline, logo, phone, email, and social media links.
-- Added participating mode options:
-  - Boys only
-  - Girls only
-  - Boys and girls
+- Added multi-select participating gender options:
+  - Boys
+  - Girls
+  - Boys and girls when both are selected
   - Separate competitions
   - Single/common competitions
   - Separate and single mixed model
-- Added fest type options:
-  - Sports only
-  - Arts only
-  - Arts and sports
+- Added multi-select fest type options:
+  - Sports
+  - Arts
+  - Arts and sports when both are selected
 - Added arts/sports section selection such as on-stage, off-stage, track, field, and custom sections.
-- Added category presets and custom category creation.
+- Added edit/delete controls with confirmation for custom arts/sports sections.
+- Added category presets and custom category creation with edit/delete controls for custom categories.
 - Added skip/previous/done flow with setup completion state.
 - Added lock-state concept for preventing core setup changes after students or competitions are created.
 - Added reset concept for returning setup to incomplete state.
@@ -112,11 +113,11 @@ Remaining work:
 Completed items:
 
 - Added Participating page under setup-related navigation.
-- Added participant intake modes:
+- Added multi-select participant intake modes:
   - Admin add
   - Team leaders add
   - Public registration
-  - All methods
+  - Any combination of these methods
 - Added setting for whether team leader submissions require admin approval.
 - Added public registration/status link generation foundation.
 - Added registration open/closed setting foundation with optional portal close date/time.

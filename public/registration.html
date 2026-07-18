@@ -62,7 +62,7 @@
       requireScope();
       const snap = await getDoc(doc(db, scoped));
       const settings = snap.exists() ? snap.data() : {};
-      const publicEnabled = publicModes.includes(settings.studentRegistrationMode || 'adminOnly');
+      const publicEnabled = Array.isArray(settings.studentRegistrationSources) && settings.studentRegistrationSources.length ? settings.studentRegistrationSources.includes('public') : publicModes.includes(settings.studentRegistrationMode || 'adminOnly');
       const open = publicEnabled && isStudentRegistrationPortalOpen(settings);
       if (!open) {
         $('closed-panel').classList.remove('hidden');

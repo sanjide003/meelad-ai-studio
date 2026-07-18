@@ -96,10 +96,9 @@
                 <h2 class="text-xl font-extrabold text-slate-950">Who can participate?</h2>
                 <p class="text-sm text-slate-500 mt-1">This controls how competitions and categories are grouped for boys and girls.</p>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4" data-option-group="participantMode">
-                <label class="setup-option-card"><input type="radio" name="participantMode" value="boysOnly" checked><span>Boys Only</span><small>Only boys participate in this festival.</small></label>
-                <label class="setup-option-card"><input type="radio" name="participantMode" value="girlsOnly"><span>Girls Only</span><small>Only girls participate in this festival.</small></label>
-                <label class="setup-option-card"><input type="radio" name="participantMode" value="boysAndGirls"><span>Boys & Girls</span><small>Both boys and girls participate.</small></label>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4" data-option-group="participantGender">
+                <label class="setup-option-card"><input type="checkbox" name="participantGender" value="boys" checked><span>Boys</span><small>Boys can participate in this festival.</small></label>
+                <label class="setup-option-card"><input type="checkbox" name="participantGender" value="girls"><span>Girls</span><small>Girls can participate in this festival.</small></label>
               </div>
             </div>
 
@@ -123,10 +122,9 @@
                 <h2 class="text-xl font-extrabold text-slate-950">Arts, Sports, or both?</h2>
                 <p class="text-sm text-slate-500 mt-1">Sections can be selected from defaults or created as custom sections.</p>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4" data-option-group="festType">
-                <label class="setup-option-card"><input type="radio" name="festType" value="sportsOnly"><span>Sports Only</span><small>Track, field, and custom sports sections.</small></label>
-                <label class="setup-option-card"><input type="radio" name="festType" value="artsOnly"><span>Arts Only</span><small>On-stage, off-stage, and custom arts sections.</small></label>
-                <label class="setup-option-card"><input type="radio" name="festType" value="artsAndSports" checked><span>Arts & Sports</span><small>Enable both arts and sports sections.</small></label>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4" data-option-group="programmeTypes">
+                <label class="setup-option-card"><input type="checkbox" name="programmeTypes" value="arts" checked><span>Arts</span><small>On-stage, off-stage, and custom arts sections.</small></label>
+                <label class="setup-option-card"><input type="checkbox" name="programmeTypes" value="sports" checked><span>Sports</span><small>Track, field, and custom sports sections.</small></label>
               </div>
             </div>
 
@@ -307,9 +305,9 @@
       $('#festEmail').value = festival.contact?.email || festival.email || '';
       const social = festival.socialLinks || {};
       ['Instagram','Facebook','Youtube','X','Telegram','Whatsapp'].forEach(key => { $(`#social${key}`).value = social[key.toLowerCase()] || ''; });
-      setRadio('participantMode', wizard.participantMode || festival.festivalType || 'boysOnly');
+      setParticipantChecks(wizard.participantGenders, wizard.participantMode || festival.festivalType || 'boysOnly');
       setRadio('genderCompetitionMode', wizard.genderCompetitionMode || festival.genderCompetitionMode || 'separate');
-      setRadio('festType', wizard.festType || festival.programmeScope || 'artsAndSports');
+      setProgrammeTypeChecks(wizard.programmeTypes, wizard.festType || festival.programmeScope || 'artsAndSports');
       restoreChecks('artsSections', wizard.sections?.arts || ['onStage', 'offStage']);
       restoreChecks('sportsSections', wizard.sections?.sports || ['track', 'field']);
       restoreChecks('categories', wizard.categories?.defaults || Object.keys(defaultCategoryNames));
@@ -332,11 +330,19 @@
       $('#lock-status').textContent = state.locked ? `Locked · ${studentsSnap.size} students · ${competitionsSnap.size} events` : 'Editable · no students/events yet';
       $('#lock-status').className = state.locked ? 'admin-warning-card px-4 py-2 text-xs font-extrabold' : 'admin-success-card px-4 py-2 text-xs font-extrabold';
       $('#lock-banner').classList.toggle('hidden', !state.locked);
-      $$('input[name="participantMode"], input[name="genderCompetitionMode"], input[name="festType"], input[name="artsSections"], input[name="sportsSections"], input[name="categories"]').forEach(input => { input.disabled = state.locked; });
+      $$('input[name="participantGender"], input[name="genderCompetitionMode"], input[name="programmeTypes"], input[name="artsSections"], input[name="sportsSections"], input[name="categories"]').forEach(input => { input.disabled = state.locked; });
     }
 
     function setRadio(name, val) { const radio = $(`input[name="${name}"][value="${val}"]`); if (radio) radio.checked = true; }
     function restoreChecks(name, values) { $$(`input[name="${name}"]`).forEach(input => { input.checked = values.includes(input.value); }); }
+    function setParticipantChecks(savedGenders, mode) {
+      const genders = Array.isArray(savedGenders) && savedGenders.length ? savedGenders : modeToGenders(mode);
+      $$('input[name="participantGender"]').forEach(input => { input.checked = genders.includes(input.value); });
+    }
+    function setProgrammeTypeChecks(savedTypes, festType) {
+      const types = Array.isArray(savedTypes) && savedTypes.length ? savedTypes : festTypeToProgrammeTypes(festType);
+      $$('input[name="programmeTypes"]').forEach(input => { input.checked = types.includes(input.value); });
+    }
 
     async function goStep(next) {
       const target = Math.max(0, Math.min(steps.length - 1, next));
@@ -358,11 +364,11 @@
       $('#prev-step').disabled = state.step === 0;
       $('#next-step').classList.toggle('hidden', state.step === steps.length - 1);
       $('#done-step').classList.toggle('hidden', state.step !== steps.length - 1);
-      const participantMode = $('input[name="participantMode"]:checked')?.value;
-      $('#gender-mode-panel').classList.toggle('hidden', participantMode !== 'boysAndGirls');
-      const festType = $('input[name="festType"]:checked')?.value;
-      $('#arts-section-card').classList.toggle('hidden', festType === 'sportsOnly');
-      $('#sports-section-card').classList.toggle('hidden', festType === 'artsOnly');
+      const participantGenders = checkedValues('participantGender');
+      $('#gender-mode-panel').classList.toggle('hidden', !(participantGenders.includes('boys') && participantGenders.includes('girls')));
+      const programmeTypes = checkedValues('programmeTypes');
+      $('#arts-section-card').classList.toggle('hidden', !programmeTypes.includes('arts'));
+      $('#sports-section-card').classList.toggle('hidden', !programmeTypes.includes('sports'));
       updateSelectableStyles();
     }
 
@@ -383,17 +389,67 @@
       renderCustomList(listId, bucket);
     }
 
+    function modeToGenders(mode) {
+      if (mode === 'girlsOnly') return ['girls'];
+      if (mode === 'boysAndGirls') return ['boys', 'girls'];
+      return ['boys'];
+    }
+
+    function gendersToMode(genders) {
+      const hasBoys = genders.includes('boys');
+      const hasGirls = genders.includes('girls');
+      if (hasBoys && hasGirls) return 'boysAndGirls';
+      if (hasGirls) return 'girlsOnly';
+      return 'boysOnly';
+    }
+
+    function festTypeToProgrammeTypes(festType) {
+      if (festType === 'sportsOnly') return ['sports'];
+      if (festType === 'artsOnly') return ['arts'];
+      return ['arts', 'sports'];
+    }
+
+    function programmeTypesToFestType(types) {
+      const hasArts = types.includes('arts');
+      const hasSports = types.includes('sports');
+      if (hasArts && hasSports) return 'artsAndSports';
+      if (hasSports) return 'sportsOnly';
+      return 'artsOnly';
+    }
+
     function renderCustomList(listId, bucket) {
-      $(`#${listId}`).innerHTML = state[bucket].map((item, index) => `<span class="setup-pill">${item.name}<button type="button" data-remove="${bucket}:${index}" aria-label="Remove ${item.name}">×</button></span>`).join('');
+      $(`#${listId}`).innerHTML = state[bucket].map((item, index) => `
+        <div class="custom-setup-row">
+          <span class="font-extrabold text-slate-900">${item.name}</span>
+          <div class="flex items-center gap-2">
+            <button type="button" class="text-[11px] font-extrabold text-sky-700 hover:text-sky-900" data-edit="${bucket}:${index}:${listId}">Edit</button>
+            <button type="button" class="text-[11px] font-extrabold text-rose-700 hover:text-rose-900" data-remove="${bucket}:${index}:${listId}">Delete</button>
+          </div>
+        </div>`).join('');
+      $$('[data-edit]').forEach(button => button.addEventListener('click', () => {
+        const [bucketName, index, targetList] = button.dataset.edit.split(':');
+        const current = state[bucketName][Number(index)];
+        const nextName = prompt('Edit name', current?.name || '');
+        if (!nextName || !nextName.trim()) return;
+        state[bucketName][Number(index)] = { ...current, id: current.id || slug(nextName), name: nextName.trim() };
+        renderCustomList(targetList, bucketName);
+      }));
       $$('[data-remove]').forEach(button => button.addEventListener('click', () => {
-        const [bucketName, index] = button.dataset.remove.split(':');
+        const [bucketName, index, targetList] = button.dataset.remove.split(':');
+        const item = state[bucketName][Number(index)];
+        if (!confirm(`Delete ${item?.name || 'this item'}?`)) return;
         state[bucketName].splice(Number(index), 1);
-        renderCustomList(listId, bucketName);
+        renderCustomList(targetList, bucketName);
       }));
     }
 
     function collectSetup() {
-      const festType = $('input[name="festType"]:checked')?.value || 'artsAndSports';
+      const participantGenders = checkedValues('participantGender');
+      const safeParticipantGenders = participantGenders.length ? participantGenders : ['boys'];
+      const participantMode = gendersToMode(safeParticipantGenders);
+      const programmeTypes = checkedValues('programmeTypes');
+      const safeProgrammeTypes = programmeTypes.length ? programmeTypes : ['arts'];
+      const festType = programmeTypesToFestType(safeProgrammeTypes);
       return {
         institution: { name: value('institutionName'), place: value('institutionPlace'), registerNumber: value('institutionRegisterNumber'), logoUrl: value('institutionLogoUrl'), runBy: value('institutionRunBy') },
         fest: {
@@ -401,12 +457,14 @@
           contact: { phone: value('festPhone'), email: value('festEmail') },
           socialLinks: { instagram: value('socialInstagram'), facebook: value('socialFacebook'), youtube: value('socialYoutube'), x: value('socialX'), telegram: value('socialTelegram'), whatsapp: value('socialWhatsapp') }
         },
-        participantMode: $('input[name="participantMode"]:checked')?.value || 'boysOnly',
+        participantMode,
+        participantGenders: safeParticipantGenders,
         genderCompetitionMode: $('input[name="genderCompetitionMode"]:checked')?.value || 'separate',
         festType,
+        programmeTypes: safeProgrammeTypes,
         sections: {
-          arts: festType === 'sportsOnly' ? [] : checkedValues('artsSections'),
-          sports: festType === 'artsOnly' ? [] : checkedValues('sportsSections'),
+          arts: !safeProgrammeTypes.includes('arts') ? [] : checkedValues('artsSections'),
+          sports: !safeProgrammeTypes.includes('sports') ? [] : checkedValues('sportsSections'),
           customArts: state.customArts,
           customSports: state.customSports
         },
@@ -465,11 +523,19 @@
     async function seedSetupRecords(data) {
       const base = `institutions/${state.scope.institutionId}/festivals/${state.scope.festivalId}`;
       const batch = writeBatch(db);
-      [...data.categories.defaults.map(id => ({ id, name: defaultCategoryNames[id] })), ...data.categories.custom].forEach(item => {
-        batch.set(doc(db, `${base}/categories`, item.id), { id: item.id, name: item.name, active: true, source: 'masterSetup', updatedAt: serverTimestamp() }, { merge: true });
+      Object.entries(defaultCategoryNames).forEach(([id, name]) => {
+        batch.set(doc(db, `${base}/categories`, id), { id, name, active: data.categories.defaults.includes(id), source: 'masterSetup', updatedAt: serverTimestamp() }, { merge: true });
       });
-      [...data.sections.arts.map(id => ({ id, name: defaultSectionNames[id], type: 'arts' })), ...data.sections.sports.map(id => ({ id, name: defaultSectionNames[id], type: 'sports' })), ...data.sections.customArts.map(item => ({ ...item, type: 'arts' })), ...data.sections.customSports.map(item => ({ ...item, type: 'sports' }))].forEach(item => {
-        batch.set(doc(db, `${base}/competitionSections`, item.id), { ...item, active: true, source: 'masterSetup', updatedAt: serverTimestamp() }, { merge: true });
+      data.categories.custom.forEach(item => {
+        batch.set(doc(db, `${base}/categories`, item.id), { id: item.id, name: item.name, active: true, source: 'masterSetupCustom', custom: true, updatedAt: serverTimestamp() }, { merge: true });
+      });
+      Object.entries(defaultSectionNames).forEach(([id, name]) => {
+        const type = ['track', 'field'].includes(id) ? 'sports' : 'arts';
+        const selected = type === 'arts' ? data.sections.arts.includes(id) : data.sections.sports.includes(id);
+        batch.set(doc(db, `${base}/competitionSections`, id), { id, name, type, active: selected, source: 'masterSetup', updatedAt: serverTimestamp() }, { merge: true });
+      });
+      [...data.sections.customArts.map(item => ({ ...item, type: 'arts' })), ...data.sections.customSports.map(item => ({ ...item, type: 'sports' }))].forEach(item => {
+        batch.set(doc(db, `${base}/competitionSections`, item.id), { ...item, active: true, source: 'masterSetupCustom', custom: true, updatedAt: serverTimestamp() }, { merge: true });
       });
       await batch.commit();
     }

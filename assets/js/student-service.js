@@ -30,6 +30,7 @@ export async function getFestivalSettings(festId) {
       return {
         id: snap.id,
         studentRegistrationMode: data.studentRegistrationMode || 'adminOnly',
+        studentRegistrationSources: Array.isArray(data.studentRegistrationSources) ? data.studentRegistrationSources : [],
         studentRegistrationOpen: data.studentRegistrationOpen !== false,
         studentRegistrationCloseAt: data.studentRegistrationCloseAt || '',
         teamLeaderStudentApprovalRequired: data.teamLeaderStudentApprovalRequired === true,
@@ -64,6 +65,7 @@ export async function updateFestivalSettings(settings) {
     
     const payload = {
       studentRegistrationMode: settings.studentRegistrationMode || 'adminOnly',
+      studentRegistrationSources: Array.isArray(settings.studentRegistrationSources) ? settings.studentRegistrationSources : [],
       studentRegistrationOpen: settings.studentRegistrationOpen !== false,
       studentRegistrationCloseAt: settings.studentRegistrationCloseAt || '',
       teamLeaderStudentApprovalRequired: settings.teamLeaderStudentApprovalRequired === true,
@@ -127,11 +129,11 @@ export async function canCurrentUserCreateStudent() {
   if (!settings.studentRegistrationOpen) return false;
 
   if (profile.role === 'admin') {
-    return isAdminStudentMode(settings.studentRegistrationMode || 'adminOnly');
+    return isAdminStudentMode(settings.studentRegistrationMode || 'adminOnly', settings);
   }
 
   if (profile.role === 'teamLeader') {
-    return isTeamLeaderStudentMode(settings.studentRegistrationMode || 'adminOnly');
+    return isTeamLeaderStudentMode(settings.studentRegistrationMode || 'adminOnly', settings);
   }
 
   return false;
@@ -149,13 +151,13 @@ export async function canCurrentUserEditStudent(student) {
   if (!settings.studentRegistrationOpen) return false;
 
   if (profile.role === 'admin') {
-    return isAdminStudentMode(settings.studentRegistrationMode || 'adminOnly');
+    return isAdminStudentMode(settings.studentRegistrationMode || 'adminOnly', settings);
   }
 
   if (profile.role === 'teamLeader') {
     // Team Leader can edit if mode is teamLeadersOnly, and student belongs to their team, 
     // and is not already approved if approval is required.
-    if (!isTeamLeaderStudentMode(settings.studentRegistrationMode || 'adminOnly')) return false;
+    if (!isTeamLeaderStudentMode(settings.studentRegistrationMode || 'adminOnly', settings)) return false;
     if (student.teamId !== profile.teamId) return false;
     return true;
   }
@@ -169,16 +171,25 @@ export function normalizeStudentName(name = '') {
   return /^[A-Za-z .'-]+$/.test(clean) ? clean.toUpperCase() : clean;
 }
 
-function isAdminStudentMode(mode = 'adminOnly') {
-  return ['adminOnly', 'all'].includes(mode);
+function sourceEnabled(settings = {}, source) {
+  return Array.isArray(settings.studentRegistrationSources) && settings.studentRegistrationSources.length
+    ? settings.studentRegistrationSources.includes(source)
+    : null;
 }
 
-function isTeamLeaderStudentMode(mode = 'adminOnly') {
-  return ['teamLeadersOnly', 'all'].includes(mode);
+function isAdminStudentMode(mode = 'adminOnly', settings = {}) {
+  const explicit = sourceEnabled(settings, 'admin');
+  return explicit === null ? ['adminOnly', 'all'].includes(mode) : explicit;
 }
 
-function isPublicStudentMode(mode = 'adminOnly') {
-  return ['publicRegistrationOnly', 'registration', 'all'].includes(mode);
+function isTeamLeaderStudentMode(mode = 'adminOnly', settings = {}) {
+  const explicit = sourceEnabled(settings, 'teamLeader');
+  return explicit === null ? ['teamLeadersOnly', 'all'].includes(mode) : explicit;
+}
+
+function isPublicStudentMode(mode = 'adminOnly', settings = {}) {
+  const explicit = sourceEnabled(settings, 'public');
+  return explicit === null ? ['publicRegistrationOnly', 'registration', 'all'].includes(mode) : explicit;
 }
 
 export function isStudentRegistrationPortalOpen(settings = {}) {
@@ -232,10 +243,10 @@ export async function createFestivalStudent(studentData) {
 
   // Validate permission by mode
   const mode = settings.studentRegistrationMode || 'adminOnly';
-  if (profile.role === 'admin' && !isAdminStudentMode(mode)) {
+  if (profile.role === 'admin' && !isAdminStudentMode(mode, settings)) {
     throw new Error("Student registration mode does not allow admin-added students.");
   }
-  if (profile.role === 'teamLeader' && !isTeamLeaderStudentMode(mode)) {
+  if (profile.role === 'teamLeader' && !isTeamLeaderStudentMode(mode, settings)) {
     throw new Error("Student registration mode does not allow team-leader-added students.");
   }
 
@@ -353,7 +364,7 @@ export async function createPublicStudentRegistration(studentData, { institution
     throw new Error('Public registration is currently closed.');
   }
   const mode = settings.studentRegistrationMode || 'adminOnly';
-  if (!isPublicStudentMode(mode)) {
+  if (!isPublicStudentMode(mode, settings)) {
     throw new Error('Public registration is not enabled for this festival.');
   }
   if (!studentData.phone || !studentData.name || !studentData.teamId || !studentData.categoryId) {

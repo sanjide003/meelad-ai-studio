@@ -35,11 +35,11 @@ This document records the product rules and working decisions given during chat 
 - Institution details include name, place, registration number, logo, and run-by/subtitle text.
 - Festival details include name, subtitle, tagline, logo, phone, email, and social links.
 - Social links include Instagram, Facebook, YouTube, X/Twitter, Telegram, and WhatsApp.
-- Participating mode options must include boys only, girls only, boys and girls, separate, single/common, and mixed separate+single behavior.
-- Fest type options must include sports only, arts only, and arts and sports.
+- Participating gender selection must be multi-select: boys, girls, or both; gender competition pattern still supports separate, single/common, and mixed separate+single behavior.
+- Fest type selection must be multi-select: arts, sports, or both.
 - Arts sections should include on-stage, off-stage, and custom sections.
 - Sports sections should include track, field, and custom sections.
-- Categories should include default presets and custom category creation.
+- Categories should include default presets and custom category creation; custom categories/sections require edit/delete controls and delete confirmation.
 - Setup may be skipped, but admins must be warned that core setup should be corrected before adding students and competitions.
 - After students or competitions are created, core setup fields should become locked or add-only where necessary.
 - Reset must be destructive only after admin password confirmation and clear warning, and it must delete festival operational data while preserving institution/festival profile records.
@@ -54,7 +54,7 @@ This document records the product rules and working decisions given during chat 
 
 ## Student Intake rules
 
-- Student intake must support admin add, team-leader add, public registration, or all methods.
+- Student intake must support multi-select combinations of admin add, team-leader add, and public registration.
 - Admin-added students may be auto-approved based on settings.
 - Team-leader and public submissions should support approval/rejection workflows.
 - Rejecting a student requires a reason.
