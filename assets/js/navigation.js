@@ -256,7 +256,30 @@ function enhanceAdminEmptyStates() {
   });
 }
 
+
+function hydrateMobileAdminMenu() {
+  const mobileNavMenu = document.getElementById('mobile-dropdown-menu');
+  const sidebar = document.getElementById('portal-sidebar');
+  if (!mobileNavMenu || !sidebar) return;
+  const sidebarLinks = Array.from(sidebar.querySelectorAll('a.nav-link-item'));
+  if (!sidebarLinks.length) return;
+  const linkHtml = sidebarLinks.map((link) => {
+    const href = link.getAttribute('href') || '#';
+    const label = link.textContent.trim().replace(/\s+/g, ' ');
+    const svg = link.querySelector('svg')?.outerHTML || '';
+    return `<a href="${href}" class="nav-link-item flex items-center py-2 px-3 hover:bg-slate-50 rounded-lg">${svg}<span>${label}</span></a>`;
+  }).join('');
+  mobileNavMenu.innerHTML = `
+    <div class="p-3 space-y-2 max-h-[70vh] overflow-y-auto">${linkHtml}</div>
+    <div class="p-3 bg-slate-50">
+      <button class="logout-action-btn w-full text-left font-semibold text-rose-600 flex items-center py-2 px-3 hover:bg-rose-50 rounded-lg cursor-pointer">
+        <span>Sign Out</span>
+      </button>
+    </div>`;
+}
+
 export function initializeNavigation() {
+  hydrateMobileAdminMenu();
   // 1. Mobile Hamburger Menu Setup
   const hamburgerBtn = document.getElementById('mobile-hamburger-btn');
   const mobileNavMenu = document.getElementById('mobile-dropdown-menu');

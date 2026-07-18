@@ -31,8 +31,14 @@
         
         <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-2">
           <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Accounts</h1>
-          <p class="text-xs text-slate-400 font-medium">Manage only the accounts that belong to the selected institution workspace.</p>
+          <p class="text-xs text-slate-400 font-medium">See how many administrator, team, and judge accounts belong to the selected institution workspace.</p>
         </div>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4" id="account-summary-cards">
+          <article class="admin-status-card"><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Admin Accounts</p><h2 id="admin-account-count" class="text-3xl font-extrabold text-slate-950 mt-2">0</h2><p class="text-xs text-slate-500 mt-1">Institution administrators with workspace access.</p></article>
+          <article class="admin-status-card"><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Team Accounts</p><h2 id="team-account-count" class="text-3xl font-extrabold text-slate-950 mt-2">0</h2><p class="text-xs text-slate-500 mt-1">Teams / group leader login accounts.</p></article>
+          <article class="admin-status-card"><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Judge Accounts</p><h2 id="judge-account-count" class="text-3xl font-extrabold text-slate-950 mt-2">0</h2><p class="text-xs text-slate-500 mt-1">Judges assigned under this institution.</p></article>
+        </section>
 
         <!-- Alert Notification Toast -->
         <div id="alert-toast" class="hidden bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl p-4 text-xs flex items-center space-x-2">
@@ -91,14 +97,34 @@
       }
     }
 
+
+    function updateAccountSummary(users, teamsSnapshot, judgesSnapshot) {
+      const adminRoles = ['admin', 'institutionAdmin', 'superAdmin'];
+      const adminCount = users.filter((user) => adminRoles.includes(user.role)).length;
+      const teamLeaderUsers = users.filter((user) => user.role === 'teamLeader').length;
+      const activeTeams = teamsSnapshot.docs.filter((docSnap) => docSnap.data().active !== false).length;
+      const judgeUsers = users.filter((user) => user.role === 'judge').length;
+      const activeJudges = judgesSnapshot.docs.filter((docSnap) => docSnap.data().active !== false).length;
+      document.getElementById('admin-account-count').textContent = adminCount;
+      document.getElementById('team-account-count').textContent = Math.max(teamLeaderUsers, activeTeams);
+      document.getElementById('judge-account-count').textContent = Math.max(judgeUsers, activeJudges);
+    }
+
     async function loadUsersList() {
       const tableBody = document.getElementById('users-table-body');
       
       try {
-        const { institutionId } = getActiveScope();
+        const { institutionId, festivalId } = getActiveScope();
         const usersCol = collection(db, 'users');
         const scopedUsersQuery = query(usersCol, where('institutionId', '==', institutionId));
-        const querySnapshot = await getDocs(scopedUsersQuery);
+        const base = `institutions/${institutionId}/festivals/${festivalId}`;
+        const [querySnapshot, teamsSnapshot, judgesSnapshot] = await Promise.all([
+          getDocs(scopedUsersQuery),
+          getDocs(collection(db, `${base}/teams`)),
+          getDocs(collection(db, `${base}/judges`))
+        ]);
+        const scopedUsers = querySnapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+        updateAccountSummary(scopedUsers, teamsSnapshot, judgesSnapshot);
 
         tableBody.innerHTML = '';
 
@@ -111,9 +137,8 @@
           return;
         }
 
-        querySnapshot.forEach((userDoc) => {
-          const user = userDoc.data();
-          const uid = userDoc.id;
+        scopedUsers.forEach((user) => {
+          const uid = user.id;
 
           const row = document.createElement('tr');
           row.className = "hover:bg-slate-50/50 transition";
