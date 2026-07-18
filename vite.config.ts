@@ -38,6 +38,7 @@ export default defineConfig(() => {
           adminInvitations: path.resolve(__dirname, 'admin/user-invitations.html'),
           adminJudges: path.resolve(__dirname, 'admin/judges.html'),
           adminJudgeAssignments: path.resolve(__dirname, 'admin/judge-assignments.html'),
+          adminScheduleManagement: path.resolve(__dirname, 'admin/schedule-management.html'),
           adminMarkMonitor: path.resolve(__dirname, 'admin/mark-monitor.html'),
           adminProvisionalResults: path.resolve(__dirname, 'admin/provisional-results.html'),
           adminSubmittedMarks: path.resolve(__dirname, 'admin/submitted-marks.html'),

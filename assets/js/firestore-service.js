@@ -756,6 +756,65 @@ export async function getCompetitionEntries() {
   }
 }
 
+
+// ==========================================
+// SCHEDULE MANAGEMENT
+// ==========================================
+export async function getSchedules() {
+  const path = window.meeladPulseScopedFestivalPath('schedules');
+  try {
+    const snap = await getDocs(collection(db, path));
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, path);
+  }
+}
+
+export async function saveSchedule(scheduleData) {
+  assertAdminRole();
+  const scope = getActiveScope();
+  const id = scheduleData.id || doc(collection(db, 'dummy')).id;
+  const path = window.meeladPulseScopedFestivalPath(`schedules/${id}`);
+  try {
+    const payload = {
+      id,
+      institutionId: scope.institutionId,
+      festivalId: scope.festivalId,
+      competitionId: scheduleData.competitionId,
+      competitionName: scheduleData.competitionName || '',
+      date: scheduleData.date || '',
+      reportingTime: scheduleData.reportingTime || '',
+      startTime: scheduleData.startTime || '',
+      endTime: scheduleData.endTime || '',
+      durationMinutes: Number(scheduleData.durationMinutes) || 0,
+      stage: scheduleData.stage || '',
+      venue: scheduleData.venue || scheduleData.stage || '',
+      status: scheduleData.status || 'scheduled',
+      notes: scheduleData.notes || '',
+      estimatedDurationMinutes: Number(scheduleData.estimatedDurationMinutes) || 0,
+      entryCount: Number(scheduleData.entryCount) || 0,
+      teamEntryCount: Number(scheduleData.teamEntryCount) || 0,
+      participantCount: Number(scheduleData.participantCount) || 0,
+      scheduledTime: scheduleData.date && scheduleData.startTime ? `${scheduleData.date}T${scheduleData.startTime}` : '',
+      updatedAt: serverTimestamp()
+    };
+    await setDoc(doc(db, window.meeladPulseScopedFestivalPath('schedules'), id), payload, { merge: true });
+    return id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export async function deleteSchedule(id) {
+  assertAdminRole();
+  const path = window.meeladPulseScopedFestivalPath(`schedules/${id}`);
+  try {
+    await deleteDoc(doc(db, window.meeladPulseScopedFestivalPath('schedules'), id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
 async function validateCompetitionEntryStudents(competition, teamId, studentIds) {
   const students = [];
   for (const studentId of studentIds) {

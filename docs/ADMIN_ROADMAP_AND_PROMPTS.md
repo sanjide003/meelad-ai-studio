@@ -558,3 +558,15 @@ Reason:
 ### Remaining / needs final product confirmation
 - If account creation must happen fully inline inside Accounts rather than by routing to Team Management and Judges, build embedded create forms there.
 - Final judging UX still needs live Firebase staging verification with real judge logins, assigned items, submitted marks, and result review.
+
+## Current Update — Inline Accounts, Judge Assignment, and Schedule Management
+
+### Completed in this update
+- **Accounts** now supports inline admin-created manual accounts for Judges and Team Leaders with name, username, password/password reset, role, phone, team selection, and Active/Inactive status.
+- Judge account creation remains separate from competition assignment; assignments are handled later in **Judge Assignments**.
+- **Judge Assignments** now shows filters, entry counts, assigned/unassigned state, scheduled/not scheduled state, judge workload, and schedule-conflict warnings before saving assignments.
+- Added **Schedule Management** for competition date, reporting time, start/end time, stage/venue, status, notes, estimated duration, entry counts, and conflict warnings.
+
+### Remaining / needs staging verification
+- Run a full Firebase staging flow with real manual Judge and Team Leader logins to verify anonymous manual-session creation, scoped rules, judge dashboard visibility, mark entry, admin review, and result publication.
+- If hard-blocking schedule conflict prevention is required for judge conflicts and participant conflicts, move the current UI warnings into stricter service-layer validation before production lock.
