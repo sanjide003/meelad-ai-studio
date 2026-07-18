@@ -67,15 +67,17 @@ export function buildInstitutionPublicLinks(institutionId, festivalId = institut
 export async function getInstitutionAccountContext() {
   const scope = getActiveScope();
   const profile = window.currentUserProfile || getSessionManualProfile() || {};
-  const [institutionSnap, loginSnap, manualSnap] = await Promise.all([
+  const [institutionSnap, festivalSnap, loginSnap, manualSnap] = await Promise.all([
     getDoc(doc(db, 'institutions', scope.institutionId)),
+    getDoc(doc(db, `institutions/${scope.institutionId}/festivals/${scope.festivalId}`)),
     profile.usernameLower ? getDoc(doc(db, 'institutionLogins', profile.usernameLower)) : Promise.resolve(null),
     profile.usernameLower ? getDoc(doc(db, `institutions/${scope.institutionId}/festivals/${scope.festivalId}/manualUsers`, profile.usernameLower)) : Promise.resolve(null)
   ]);
 
   const institution = institutionSnap.exists() ? { id: institutionSnap.id, ...institutionSnap.data() } : { id: scope.institutionId };
+  const festival = festivalSnap.exists() ? { id: festivalSnap.id, ...festivalSnap.data() } : { id: scope.festivalId };
   const loginProfile = loginSnap?.exists?.() ? loginSnap.data() : (manualSnap?.exists?.() ? manualSnap.data() : profile);
-  return { scope, profile: { ...profile, ...loginProfile }, institution, links: buildInstitutionPublicLinks(scope.institutionId, scope.festivalId) };
+  return { scope, profile: { ...profile, ...loginProfile }, institution, festival, links: buildInstitutionPublicLinks(scope.institutionId, scope.festivalId) };
 }
 
 export async function updateInstitutionAdminCredentials({ currentPassword, newUsername, newPassword }) {

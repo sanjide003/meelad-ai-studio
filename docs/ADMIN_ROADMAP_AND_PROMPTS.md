@@ -546,3 +546,15 @@ Reason:
 - Admin-side Competition Entries are implemented.
 - Judging is the next required workflow before results, ranking, certificates, and public publishing can be completed.
 
+
+## Current Update — People & Access, Judging, and Scoring Rules
+
+### Completed in this update
+- People & Access now keeps only **My Account** and **Accounts** so administrator identity/details and account operations stay in one section.
+- Judge creation, judge assignment, mark monitoring, submitted marks, mark review, and provisional result checks are grouped under the **Judging** lifecycle section.
+- Grade Rules and Point Rules are consolidated operationally through **Scoring Rules**, where the scoring mode is selected as **Grade Only**, **Mark Only**, or **Grade & Mark** before configuring the relevant values.
+- My Account now reads the scoped festival document along with the institution document so institution and festival details are visible together.
+
+### Remaining / needs final product confirmation
+- If account creation must happen fully inline inside Accounts rather than by routing to Team Management and Judges, build embedded create forms there.
+- Final judging UX still needs live Firebase staging verification with real judge logins, assigned items, submitted marks, and result review.

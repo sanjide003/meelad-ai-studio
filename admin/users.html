@@ -34,10 +34,23 @@
           <p class="text-xs text-slate-400 font-medium">See how many administrator, team, and judge accounts belong to the selected institution workspace.</p>
         </div>
 
+        <section class="admin-section-card border border-slate-100 bg-white p-5">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-extrabold text-slate-900">Account operations</h2>
+              <p class="text-xs text-slate-500 mt-1">Create team leaders from Team Management, create judges from Judging, and activate/deactivate every institution account from the table below.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <a href="../admin/teams.html" class="btn btn-secondary text-[10px] font-bold px-3 py-2 border border-slate-200">Team Leader Accounts</a>
+              <a href="../admin/judges.html" class="btn btn-secondary text-[10px] font-bold px-3 py-2 border border-slate-200">Judge Accounts</a>
+            </div>
+          </div>
+        </section>
+
         <section class="grid grid-cols-1 md:grid-cols-3 gap-4" id="account-summary-cards">
-          <article class="admin-status-card"><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Admin Accounts</p><h2 id="admin-account-count" class="text-3xl font-extrabold text-slate-950 mt-2">0</h2><p class="text-xs text-slate-500 mt-1">Institution administrators with workspace access.</p></article>
-          <article class="admin-status-card"><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Team Accounts</p><h2 id="team-account-count" class="text-3xl font-extrabold text-slate-950 mt-2">0</h2><p class="text-xs text-slate-500 mt-1">Teams / group leader login accounts.</p></article>
-          <article class="admin-status-card"><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Judge Accounts</p><h2 id="judge-account-count" class="text-3xl font-extrabold text-slate-950 mt-2">0</h2><p class="text-xs text-slate-500 mt-1">Judges assigned under this institution.</p></article>
+          <article class="admin-status-card"><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Admin Accounts</p><h2 id="admin-account-count" class="text-3xl font-extrabold text-slate-950 mt-2">0</h2><p class="text-xs text-slate-500 mt-1">Institution administrators with workspace access.</p><a href="../admin/account-settings.html" class="btn btn-secondary mt-3 text-[10px] font-bold px-3 py-2 border border-slate-200 inline-flex">Manage Admin</a></article>
+          <article class="admin-status-card"><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Team Accounts</p><h2 id="team-account-count" class="text-3xl font-extrabold text-slate-950 mt-2">0</h2><p class="text-xs text-slate-500 mt-1">Teams / group leader login accounts.</p><a href="../admin/teams.html" class="btn btn-secondary mt-3 text-[10px] font-bold px-3 py-2 border border-slate-200 inline-flex">Create Team Leaders</a></article>
+          <article class="admin-status-card"><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Judge Accounts</p><h2 id="judge-account-count" class="text-3xl font-extrabold text-slate-950 mt-2">0</h2><p class="text-xs text-slate-500 mt-1">Judges assigned under this institution.</p><a href="../admin/judges.html" class="btn btn-secondary mt-3 text-[10px] font-bold px-3 py-2 border border-slate-200 inline-flex">Create Judges</a></article>
         </section>
 
         <!-- Alert Notification Toast -->

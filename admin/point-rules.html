@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Point Rules Management - MeeladPulse</title>
+  <title>Scoring Rules Management - MeeladPulse</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../assets/css/main.css">
 </head>
@@ -30,8 +30,8 @@
         <!-- Header Banner & Translation Toggle -->
         <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
           <div class="space-y-1">
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display" id="page-title-pts">Point & Grade Allocation Schemes</h1>
-            <p class="text-xs text-slate-400 font-medium" id="page-subtitle-pts">Manage position points and attach the grade scale that should be displayed with each point scheme.</p>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight font-display" id="page-title-pts">Scoring Rules</h1>
+            <p class="text-xs text-slate-400 font-medium" id="page-subtitle-pts">Choose Grade Only, Mark Only, or Grade & Mark, then configure position marks and grade scales in one place.</p>
           </div>
           <div class="flex items-center space-x-2">
             <button id="lang-toggle-btn" class="btn btn-secondary text-xs py-2 px-3 flex items-center space-x-1 border border-slate-200 cursor-pointer">
@@ -57,33 +57,34 @@
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-slate-700 block" id="lbl-pts-mode">Calculation Mode</label>
                 <select id="rule-mode-select" required class="form-input cursor-pointer">
-                  <option value="positionAndGrade">Position Points + Grade Points</option>
-                  <option value="positionOnly">Position Points Only (Ignore Grades)</option>
-                  <option value="gradeOnly">Grade Points Only (Ignore Ranks)</option>
+                  <option value="positionAndGrade">Grade & Mark</option>
+                  <option value="positionOnly">Mark Only</option>
+                  <option value="gradeOnly">Grade Only</option>
                 </select>
               </div>
 
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-700 block" id="lbl-pts-grade-rule">Linked Grade Rule</label>
+              <div id="grade-scale-section" class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 block" id="lbl-pts-grade-rule">Grade Scale (for Grade Only / Grade & Mark)</label>
                 <select id="rule-grade-select" class="form-input cursor-pointer">
                   <option value="">-- Select grade scale --</option>
                 </select>
                 <div id="grade-rule-preview" class="rounded-xl bg-slate-50 border border-slate-100 p-3 text-[11px] text-slate-500">Select a grade rule to preview grade ranges here.</div>
-                <a href="../admin/grade-rules.html" class="inline-flex text-[10px] font-bold text-emerald-600 hover:underline">Create / edit grade ranges</a>
+                <a href="../admin/grade-rules.html" class="inline-flex text-[10px] font-bold text-emerald-600 hover:underline">Configure grade values here</a>
               </div>
 
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-1.5">
-                  <label class="text-xs font-bold text-slate-700 block" id="lbl-pt-1">1st Place Points</label>
-                  <input type="number" id="pts-1-input" required class="form-input" min="0" value="5">
+              <div id="position-points-section" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 block" id="lbl-pt-1">1st Place Points</label>
+                    <input type="number" id="pts-1-input" required class="form-input" min="0" value="5">
+                  </div>
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 block" id="lbl-pt-2">2nd Place Points</label>
+                    <input type="number" id="pts-2-input" required class="form-input" min="0" value="3">
+                  </div>
                 </div>
-                <div class="space-y-1.5">
-                  <label class="text-xs font-bold text-slate-700 block" id="lbl-pt-2">2nd Place Points</label>
-                  <input type="number" id="pts-2-input" required class="form-input" min="0" value="3">
-                </div>
-              </div>
 
-              <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-4">
                 <div class="space-y-1.5">
                   <label class="text-xs font-bold text-slate-700 block" id="lbl-pt-3">3rd Place Points</label>
                   <input type="number" id="pts-3-input" required class="form-input" min="0" value="1">
@@ -103,6 +104,8 @@
                   <label class="text-xs font-bold text-slate-700 block" id="lbl-pt-part">Participation Points</label>
                   <input type="number" id="pts-part-input" required class="form-input" min="0" value="0">
                 </div>
+              </div>
+
               </div>
 
               <div class="flex items-center space-x-2 pt-2">
@@ -161,13 +164,13 @@
 
     const trans = {
       en: {
-        title: "Point Allocation Schemes",
-        subtitle: "Manage standard schemes for allocating team points based on participant ranks and participation.",
-        createHeader: "Create Point Rule Profile",
-        editHeader: "Edit Point Rule Profile",
+        title: "Scoring Rules",
+        subtitle: "Choose Grade Only, Mark Only, or Grade & Mark and configure the required scoring values.",
+        createHeader: "Create Scoring Rule Profile",
+        editHeader: "Edit Scoring Rule Profile",
         nameLabel: "Scheme Profile Name",
         modeLabel: "Calculation Mode",
-        gradeRuleLabel: "Linked Grade Rule",
+        gradeRuleLabel: "Grade Scale (for Grade Only / Grade & Mark)",
         thGrade: "Grade Scale",
         pt1: "1st Place Points",
         pt2: "2nd Place Points",
@@ -259,7 +262,8 @@
         applyTranslations();
         await loadGradeRuleOptions();
         document.getElementById('rule-grade-select').addEventListener('change', updateGradePreview);
-        document.getElementById('rule-mode-select').addEventListener('change', updateGradePreview);
+        document.getElementById('rule-mode-select').addEventListener('change', updateModeVisibility);
+        updateModeVisibility();
 
         // Language toggle
         document.getElementById('lang-toggle-btn').addEventListener('click', () => {
@@ -326,6 +330,24 @@
       updateGradePreview();
     }
 
+    function updateModeVisibility() {
+      const mode = document.getElementById('rule-mode-select').value;
+      const gradeSection = document.getElementById('grade-scale-section');
+      const positionSection = document.getElementById('position-points-section');
+      const gradeSelect = document.getElementById('rule-grade-select');
+      const usesGrades = mode !== 'positionOnly';
+      const usesPositions = mode !== 'gradeOnly';
+      gradeSection.classList.toggle('hidden', !usesGrades);
+      positionSection.classList.toggle('hidden', !usesPositions);
+      gradeSelect.required = usesGrades;
+      gradeSelect.disabled = !usesGrades;
+      positionSection.querySelectorAll('input').forEach((input) => {
+        input.disabled = !usesPositions;
+        input.required = usesPositions;
+      });
+      updateGradePreview();
+    }
+
     function updateGradePreview() {
       const mode = document.getElementById('rule-mode-select').value;
       const selectedId = document.getElementById('rule-grade-select').value;
@@ -368,8 +390,8 @@
           row.className = "hover:bg-slate-50/50 transition";
 
           let modeText = r.calculationMode;
-          if (r.calculationMode === 'positionAndGrade') modeText = "Position & Grade";
-          else if (r.calculationMode === 'positionOnly') modeText = "Position Only";
+          if (r.calculationMode === 'positionAndGrade') modeText = "Grade & Mark";
+          else if (r.calculationMode === 'positionOnly') modeText = "Mark Only";
           else if (r.calculationMode === 'gradeOnly') modeText = "Grade Only";
 
           row.innerHTML = `
@@ -410,7 +432,7 @@
               document.getElementById('pts-5-input').value = r.fifthPlacePoints || 0;
               document.getElementById('pts-part-input').value = r.participationPoints || 0;
               document.getElementById('rule-grade-select').value = r.gradeRuleId || '';
-              updateGradePreview();
+              updateModeVisibility();
 
               document.getElementById('form-header-pts').textContent = t.editHeader;
               cancelBtn.classList.remove('hidden');
@@ -444,7 +466,7 @@
       const t = trans[currentLang];
       document.getElementById('rule-id').value = "";
       form.reset();
-      updateGradePreview();
+      updateModeVisibility();
       document.getElementById('form-header-pts').textContent = t.createHeader;
       cancelBtn.classList.add('hidden');
     }

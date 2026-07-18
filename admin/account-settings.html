@@ -108,7 +108,7 @@
     }
 
     function renderIdentity() {
-      const { institution, profile, scope } = accountContext;
+      const { institution, festival = {}, profile, scope } = accountContext;
       const badge = statusBadge(institution.active, institution.subscriptionStatus);
       const identityStatus = document.getElementById('identity-status');
       identityStatus.textContent = badge.text;
@@ -116,6 +116,9 @@
       document.getElementById('new-username').value = profile.usernameLower || profile.username || profile.email || '';
       document.getElementById('identity-grid').innerHTML = [
         infoCard('Institution', fmt(institution.title || institution.name || scope.institutionId)),
+        infoCard('Festival', fmt(festival.title || festival.name || festival.festivalName || scope.festivalId)),
+        infoCard('Festival Year', fmt(festival.year || festival.academicYear || festival.season)),
+        infoCard('Festival Status', fmt(festival.status || festival.setupStatus || festival.phase)),
         infoCard('Admin Name', fmt(profile.name)),
         infoCard('Username / Email', fmt(profile.usernameLower || profile.username || profile.email)),
         infoCard('Role', fmt(profile.role)),
